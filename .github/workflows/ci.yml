@@ -38,6 +38,11 @@ jobs:
       DATABASE_URL: postgresql://myqrcards:myqrcards@localhost:5432/myqrcards?schema=public
       REDIS_URL: redis://localhost:6379
       API_PORT: 3001
+      WEB_PORT: 3000
+      WEB_ORIGIN: http://localhost:3000
+      API_URL: http://localhost:3001
+      JWT_SECRET: ci-test-secret
+      COOKIE_SECURE: "false"
       NODE_ENV: test
 
     steps:
@@ -57,12 +62,22 @@ jobs:
       - name: Apply Prisma migrations
         run: npm run prisma:migrate
 
-
       - name: Lint
         run: npm run lint
 
       - name: Test
         run: npm run test
 
+      - name: API e2e
+        run: npm run test:e2e -w apps/api
+
       - name: Build
         run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Web e2e
+        run: npm run test:e2e -w apps/web
+

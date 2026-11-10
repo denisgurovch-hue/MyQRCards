@@ -7,4 +7,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// No business models in T-001. Domain tables land in later tasks.
+model User {
+  id           String         @id @default(uuid()) @db.Uuid
+  email        String?        @unique
+  passwordHash String?        @map("password_hash")
+  displayName  String?        @map("display_name")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  identities   Identity[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model Identity {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  provider       String
+  providerUserId String   @map("provider_user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("identities")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([tokenHash])
+  @@map("refresh_tokens")
+}

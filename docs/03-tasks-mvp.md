@@ -1,45 +1,61 @@
 # 03 — Задачи MVP MyQRCards
 
-## Текущая задача: T-001 — Инфраструктура проекта
+## T-002 — Авторизация: e-mail/password и VK ID
+
+### Статус
+In progress
 
 ### Цель
-Создать базовую монорепозиторную структуру MyQRCards с frontend, API,
-PostgreSQL, Redis, Docker Compose и базовым CI.
+Реализовать безопасную авторизацию пользователей MyQRCards:
+регистрацию и вход по e-mail/паролю, а также вход через VK ID.
+После успешной авторизации пользователь должен попадать в личный кабинет.
 
 ### Scope
-- Создать monorepo.
-- Настроить Next.js в `apps/web`.
-- Настроить NestJS в `apps/api`.
-- Настроить PostgreSQL и Redis в Docker Compose.
-- Настроить Prisma и первую миграцию.
-- Добавить health check endpoints.
-- Добавить базовые команды lint, test, build и dev.
-- Создать `.env.example`.
+- Модель `User`.
+- Модель `Identity` для внешних OAuth-провайдеров.
+- Регистрация по e-mail и паролю.
+- Вход по e-mail и паролю.
+- Выход из аккаунта.
+- OAuth Authorization Code flow с PKCE для VK ID.
+- Создание пользователя при первом входе через VK ID.
+- Связывание VK ID с существующим пользователем при повторном входе.
+- Защищённые httpOnly session cookies.
+- Refresh token с возможностью отзыва.
+- Rate limiting для регистрации, входа и OAuth callback.
+- Базовые страницы: `/login`, `/register`, `/dashboard`.
+- Интеграционные и E2E-тесты.
 
 ### Вне scope
-- Бизнес-логика визиток.
-- Авторизация.
-- UI-экраны.
+- Яндекс ID.
+- Google, Apple, Facebook и любые другие зарубежные OAuth-провайдеры.
+- Восстановление пароля.
+- Подтверждение e-mail.
+- Двухфакторная аутентификация.
+- Корпоративные аккаунты и роли.
+- Создание визиток.
 - Аналитика.
 - Продакшн-деплой.
 
 ### Acceptance criteria
-- [ ] `docker compose up -d` поднимает PostgreSQL и Redis.
-- [ ] `npm run dev` запускает frontend и API.
-- [ ] `GET /api/v1/healthz` возвращает 200.
-- [ ] `GET /readyz` проверяет доступность БД и Redis.
-- [ ] `npm run lint` проходит без ошибок.
-- [ ] `npm run test` проходит.
-- [ ] Prisma migration применяется на чистой БД.
+- [ ] Новый пользователь может зарегистрироваться по e-mail и паролю.
+- [ ] Повторная регистрация с тем же e-mail возвращает понятную ошибку.
+- [ ] Пользователь может войти по корректному e-mail и паролю.
+- [ ] Неверный пароль возвращает ошибку без раскрытия внутренних деталей.
+- [ ] Пользователь может войти через VK ID.
+- [ ] При первом входе через VK ID создаётся пользователь и identity.
+- [ ] При повторном входе через VK ID используется существующий пользователь.
+- [ ] После входа устанавливаются httpOnly, Secure, SameSite=Lax cookies.
+- [ ] Refresh token можно отозвать при logout и смене пароля.
+- [ ] Неавторизованный пользователь не может получить доступ к защищённым endpoints.
+- [ ] Rate limiting применяется к регистрации, входу и OAuth callback.
+- [ ] Пароли, токены и персональные данные не попадают в логи.
+- [ ] Все критические сценарии покрыты тестами.
 
-### Файлы
-- `package.json`
-- `docker-compose.yml`
-- `.env.example`
-- `apps/web/package.json`
-- `apps/api/package.json`
-- `apps/api/prisma/schema.prisma`
-- `apps/api/src/main.ts`
-- `apps/api/src/app.module.ts`
-- `apps/api/src/health/health.controller.ts`
-- `README.md`
+### Definition of Done
+- [ ] Миграции применяются на чистой тестовой БД.
+- [ ] `npm run lint` проходит.
+- [ ] `npm run test` проходит.
+- [ ] `npm run test:e2e` проходит.
+- [ ] `docker compose up -d` поднимает зависимости.
+- [ ] Ручная проверка входа через VK ID возможна с тестовыми credentials из `.env`.
+- [ ] Документация API обновлена.

@@ -11,7 +11,8 @@
     "lint": "npm run lint -w apps/api && npm run lint -w apps/web",
     "test": "npm run test -w apps/api && npm run test -w apps/web",
     "prisma:generate": "npm run prisma:generate -w apps/api",
-    "prisma:migrate": "npm run prisma:migrate -w apps/api"
+    "prisma:migrate": "npm run prisma:migrate -w apps/api",
+    "test:e2e": "npm run test:e2e -w apps/api && npm run build && npm run test:e2e -w apps/web"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
