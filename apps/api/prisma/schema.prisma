@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id           String         @id @default(uuid()) @db.Uuid
-  email        String?        @unique
-  passwordHash String?        @map("password_hash")
-  displayName  String?        @map("display_name")
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
-  identities   Identity[]
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String?        @unique
+  passwordHash  String?        @map("password_hash")
+  displayName   String?        @map("display_name")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  identities    Identity[]
   refreshTokens RefreshToken[]
+  cards         Card[]
 
   @@map("users")
 }
@@ -46,4 +47,50 @@ model RefreshToken {
   @@index([userId])
   @@unique([tokenHash])
   @@map("refresh_tokens")
+}
+
+enum CardStatus {
+  draft
+  published
+  archived
+}
+
+model Card {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  displayName String     @map("display_name")
+  jobTitle    String?    @map("job_title")
+  companyName String?    @map("company_name")
+  summary     String?
+  phone       String?
+  email       String?
+  showEmail   Boolean    @default(false) @map("show_email")
+  websiteUrl  String?    @map("website_url")
+  photoUrl    String?    @map("photo_url")
+  slug        String     @unique
+  status      CardStatus @default(draft)
+  deletedAt   DateTime?  @map("deleted_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links       CardLink[]
+
+  @@index([userId])
+  @@index([userId, deletedAt])
+  @@map("cards")
+}
+
+model CardLink {
+  id        String   @id @default(uuid()) @db.Uuid
+  cardId    String   @map("card_id") @db.Uuid
+  label     String?
+  url       String
+  type      String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId])
+  @@map("card_links")
 }

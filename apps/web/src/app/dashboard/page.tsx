@@ -1,6 +1,7 @@
-import { cookies } from 'next/headers';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LogoutButton } from './logout-button';
+import { serverApiFetch } from '../../lib/server-api';
 
 type MeResponse = {
   user: {
@@ -10,39 +11,29 @@ type MeResponse = {
   };
 };
 
-async function loadMe(): Promise<MeResponse | null> {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((item) => `${item.name}=${item.value}`)
-    .join('; ');
-
-  const apiUrl = process.env.API_URL ?? 'http://localhost:3001';
-  const response = await fetch(`${apiUrl}/api/v1/auth/me`, {
-    headers: cookieHeader ? { cookie: cookieHeader } : {},
-    cache: 'no-store',
-  });
-
-  if (response.status === 401) {
-    return null;
-  }
-
-  if (!response.ok) {
-    return null;
-  }
-
-  return (await response.json()) as MeResponse;
-}
+type CardsResponse = {
+  items: Array<{
+    id: string;
+    displayName: string;
+    slug: string;
+    status: string;
+    jobTitle: string | null;
+    companyName: string | null;
+  }>;
+  total: number;
+};
 
 export default async function DashboardPage() {
-  const me = await loadMe();
+  const me = await serverApiFetch<MeResponse>('/api/v1/auth/me');
   if (!me) {
     redirect('/login');
   }
 
+  const cards = await serverApiFetch<CardsResponse>('/api/v1/cards?page=1&limit=50');
+
   return (
     <main className="auth-shell">
-      <section className="panel">
+      <section className="panel" style={{ width: 'min(640px, 100%)' }}>
         <p className="brand">MyQRCards</p>
         <p className="lede">Личный кабинет</p>
         <p>
@@ -51,9 +42,48 @@ export default async function DashboardPage() {
             : 'Вы вошли в аккаунт'}
         </p>
         {me.user.email ? <p className="muted">{me.user.email}</p> : null}
-        <div style={{ marginTop: '1.25rem' }}>
+
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.75rem',
+            marginTop: '1.25rem',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Link className="button" href="/cards/new">
+            Создать визитку
+          </Link>
           <LogoutButton />
         </div>
+
+        <h2 style={{ marginTop: '1.75rem', fontFamily: 'var(--font)' }}>
+          Мои визитки
+        </h2>
+        {!cards || cards.items.length === 0 ? (
+          <p className="muted">Пока нет визиток. Создайте первую.</p>
+        ) : (
+          <ul className="stack" style={{ listStyle: 'none', padding: 0 }}>
+            {cards.items.map((card) => (
+              <li
+                key={card.id}
+                style={{
+                  border: '1px solid var(--line)',
+                  borderRadius: 12,
+                  padding: '0.9rem 1rem',
+                  background: '#fff',
+                }}
+              >
+                <strong>{card.displayName}</strong>
+                <div className="muted">
+                  /{card.slug} · {card.status}
+                  {card.jobTitle ? ` · ${card.jobTitle}` : ''}
+                </div>
+                <Link href={`/cards/${card.id}/edit`}>Редактировать</Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );
