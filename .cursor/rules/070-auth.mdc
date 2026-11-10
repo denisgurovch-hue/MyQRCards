@@ -1,0 +1,42 @@
+---
+description: Правила авторизации MyQRCards
+globs: apps/api/src/auth/**/*, apps/web/app/**/*, apps/api/prisma/**/*
+alwaysApply: false
+---
+
+# Auth rules
+
+## Разрешённые провайдеры
+- E-mail и пароль.
+- VK ID.
+- Яндекс ID разрешён только как отдельная будущая задача.
+
+## Запрещено
+- Google, Apple, Facebook и любые другие зарубежные OAuth-провайдеры.
+- Хранение пароля в открытом виде.
+- Хранение access или refresh token в localStorage.
+- Возврат refresh token в JSON response.
+- Логирование паролей, токенов, authorization codes и персональных данных.
+
+## OAuth VK ID
+- Использовать Authorization Code flow с PKCE.
+- Генерировать code_verifier на сервере или в защищённом httpOnly cookie.
+- Передавать code_challenge в authorization request.
+- Проверять state на CSRF.
+- Обменивать authorization code на токены только на backend.
+- Не доверять данным пользователя из frontend без валидации токена.
+- Создавать user и identity в одной транзакции.
+- При повторном входе связывать identity с существующим user по provider + provider_user_id.
+
+## Сессии
+- Access token: JWT, 15 минут.
+- Refresh token: httpOnly cookie, 30 дней.
+- Cookie flags: Secure, HttpOnly, SameSite=Lax.
+- При logout отзывывать refresh token.
+- При смене пароля отзывывать все refresh tokens пользователя.
+
+## Безопасность
+- Применять rate limit к register, login и OAuth callback.
+- Не раскрывать, существует ли e-mail, в сообщениях об ошибках входа.
+- Использовать параметризованные запросы через Prisma.
+- Все защищённые endpoints требуют валидной сессии.
