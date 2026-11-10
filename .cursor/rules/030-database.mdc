@@ -1,0 +1,19 @@
+---
+description: Правила работы с PostgreSQL и Prisma
+globs: apps/api/prisma/**/*, apps/api/src/**/*.ts
+alwaysApply: false
+---
+
+# Database rules
+
+## Миграции
+- Каждое изменение схемы — отдельная миграция.
+- Не редактируй уже применённые миграции.
+- Миграции должны быть воспроизводимыми на чистой БД.
+- Добавляй индексы для внешних ключей и частых фильтров.
+
+## Данные
+- Персональные данные не храни в логах.
+- `cards.deleted_at` используется для soft delete.
+- `card_events.expires_at = occurred_at + 12 months`.
+- Не храни IP, точную геолокацию, User-Agent и device fingerprint.
