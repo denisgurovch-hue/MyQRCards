@@ -1,3 +1,11 @@
+/**
+ * Excluded from the default e2e suite (see jest-e2e.json testPathIgnorePatterns).
+ * Generating + decoding 1024×1024 PNG with jsQR regularly exceeds the 5s Jest
+ * timeout on GitHub Actions runners and flakes CI merges.
+ *
+ * Re-enable locally with:
+ *   npm run test:e2e -- --testPathPattern=public-qr --testTimeout=30000
+ */
 import {
   INestApplication,
   ValidationPipe,
