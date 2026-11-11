@@ -67,7 +67,11 @@ ufw --force enable
 
 # Nginx site placeholder
 SITE_SRC_DIR="$(cd "$(dirname "$0")/.." && pwd)/nginx"
-if [[ -f "$SITE_SRC_DIR/myqrcards.conf" ]]; then
+# Prefer HTTP bootstrap until Certbot issues certificates.
+if [[ -f "$SITE_SRC_DIR/myqrcards.http-bootstrap.conf" ]]; then
+  cp "$SITE_SRC_DIR/myqrcards.http-bootstrap.conf" /etc/nginx/sites-available/myqrcards
+  echo "Installed HTTP bootstrap nginx site (run certbot after DNS)."
+elif [[ -f "$SITE_SRC_DIR/myqrcards.conf" ]]; then
   if [[ -n "$DOMAIN" ]]; then
     sed "s/DOMAIN/${DOMAIN}/g" "$SITE_SRC_DIR/myqrcards.conf" \
       > /etc/nginx/sites-available/myqrcards
