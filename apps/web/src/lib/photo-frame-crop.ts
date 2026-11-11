@@ -102,16 +102,52 @@ export function sourceRect(state: FrameCropState): {
   return { sx, sy, sSize };
 }
 
+function isRemoteHttpUrl(src: string): boolean {
+  return /^https?:\/\//i.test(src);
+}
+
+/**
+ * Load pixels for canvas crop/export.
+ * Avoid `crossOrigin=anonymous` on blob:/data: URLs — it fails in several
+ * browsers (notably Safari) and surfaces as "Не удалось прочитать изображение".
+ * For http(s) media, fetch→blob first so canvas export stays untainted
+ * without depending on CORS headers.
+ */
 export async function loadHtmlImage(src: string): Promise<HTMLImageElement> {
-  const image = new Image();
-  image.decoding = 'async';
-  image.crossOrigin = 'anonymous';
-  await new Promise<void>((resolve, reject) => {
-    image.onload = () => resolve();
-    image.onerror = () => reject(new Error('Не удалось прочитать изображение'));
-    image.src = src;
-  });
-  return image;
+  let objectUrl: string | null = null;
+  let loadSrc = src;
+
+  try {
+    if (isRemoteHttpUrl(src)) {
+      const response = await fetch(src, {
+        credentials: 'same-origin',
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        throw new Error('Не удалось прочитать изображение');
+      }
+      const blob = await response.blob();
+      if (!blob.type.startsWith('image/') && blob.type !== '') {
+        throw new Error('Не удалось прочитать изображение');
+      }
+      objectUrl = URL.createObjectURL(blob);
+      loadSrc = objectUrl;
+    }
+
+    const image = new Image();
+    image.decoding = 'async';
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () =>
+        reject(new Error('Не удалось прочитать изображение'));
+      image.src = loadSrc;
+    });
+    return image;
+  } finally {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
 }
 
 /**
