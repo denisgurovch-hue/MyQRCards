@@ -543,13 +543,27 @@ button.accent:hover,
 .card-row-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 0.55rem;
   margin-top: 0.75rem;
 }
 
-.card-row-actions a,
-.card-row-actions button {
+.card-row-actions > .button,
+.card-row-actions > a.button,
+.card-row-actions > button {
   font-size: 0.9rem;
+  min-height: 2.6rem;
+  padding: 0.55rem 0.95rem;
+}
+
+.card-action-note {
+  width: 100%;
+  margin: 0;
+}
+
+.card-action-url {
+  width: 100%;
+  margin: 0;
 }
 
 button.linkish {
@@ -766,24 +780,47 @@ button.linkish:hover {
 
 .card-analytics {
   margin-top: 1rem;
-  padding-top: 0.95rem;
+  padding-top: 0.85rem;
   border-top: 1px solid var(--line);
+}
+
+.card-analytics-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-family: var(--font);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  padding: 0.15rem 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.card-analytics-toggle:hover {
+  background: transparent;
+  transform: none;
+  color: var(--ink-soft);
+}
+
+.card-analytics-panel {
+  margin-top: 0.75rem;
 }
 
 .card-analytics-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.6rem;
   margin-bottom: 0.65rem;
-}
-
-.card-analytics-title {
-  margin: 0;
-  font-family: var(--font);
-  font-size: 1.1rem;
-  letter-spacing: -0.02em;
 }
 
 .card-analytics-subtitle {

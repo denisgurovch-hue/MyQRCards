@@ -14,8 +14,8 @@ export function PublicLinkActions({ slug, status }: Props) {
 
   if (status !== 'published') {
     return (
-      <p className="muted" style={{ margin: '0.4rem 0 0' }}>
-        Опубликуйте визитку, чтобы получить публичную ссылку.
+      <p className="muted card-action-note">
+        Опубликуйте визитку, чтобы получить публичную ссылку и QR-код.
       </p>
     );
   }
@@ -35,23 +35,23 @@ export function PublicLinkActions({ slug, status }: Props) {
   }
 
   return (
-    <div className="card-row-actions">
+    <>
       <a className="button secondary" href={path} target="_blank" rel="noreferrer">
         Открыть визитку
       </a>
-      <button type="button" className="secondary" onClick={onCopy}>
+      <button type="button" className="button secondary" onClick={onCopy}>
         Копировать ссылку
       </button>
-      {copied ? <span className="muted">Ссылка скопирована</span> : null}
+      {copied ? <span className="muted card-action-note">Ссылка скопирована</span> : null}
       {manualUrl ? (
         <input
           readOnly
           value={manualUrl}
           aria-label="Публичная ссылка"
           onFocus={(event) => event.currentTarget.select()}
-          style={{ width: '100%' }}
+          className="card-action-url"
         />
       ) : null}
-    </div>
+    </>
   );
 }

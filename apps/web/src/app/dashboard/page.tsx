@@ -79,19 +79,24 @@ export default async function DashboardPage() {
                   </span>
                 </div>
                 <div className="muted">
-                  /{card.slug}
+                  {card.slug}
                   {card.jobTitle ? ` · ${card.jobTitle}` : ''}
                   {card.companyName ? ` · ${card.companyName}` : ''}
                 </div>
                 <div className="card-row-actions">
-                  <Link href={`/cards/${card.id}/edit`}>Редактировать</Link>
+                  <Link
+                    className="button secondary"
+                    href={`/cards/${card.id}/edit`}
+                  >
+                    Редактировать
+                  </Link>
                   <QrActions
                     slug={card.slug}
                     status={card.status}
                     displayName={card.displayName}
                   />
+                  <PublicLinkActions slug={card.slug} status={card.status} />
                 </div>
-                <PublicLinkActions slug={card.slug} status={card.status} />
                 <CardAnalytics cardId={card.id} />
               </li>
             ))}
