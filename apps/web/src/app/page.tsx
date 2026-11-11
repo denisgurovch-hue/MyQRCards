@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function HomePage() {
@@ -24,7 +25,14 @@ export default function HomePage() {
       <aside className="landing-visual" aria-hidden="true">
         <div className="phone-stage">
           <div className="phone-screen">
-            <div className="phone-avatar">М</div>
+            <Image
+              className="phone-avatar phone-avatar-photo"
+              src="/images/mock-card-portrait.jpg"
+              alt=""
+              width={88}
+              height={88}
+              priority
+            />
             <div>
               <p className="phone-name">Мария Орлова</p>
               <p className="phone-meta">Product · SmartVizitka</p>
@@ -36,7 +44,6 @@ export default function HomePage() {
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <rect width="29" height="29" fill="#f5f8fb" />
-                {/* finder patterns */}
                 <path
                   fill="#0b1520"
                   d="M1 1h7v7H1zm2 2h3v3H3zM21 1h7v7h-7zm2 2h3v3h-3zM1 21h7v7H1zm2 2h3v3H3z"
