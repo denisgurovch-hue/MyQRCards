@@ -18,6 +18,7 @@ describe('Auth API (e2e)', () => {
   let redis: RedisService;
 
   const vkid = {
+    isConfigured: jest.fn(() => true),
     authorizeUrl: jest.fn(),
     exchangeCode: jest.fn(),
     fetchUserInfo: jest.fn(),
@@ -228,9 +229,12 @@ describe('Auth API (e2e)', () => {
     const first = await request(app.getHttpServer())
       .get('/api/v1/auth/vkid/callback')
       .query({
-        code: 'auth-code',
-        state,
-        device_id: 'device-1',
+        payload: JSON.stringify({
+          code: 'auth-code',
+          state,
+          type: 'code_v2',
+          device_id: 'device-1',
+        }),
       })
       .expect(302);
 

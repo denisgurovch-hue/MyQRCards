@@ -24,3 +24,4 @@
 - `NEXT_PUBLIC_APP_URL` === `WEB_ORIGIN` === `https://smartvizitka.ru`
 - `COOKIE_SECURE=true`
 - `VK_ID_REDIRECT_URI=https://smartvizitka.ru/api/v1/auth/vkid/callback`
+- VK ID keys: see `deploy/vkid-setup.md` (`VK_ID_CLIENT_ID` / `VK_ID_CLIENT_SECRET`)

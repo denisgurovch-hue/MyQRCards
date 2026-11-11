@@ -13,6 +13,7 @@ import {
 } from '../common/crypto/tokens';
 import { SessionService } from './session/session.service';
 import { VkidClient } from './vkid/vkid.client';
+import { normalizeVkidCallbackQuery } from './vkid/vkid-callback.query';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -151,11 +152,19 @@ export class AuthService {
   }
 
   async startVkidAuth(): Promise<{ url: string }> {
+    if (!this.vkid.isConfigured()) {
+      throw new AppError(
+        'OAUTH_NOT_CONFIGURED',
+        'VK ID is not configured',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
     const redirectUri = this.config.get<string>(
       'VK_ID_REDIRECT_URI',
       'http://localhost:3000/api/v1/auth/vkid/callback',
     );
-    const state = generateOpaqueToken(24);
+    // VK ID requires state length >= 32 (a-zA-Z0-9_-).
+    const state = generateOpaqueToken(32);
     const codeVerifier = generatePkceVerifier();
     const codeChallenge = pkceChallengeS256(codeVerifier);
 
@@ -180,6 +189,7 @@ export class AuthService {
       state?: string;
       device_id?: string;
       error?: string;
+      payload?: string;
     },
     res: Response,
   ): Promise<string> {
@@ -188,7 +198,14 @@ export class AuthService {
       'http://localhost:3000',
     );
 
-    if (query.error || !query.code || !query.state || !query.device_id) {
+    const normalized = normalizeVkidCallbackQuery(query);
+
+    if (
+      normalized.error ||
+      !normalized.code ||
+      !normalized.state ||
+      !normalized.device_id
+    ) {
       throw new AppError(
         'OAUTH_INVALID_CODE',
         'OAuth callback is missing required parameters',
@@ -197,7 +214,7 @@ export class AuthService {
     }
 
     const record = await this.redis.getJson<OAuthStateRecord>(
-      `${OAUTH_STATE_PREFIX}${query.state}`,
+      `${OAUTH_STATE_PREFIX}${normalized.state}`,
     );
     if (!record) {
       throw new AppError(
@@ -207,14 +224,14 @@ export class AuthService {
       );
     }
 
-    await this.redis.del(`${OAUTH_STATE_PREFIX}${query.state}`);
+    await this.redis.del(`${OAUTH_STATE_PREFIX}${normalized.state}`);
 
     const tokens = await this.vkid.exchangeCode({
-      code: query.code,
+      code: normalized.code,
       codeVerifier: record.codeVerifier,
       redirectUri: record.redirectUri,
-      deviceId: query.device_id,
-      state: query.state,
+      deviceId: normalized.device_id,
+      state: normalized.state,
     });
 
     if (!tokens.access_token) {

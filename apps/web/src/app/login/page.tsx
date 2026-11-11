@@ -1,12 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { FormEvent, Suspense, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch } from '../../lib/api';
 
-export default function LoginPage() {
+function oauthErrorMessage(code: string | null): string | null {
+  if (!code) return null;
+  if (code === 'OAUTH_NOT_CONFIGURED') {
+    return 'Вход через VK ID пока не настроен. Используйте e-mail и пароль.';
+  }
+  return 'Не удалось войти через VK ID. Попробуйте ещё раз или войдите по e-mail.';
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const oauthError = useMemo(
+    () => oauthErrorMessage(searchParams.get('error')),
+    [searchParams],
+  );
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -33,6 +46,47 @@ export default function LoginPage() {
   }
 
   return (
+    <>
+      <div className="panel-head">
+        <p className="eyebrow">Кабинет</p>
+        <h1 className="section-title">Вход</h1>
+        <p className="muted">E-mail и пароль или VK ID</p>
+      </div>
+      {oauthError ? <p className="error">{oauthError}</p> : null}
+      {error ? <p className="error">{error}</p> : null}
+      <form onSubmit={onSubmit} className="stack">
+        <label>
+          E-mail
+          <input name="email" type="email" autoComplete="email" required />
+        </label>
+        <label>
+          Пароль
+          <input
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            minLength={8}
+          />
+        </label>
+        <button className="accent" type="submit" disabled={pending}>
+          {pending ? 'Входим…' : 'Войти'}
+        </button>
+      </form>
+      <div className="stack" style={{ marginTop: '1rem' }}>
+        <a className="button secondary" href="/api/v1/auth/vkid/authorize">
+          Войти через VK ID
+        </a>
+        <p className="muted">
+          Нет аккаунта? <Link href="/register">Зарегистрироваться</Link>
+        </p>
+      </div>
+    </>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <main className="auth-shell">
       <div className="auth-layout">
         <aside className="auth-aside">
@@ -42,39 +96,9 @@ export default function LoginPage() {
           <p>Войдите, чтобы управлять визитками, QR и аналитикой просмотров.</p>
         </aside>
         <section className="panel">
-          <div className="panel-head">
-            <p className="eyebrow">Кабинет</p>
-            <h1 className="section-title">Вход</h1>
-            <p className="muted">E-mail и пароль или VK ID</p>
-          </div>
-          {error ? <p className="error">{error}</p> : null}
-          <form onSubmit={onSubmit} className="stack">
-            <label>
-              E-mail
-              <input name="email" type="email" autoComplete="email" required />
-            </label>
-            <label>
-              Пароль
-              <input
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                minLength={8}
-              />
-            </label>
-            <button className="accent" type="submit" disabled={pending}>
-              {pending ? 'Входим…' : 'Войти'}
-            </button>
-          </form>
-          <div className="stack" style={{ marginTop: '1rem' }}>
-            <a className="button secondary" href="/api/v1/auth/vkid/authorize">
-              Войти через VK ID
-            </a>
-            <p className="muted">
-              Нет аккаунта? <Link href="/register">Зарегистрироваться</Link>
-            </p>
-          </div>
+          <Suspense fallback={<p className="muted">Загрузка…</p>}>
+            <LoginForm />
+          </Suspense>
         </section>
       </div>
     </main>
