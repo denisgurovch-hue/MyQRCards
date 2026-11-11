@@ -143,11 +143,7 @@ export function QrActions({ slug, status, displayName }: Props) {
   }
 
   if (status !== 'published') {
-    return (
-      <p className="muted" style={{ margin: '0.35rem 0 0' }}>
-        Опубликуйте визитку, чтобы открыть QR-код.
-      </p>
-    );
+    return null;
   }
 
   const absolute = publicCardAbsoluteUrl(slug);
@@ -157,7 +153,7 @@ export function QrActions({ slug, status, displayName }: Props) {
       <button
         ref={triggerRef}
         type="button"
-        className="secondary"
+        className="button secondary"
         onClick={() => setOpen(true)}
       >
         QR-код

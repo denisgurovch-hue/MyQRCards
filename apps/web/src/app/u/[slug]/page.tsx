@@ -20,7 +20,7 @@ export async function generateMetadata({
 
   if (!result.ok) {
     return {
-      title: 'Визитка не найдена — MyQRCards',
+      title: 'Визитка не найдена — Signet',
       robots: { index: false, follow: false },
     };
   }
@@ -29,10 +29,10 @@ export async function generateMetadata({
   const description =
     card.summary?.trim() ||
     [card.jobTitle, card.companyName].filter(Boolean).join(' · ') ||
-    'Цифровая визитка MyQRCards';
+    'Цифровая визитка Signet';
 
   return {
-    title: `${card.displayName} — MyQRCards`,
+    title: `${card.displayName} — Signet`,
     description,
     alternates: {
       canonical: publicCardAbsoluteUrl(card.slug),
@@ -56,12 +56,22 @@ export default async function PublicCardPage({ params }: PageProps) {
     return (
       <main className="public-shell">
         <section className="public-card">
-          <h1>Временная ошибка</h1>
-          <p className="muted">
+          <div className="public-photo-wrap" aria-hidden="true">
+            <div className="public-photo-fallback">!</div>
+          </div>
+          <h1 className="public-name">Временная ошибка</h1>
+          <p className="public-summary muted">
             Не удалось загрузить визитку. Попробуйте обновить страницу чуть
             позже.
           </p>
-          <Link href={`/u/${encodeURIComponent(slug)}`}>Обновить</Link>
+          <div className="public-actions">
+            <Link
+              className="public-action"
+              href={`/u/${encodeURIComponent(slug)}`}
+            >
+              Обновить
+            </Link>
+          </div>
         </section>
       </main>
     );

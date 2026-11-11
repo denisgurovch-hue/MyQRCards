@@ -20,7 +20,12 @@ export function LogoutButton() {
   }
 
   return (
-    <button type="button" onClick={onLogout} disabled={pending}>
+    <button
+      type="button"
+      className="secondary"
+      onClick={onLogout}
+      disabled={pending}
+    >
       {pending ? 'Выходим…' : 'Выйти'}
     </button>
   );

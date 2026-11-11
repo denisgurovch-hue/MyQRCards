@@ -97,3 +97,29 @@ NestJS API
 | Кэш / хранение | `Cache-Control: no-store`; файлы не сохраняются |
 | Аналитика | Событие `contact_save` **не** входит в T-006 |
 | UI | Кнопка «Сохранить контакт»; без сообщения «Контакт сохранён» |
+
+### 3.5 Базовая аналитика (T-007)
+
+| Решение | Значение |
+|---|---|
+| Хранение | Таблица `card_events` (UUID): `card_id`, `event_type`, `channel`, `occurred_at`, `day`, `visitor_hash` (nullable, не используется для дедупа в MVP) |
+| События | `card_view` (GET public card 200), `contact_click` (POST public clicks), `vcard_download` (успешный `.vcf`) |
+| Каналы клика | `phone`, `email`, `whatsapp`, `telegram`, `link`; для vCard — `vcard`; для view — `null` |
+| Privacy | Не хранить IP, User-Agent, query URL, PII; ошибка записи не ломает public/QR/vCard |
+| Owner API | `GET /api/v1/cards/{card_id}/analytics?period=7d\|30d` → `totals`, `by_channel`, `daily` |
+| Доступ | Только владелец; чужая карточка `404`; без auth `401` |
+| Public click | `POST /api/v1/public/cards/{slug}/clicks` body `{ "channel": "..." }` → `204` |
+| UI | Блок «Аналитика» в кабинете: метрики, период 7/30, каналы, таблица по дням, empty/loading/error |
+
+### 3.6 Загрузка фото (T-012)
+
+| Решение | Значение |
+|---|---|
+| Хранение | Локальный диск (`CARD_PHOTO_STORAGE_DIR` / `storage/card-photos`), вне webroot |
+| Таблица | `card_photos` + `cards.photo_id`; публичный `photoUrl` = `{WEB_ORIGIN}/api/v1/media/cards/{uuid}.webp` |
+| Вход | JPEG/PNG/WebP ≤ 5 MB; ≤ 4000×4000; magic-bytes + sharp decode; иначе 400 |
+| Выход | Одна WebP без EXIF/GPS; оригинал не сохраняется; имя файла только UUID |
+| API | `POST/DELETE /api/v1/cards/{id}/photo` (владелец); `GET /api/v1/media/cards/{key}` sessionless |
+| Доступ | Чужая карточка `404`; без auth `401`; ошибка загрузки не меняет карточку |
+| UI | Блок «Фото» в редакторе: preview, pan/zoom в рамке, upload/replace/adjust/delete; публичный placeholder с инициалами |
+| Кроп | Только клиентский квадратный crop перед upload; сервер по-прежнему принимает JPEG/PNG/WebP и сохраняет WebP |

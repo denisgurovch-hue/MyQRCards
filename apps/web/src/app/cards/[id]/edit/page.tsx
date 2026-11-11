@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '../../../../lib/api';
+import { CardPhotoEditor } from './card-photo-editor';
 
 type Card = {
   id: string;
@@ -15,6 +16,7 @@ type Card = {
   email: string | null;
   showEmail: boolean;
   websiteUrl: string | null;
+  photoUrl: string | null;
   slug: string;
   status: string;
   links: Array<{ label: string | null; url: string }>;
@@ -89,9 +91,12 @@ export default function EditCardPage() {
     setPending(true);
     setError(null);
     try {
-      const updated = await apiFetch<{ card: Card }>(`/api/v1/cards/${card.id}/${path}`, {
-        method: 'POST',
-      });
+      const updated = await apiFetch<{ card: Card }>(
+        `/api/v1/cards/${card.id}/${path}`,
+        {
+          method: 'POST',
+        },
+      );
       setCard(updated.card);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка статуса');
@@ -138,13 +143,37 @@ export default function EditCardPage() {
 
   return (
     <main className="auth-shell">
-      <section className="panel" style={{ width: 'min(560px, 100%)' }}>
-        <p className="brand">MyQRCards</p>
-        <p className="lede">
-          Редактирование · статус <strong>{card.status}</strong>
-        </p>
+      <section className="panel panel-wide">
+        <div className="panel-head">
+          <p className="brand brand-mark">
+            Sign<span>et</span>
+          </p>
+          <h1 className="section-title">Редактирование</h1>
+          <p className="muted">
+            Статус:{' '}
+            <span
+              className={
+                card.status === 'published'
+                  ? 'status-pill is-published'
+                  : 'status-pill'
+              }
+            >
+              {card.status}
+            </span>
+          </p>
+        </div>
         {error ? <p className="error">{error}</p> : null}
-        <form onSubmit={onSubmit} className="stack">
+        <CardPhotoEditor
+          cardId={card.id}
+          photoUrl={card.photoUrl}
+          displayName={card.displayName}
+          onPhotoChange={(next) =>
+            setCard((current) =>
+              current ? { ...current, photoUrl: next } : current,
+            )
+          }
+        />
+        <form onSubmit={onSubmit} className="stack" style={{ marginTop: '1.25rem' }}>
           <label>
             Имя *
             <input
@@ -174,7 +203,7 @@ export default function EditCardPage() {
             E-mail
             <input name="email" type="email" defaultValue={card.email ?? ''} />
           </label>
-          <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <label className="check-row">
             <input
               name="showEmail"
               type="checkbox"
@@ -184,7 +213,11 @@ export default function EditCardPage() {
           </label>
           <label>
             Сайт
-            <input name="websiteUrl" type="url" defaultValue={card.websiteUrl ?? ''} />
+            <input
+              name="websiteUrl"
+              type="url"
+              defaultValue={card.websiteUrl ?? ''}
+            />
           </label>
           <label>
             Slug
@@ -203,21 +236,40 @@ export default function EditCardPage() {
           </label>
           <label>
             Ссылка (URL)
-            <input name="linkUrl" type="url" defaultValue={firstLink?.url ?? ''} />
+            <input
+              name="linkUrl"
+              type="url"
+              defaultValue={firstLink?.url ?? ''}
+            />
           </label>
-          <button type="submit" disabled={pending}>
+          <button className="accent" type="submit" disabled={pending}>
             {pending ? 'Сохраняем…' : 'Сохранить'}
           </button>
         </form>
 
         <div className="stack" style={{ marginTop: '1rem' }}>
-          <button type="button" className="secondary" disabled={pending} onClick={() => runStatus('publish')}>
+          <button
+            type="button"
+            className="secondary"
+            disabled={pending}
+            onClick={() => runStatus('publish')}
+          >
             Опубликовать
           </button>
-          <button type="button" className="secondary" disabled={pending} onClick={() => runStatus('unpublish')}>
+          <button
+            type="button"
+            className="secondary"
+            disabled={pending}
+            onClick={() => runStatus('unpublish')}
+          >
             Снять с публикации
           </button>
-          <button type="button" className="secondary" disabled={pending} onClick={() => runStatus('archive')}>
+          <button
+            type="button"
+            className="secondary"
+            disabled={pending}
+            onClick={() => runStatus('archive')}
+          >
             В архив
           </button>
           <button type="button" disabled={pending} onClick={onDelete}>

@@ -29,7 +29,8 @@ COPY --from=build /app/apps/api/prisma ./prisma
 COPY apps/api/docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chmod +x ./docker-entrypoint.sh \
-  && chown -R nestjs:nodejs /app
+  && mkdir -p /var/lib/myqrcards/card-photos \
+  && chown -R nestjs:nodejs /app /var/lib/myqrcards
 
 USER nestjs
 EXPOSE 3001

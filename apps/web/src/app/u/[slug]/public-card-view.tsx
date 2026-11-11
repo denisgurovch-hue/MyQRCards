@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import type { PublicCard } from '../../../lib/public-card.types';
 import {
@@ -7,10 +8,22 @@ import {
   safeMailtoHref,
   safeTelHref,
 } from '../../../lib/safe-url';
+import {
+  resolveContactChannel,
+  trackContactClick,
+  type ContactClickChannel,
+} from '../../../lib/track-contact-click';
 import { SaveContactButton } from './save-contact-button';
 
 type Props = {
   card: PublicCard;
+};
+
+type Action = {
+  href: string;
+  label: string;
+  external?: boolean;
+  channel: ContactClickChannel;
 };
 
 export function PublicCardView({ card }: Props) {
@@ -26,22 +39,42 @@ export function PublicCardView({ card }: Props) {
     }))
     .filter((link) => link.href);
 
-  const actions: Array<{ href: string; label: string; external?: boolean }> =
-    [];
+  const actions: Action[] = [];
   if (phoneHref && card.phone) {
-    actions.push({ href: phoneHref, label: `Позвонить · ${card.phone}` });
+    actions.push({
+      href: phoneHref,
+      label: `Позвонить · ${card.phone}`,
+      channel: 'phone',
+    });
   }
   if (emailHref && card.email) {
-    actions.push({ href: emailHref, label: `Написать · ${card.email}` });
+    actions.push({
+      href: emailHref,
+      label: `Написать · ${card.email}`,
+      channel: 'email',
+    });
   }
   if (websiteHref) {
-    actions.push({ href: websiteHref, label: 'Сайт', external: true });
+    actions.push({
+      href: websiteHref,
+      label: 'Сайт',
+      external: true,
+      channel: resolveContactChannel({
+        kind: 'website',
+        url: websiteHref,
+      }),
+    });
   }
   for (const link of links) {
     actions.push({
       href: link.href!,
       label: link.label?.trim() || link.type || link.href!,
       external: true,
+      channel: resolveContactChannel({
+        kind: 'link',
+        type: link.type,
+        url: link.url,
+      }),
     });
   }
 
@@ -78,6 +111,7 @@ export function PublicCardView({ card }: Props) {
               key={`${action.href}-${action.label}`}
               className="public-action"
               href={action.href}
+              onClick={() => trackContactClick(card.slug, action.channel)}
               {...(action.external
                 ? { target: '_blank', rel: 'noopener noreferrer' }
                 : {})}
@@ -89,6 +123,9 @@ export function PublicCardView({ card }: Props) {
       ) : null}
 
       <SaveContactButton slug={card.slug} />
+      <p className="public-foot">
+        <Link href="/">Signet</Link>
+      </p>
     </section>
   );
 }

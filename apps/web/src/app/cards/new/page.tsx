@@ -50,9 +50,14 @@ export default function NewCardPage() {
 
   return (
     <main className="auth-shell">
-      <section className="panel" style={{ width: 'min(560px, 100%)' }}>
-        <p className="brand">MyQRCards</p>
-        <p className="lede">Новая визитка</p>
+      <section className="panel panel-wide">
+        <div className="panel-head">
+          <p className="brand brand-mark">
+            Sign<span>et</span>
+          </p>
+          <h1 className="section-title">Новая визитка</h1>
+          <p className="muted">Заполните контакты — опубликовать можно на следующем шаге</p>
+        </div>
         {error ? <p className="error">{error}</p> : null}
         <form onSubmit={onSubmit} className="stack">
           <label>
@@ -79,7 +84,7 @@ export default function NewCardPage() {
             E-mail на карточке
             <input name="email" type="email" />
           </label>
-          <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <label className="check-row">
             <input name="showEmail" type="checkbox" />
             Показывать e-mail публично
           </label>
@@ -89,7 +94,12 @@ export default function NewCardPage() {
           </label>
           <label>
             Slug (необязательно)
-            <input name="slug" pattern="[a-z0-9]+(-[a-z0-9]+)*" minLength={6} maxLength={32} />
+            <input
+              name="slug"
+              pattern="[a-z0-9]+(-[a-z0-9]+)*"
+              minLength={6}
+              maxLength={32}
+            />
           </label>
           <label>
             Ссылка (label)
@@ -99,7 +109,7 @@ export default function NewCardPage() {
             Ссылка (URL)
             <input name="linkUrl" type="url" placeholder="https://" />
           </label>
-          <button type="submit" disabled={pending}>
+          <button className="accent" type="submit" disabled={pending}>
             {pending ? 'Сохраняем…' : 'Создать'}
           </button>
         </form>

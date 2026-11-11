@@ -55,29 +55,72 @@ enum CardStatus {
   archived
 }
 
+enum CardEventType {
+  card_view
+  contact_click
+  vcard_download
+}
+
 model Card {
-  id          String     @id @default(uuid()) @db.Uuid
-  userId      String     @map("user_id") @db.Uuid
-  displayName String     @map("display_name")
-  jobTitle    String?    @map("job_title")
-  companyName String?    @map("company_name")
+  id          String      @id @default(uuid()) @db.Uuid
+  userId      String      @map("user_id") @db.Uuid
+  displayName String      @map("display_name")
+  jobTitle    String?     @map("job_title")
+  companyName String?     @map("company_name")
   summary     String?
   phone       String?
   email       String?
-  showEmail   Boolean    @default(false) @map("show_email")
-  websiteUrl  String?    @map("website_url")
-  photoUrl    String?    @map("photo_url")
-  slug        String     @unique
-  status      CardStatus @default(draft)
-  deletedAt   DateTime?  @map("deleted_at")
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  showEmail   Boolean     @default(false) @map("show_email")
+  websiteUrl  String?     @map("website_url")
+  photoUrl    String?     @map("photo_url")
+  photoId     String?     @unique @map("photo_id") @db.Uuid
+  slug        String      @unique
+  status      CardStatus  @default(draft)
+  deletedAt   DateTime?   @map("deleted_at")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   links       CardLink[]
+  events      CardEvent[]
+  photo       CardPhoto?  @relation("CardCurrentPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  photos      CardPhoto[] @relation("CardPhotoOwner")
 
   @@index([userId])
   @@index([userId, deletedAt])
   @@map("cards")
+}
+
+model CardPhoto {
+  id         String   @id @default(uuid()) @db.Uuid
+  cardId     String   @map("card_id") @db.Uuid
+  storageKey String   @unique @map("storage_key")
+  mimeType   String   @map("mime_type")
+  width      Int
+  height     Int
+  sizeBytes  Int      @map("size_bytes")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  card       Card     @relation("CardPhotoOwner", fields: [cardId], references: [id], onDelete: Cascade)
+  currentFor Card?    @relation("CardCurrentPhoto")
+
+  @@index([cardId])
+  @@map("card_photos")
+}
+
+model CardEvent {
+  id          String        @id @default(uuid()) @db.Uuid
+  cardId      String        @map("card_id") @db.Uuid
+  eventType   CardEventType @map("event_type")
+  channel     String?
+  occurredAt  DateTime      @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  day         DateTime      @db.Date
+  visitorHash String?       @map("visitor_hash")
+  card        Card          @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@index([cardId, occurredAt])
+  @@index([cardId, day])
+  @@index([eventType])
+  @@index([channel])
+  @@map("card_events")
 }
 
 model CardLink {

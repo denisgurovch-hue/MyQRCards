@@ -52,6 +52,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-myqrcards}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-myqrcards}?schema=public
       REDIS_URL: redis://redis:6379
       COOKIE_SECURE: "true"
+      CARD_PHOTO_STORAGE_DIR: /var/lib/myqrcards/card-photos
+    volumes:
+      - card_photos:/var/lib/myqrcards/card-photos
     depends_on:
       postgres:
         condition: service_healthy
@@ -121,3 +124,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  card_photos:

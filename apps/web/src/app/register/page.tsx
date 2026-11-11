@@ -37,37 +37,48 @@ export default function RegisterPage() {
 
   return (
     <main className="auth-shell">
-      <section className="panel">
-        <p className="brand">MyQRCards</p>
-        <p className="lede">Создание аккаунта</p>
-        {error ? <p className="error">{error}</p> : null}
-        <form onSubmit={onSubmit} className="stack">
-          <label>
-            Имя
-            <input name="displayName" type="text" autoComplete="name" />
-          </label>
-          <label>
-            E-mail
-            <input name="email" type="email" autoComplete="email" required />
-          </label>
-          <label>
-            Пароль
-            <input
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={8}
-            />
-          </label>
-          <button type="submit" disabled={pending}>
-            {pending ? 'Создаём…' : 'Зарегистрироваться'}
-          </button>
-        </form>
-        <p className="muted" style={{ marginTop: '1rem' }}>
-          Уже есть аккаунт? <Link href="/login">Войти</Link>
-        </p>
-      </section>
+      <div className="auth-layout">
+        <aside className="auth-aside">
+          <p className="brand brand-mark">
+            Sign<span>et</span>
+          </p>
+          <p>Создайте аккаунт и опубликуйте первую цифровую визитку за пару минут.</p>
+        </aside>
+        <section className="panel">
+          <div className="panel-head">
+            <p className="eyebrow">Старт</p>
+            <h1 className="section-title">Регистрация</h1>
+            <p className="muted">Имя, e-mail и пароль — этого достаточно</p>
+          </div>
+          {error ? <p className="error">{error}</p> : null}
+          <form onSubmit={onSubmit} className="stack">
+            <label>
+              Имя
+              <input name="displayName" type="text" autoComplete="name" />
+            </label>
+            <label>
+              E-mail
+              <input name="email" type="email" autoComplete="email" required />
+            </label>
+            <label>
+              Пароль
+              <input
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+              />
+            </label>
+            <button className="accent" type="submit" disabled={pending}>
+              {pending ? 'Создаём…' : 'Зарегистрироваться'}
+            </button>
+          </form>
+          <p className="muted" style={{ marginTop: '1rem' }}>
+            Уже есть аккаунт? <Link href="/login">Войти</Link>
+          </p>
+        </section>
+      </div>
     </main>
   );
 }
