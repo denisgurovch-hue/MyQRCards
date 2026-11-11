@@ -16,7 +16,7 @@ const sans = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: 'MyQRCards',
+  title: 'Signet',
   description: 'Цифровые визитки с QR-кодом и vCard',
 };
 

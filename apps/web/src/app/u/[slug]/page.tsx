@@ -20,7 +20,7 @@ export async function generateMetadata({
 
   if (!result.ok) {
     return {
-      title: 'Визитка не найдена — MyQRCards',
+      title: 'Визитка не найдена — Signet',
       robots: { index: false, follow: false },
     };
   }
@@ -29,10 +29,10 @@ export async function generateMetadata({
   const description =
     card.summary?.trim() ||
     [card.jobTitle, card.companyName].filter(Boolean).join(' · ') ||
-    'Цифровая визитка MyQRCards';
+    'Цифровая визитка Signet';
 
   return {
-    title: `${card.displayName} — MyQRCards`,
+    title: `${card.displayName} — Signet`,
     description,
     alternates: {
       canonical: publicCardAbsoluteUrl(card.slug),

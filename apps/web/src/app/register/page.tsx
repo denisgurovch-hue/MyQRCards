@@ -40,7 +40,7 @@ export default function RegisterPage() {
       <div className="auth-layout">
         <aside className="auth-aside">
           <p className="brand brand-mark">
-            MyQR<span>Cards</span>
+            Sign<span>et</span>
           </p>
           <p>Создайте аккаунт и опубликуйте первую цифровую визитку за пару минут.</p>
         </aside>

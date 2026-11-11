@@ -53,7 +53,7 @@ export default function NewCardPage() {
       <section className="panel panel-wide">
         <div className="panel-head">
           <p className="brand brand-mark">
-            MyQR<span>Cards</span>
+            Sign<span>et</span>
           </p>
           <h1 className="section-title">Новая визитка</h1>
           <p className="muted">Заполните контакты — опубликовать можно на следующем шаге</p>

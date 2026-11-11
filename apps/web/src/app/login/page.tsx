@@ -37,7 +37,7 @@ export default function LoginPage() {
       <div className="auth-layout">
         <aside className="auth-aside">
           <p className="brand brand-mark">
-            MyQR<span>Cards</span>
+            Sign<span>et</span>
           </p>
           <p>Войдите, чтобы управлять визитками, QR и аналитикой просмотров.</p>
         </aside>

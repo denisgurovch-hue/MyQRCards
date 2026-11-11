@@ -11,7 +11,7 @@ test.describe('auth pages', () => {
     const userEmail = email();
 
     await page.goto('/register');
-    await expect(page.getByText('MyQRCards').first()).toBeVisible();
+    await expect(page.getByText('Signet').first()).toBeVisible();
     await page.getByLabel('Имя').fill('E2E User');
     await page.getByLabel('E-mail').fill(userEmail);
     await page.getByLabel('Пароль').fill(password);

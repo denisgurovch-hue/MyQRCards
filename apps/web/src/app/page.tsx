@@ -6,7 +6,7 @@ export default function HomePage() {
     <main className="landing">
       <section className="landing-copy">
         <p className="brand brand-mark">
-          MyQR<span>Cards</span>
+          Sign<span>et</span>
         </p>
         <h1 className="landing-headline">Визитка, которая открывается с телефона</h1>
         <p className="landing-support">

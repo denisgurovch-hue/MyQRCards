@@ -144,7 +144,7 @@ export default function EditCardPage() {
       <section className="panel panel-wide">
         <div className="panel-head">
           <p className="brand brand-mark">
-            MyQR<span>Cards</span>
+            Sign<span>et</span>
           </p>
           <h1 className="section-title">Редактирование</h1>
           <p className="muted">

@@ -42,7 +42,7 @@ export default async function DashboardPage() {
         <header className="workspace-top">
           <div>
             <p className="brand brand-mark">
-              MyQR<span>Cards</span>
+              Sign<span>et</span>
             </p>
             <p className="lede">
               {me.user.displayName

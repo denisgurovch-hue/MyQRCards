@@ -124,7 +124,7 @@ export function PublicCardView({ card }: Props) {
 
       <SaveContactButton slug={card.slug} />
       <p className="public-foot">
-        <Link href="/">MyQRCards</Link>
+        <Link href="/">Signet</Link>
       </p>
     </section>
   );
