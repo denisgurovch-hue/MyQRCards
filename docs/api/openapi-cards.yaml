@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: MyQRCards Cards API
-  version: 0.3.0
-  description: Owner cards (T-003), public card (T-004), public QR PNG/SVG (T-005)
+  version: 0.4.0
+  description: Owner cards (T-003), public card (T-004), QR (T-005), vCard (T-006)
 servers:
   - url: http://localhost:3001/api/v1
 paths:
@@ -105,6 +105,44 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: Configuration or generation failure (JSON error, not an image)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /public/cards/{slug}/vcard:
+    get:
+      summary: Download vCard 3.0 for a published card
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 32
+      responses:
+        '200':
+          description: UTF-8 vCard 3.0 from public card projection
+          headers:
+            Cache-Control:
+              schema: { type: string, example: no-store }
+            Content-Disposition:
+              schema: { type: string, example: 'attachment; filename="contact-ivan-ivanov.vcf"' }
+            X-Content-Type-Options:
+              schema: { type: string, example: nosniff }
+          content:
+            text/vcard:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Card not found (draft/archived/deleted/unknown/invalid slug)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Configuration or generation failure (JSON error, not a .vcf body)
           content:
             application/json:
               schema:

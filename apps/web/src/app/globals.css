@@ -199,6 +199,42 @@ button.secondary,
   outline-offset: 2px;
 }
 
+.public-action-secondary {
+  width: 100%;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, white);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+}
+
+.public-action-secondary:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.public-vcard {
+  margin-top: 1.25rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.public-vcard-hint {
+  margin: 0;
+  text-align: center;
+}
+
+button.linkish {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
 .card-row-actions {
   display: flex;
   flex-wrap: wrap;

@@ -46,13 +46,25 @@ For VK ID login, set `VK_ID_CLIENT_ID`, `VK_ID_CLIENT_SECRET`, and matching `VK_
 
 | Command | Description |
 |---|---|
-| `npm run dev` | Start web + API |
+| `npm run dev` | Seed (idempotent) + start web + API |
 | `npm run lint` | Lint all workspaces |
 | `npm run test` | Run unit tests |
 | `npm run test:e2e` | API e2e + build + Playwright e2e |
 | `npm run build` | Build API and web |
 | `npm run prisma:migrate` | Apply Prisma migrations |
+| `npm run db:seed` | Idempotent local demo seed only |
+
+## VPS / production
+
+See `deploy/runbook.md`. Artifacts:
+
+- `docker-compose.prod.yml`
+- `apps/api/Dockerfile`, `apps/web/Dockerfile` (Next `standalone`)
+- `deploy/nginx/myqrcards.conf`
+- `.env.production.example`
+- `deploy/scripts/{provision-vps,deploy,backup-postgres,restore-postgres}.sh`
+- Phone checklist: `deploy/phone-acceptance.md`
 
 ## Current task
 
-See `docs/03-tasks-mvp.md` (T-002 auth).
+See `docs/03-tasks-mvp.md`.
