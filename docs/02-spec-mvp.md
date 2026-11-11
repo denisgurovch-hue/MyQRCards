@@ -121,4 +121,5 @@ NestJS API
 | Выход | Одна WebP без EXIF/GPS; оригинал не сохраняется; имя файла только UUID |
 | API | `POST/DELETE /api/v1/cards/{id}/photo` (владелец); `GET /api/v1/media/cards/{key}` sessionless |
 | Доступ | Чужая карточка `404`; без auth `401`; ошибка загрузки не меняет карточку |
-| UI | Блок «Фото» в редакторе: preview, upload/replace/delete; публичный placeholder с инициалами |
+| UI | Блок «Фото» в редакторе: preview, pan/zoom в рамке, upload/replace/adjust/delete; публичный placeholder с инициалами |
+| Кроп | Только клиентский квадратный crop перед upload; сервер по-прежнему принимает JPEG/PNG/WebP и сохраняет WebP |
