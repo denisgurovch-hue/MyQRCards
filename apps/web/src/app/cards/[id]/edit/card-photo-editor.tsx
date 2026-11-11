@@ -59,13 +59,17 @@ export function CardPhotoEditor({
   const [error, setError] = useState<string | null>(null);
   const [imgFailed, setImgFailed] = useState(false);
 
+  // Revoke only when the blob URL itself changes — not on every pan/zoom
+  // crop update (those also replace `session` and previously revoked the file).
+  const sessionObjectUrl = session?.objectUrl ?? null;
   useEffect(() => {
+    if (!sessionObjectUrl?.startsWith('blob:')) {
+      return;
+    }
     return () => {
-      if (session?.objectUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(session.objectUrl);
-      }
+      URL.revokeObjectURL(sessionObjectUrl);
     };
-  }, [session]);
+  }, [sessionObjectUrl]);
 
   useEffect(() => {
     setImgFailed(false);
@@ -80,12 +84,7 @@ export function CardPhotoEditor({
   }
 
   function clearSession() {
-    setSession((current) => {
-      if (current?.objectUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(current.objectUrl);
-      }
-      return null;
-    });
+    setSession(null);
     if (inputRef.current) {
       inputRef.current.value = '';
     }
@@ -100,12 +99,8 @@ export function CardPhotoEditor({
         image.naturalHeight,
         FRAME_SIZE,
       );
-      setSession((current) => {
-        if (current?.objectUrl.startsWith('blob:') && current.objectUrl !== src) {
-          URL.revokeObjectURL(current.objectUrl);
-        }
-        return { objectUrl: src, crop };
-      });
+      // Previous blob URL is revoked by the sessionObjectUrl effect cleanup.
+      setSession({ objectUrl: src, crop });
     } catch (err) {
       if (revokeOnFail && src.startsWith('blob:')) {
         URL.revokeObjectURL(src);
