@@ -73,6 +73,7 @@ model Card {
   showEmail   Boolean     @default(false) @map("show_email")
   websiteUrl  String?     @map("website_url")
   photoUrl    String?     @map("photo_url")
+  photoId     String?     @unique @map("photo_id") @db.Uuid
   slug        String      @unique
   status      CardStatus  @default(draft)
   deletedAt   DateTime?   @map("deleted_at")
@@ -81,10 +82,28 @@ model Card {
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   links       CardLink[]
   events      CardEvent[]
+  photo       CardPhoto?  @relation("CardCurrentPhoto", fields: [photoId], references: [id], onDelete: SetNull)
+  photos      CardPhoto[] @relation("CardPhotoOwner")
 
   @@index([userId])
   @@index([userId, deletedAt])
   @@map("cards")
+}
+
+model CardPhoto {
+  id         String   @id @default(uuid()) @db.Uuid
+  cardId     String   @map("card_id") @db.Uuid
+  storageKey String   @unique @map("storage_key")
+  mimeType   String   @map("mime_type")
+  width      Int
+  height     Int
+  sizeBytes  Int      @map("size_bytes")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  card       Card     @relation("CardPhotoOwner", fields: [cardId], references: [id], onDelete: Cascade)
+  currentFor Card?    @relation("CardCurrentPhoto")
+
+  @@index([cardId])
+  @@map("card_photos")
 }
 
 model CardEvent {

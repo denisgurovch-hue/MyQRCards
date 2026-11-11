@@ -17,6 +17,6 @@ import { RateLimitGuard } from '../common/rate-limit/rate-limit.guard';
     RateLimitService,
     RateLimitGuard,
   ],
-  exports: [AuthService, SessionService, AuthGuard],
+  exports: [AuthService, SessionService, AuthGuard, RateLimitService, RateLimitGuard],
 })
 export class AuthModule {}

@@ -110,3 +110,15 @@ NestJS API
 | Доступ | Только владелец; чужая карточка `404`; без auth `401` |
 | Public click | `POST /api/v1/public/cards/{slug}/clicks` body `{ "channel": "..." }` → `204` |
 | UI | Блок «Аналитика» в кабинете: метрики, период 7/30, каналы, таблица по дням, empty/loading/error |
+
+### 3.6 Загрузка фото (T-012)
+
+| Решение | Значение |
+|---|---|
+| Хранение | Локальный диск (`CARD_PHOTO_STORAGE_DIR` / `storage/card-photos`), вне webroot |
+| Таблица | `card_photos` + `cards.photo_id`; публичный `photoUrl` = `{WEB_ORIGIN}/api/v1/media/cards/{uuid}.webp` |
+| Вход | JPEG/PNG/WebP ≤ 5 MB; ≤ 4000×4000; magic-bytes + sharp decode; иначе 400 |
+| Выход | Одна WebP без EXIF/GPS; оригинал не сохраняется; имя файла только UUID |
+| API | `POST/DELETE /api/v1/cards/{id}/photo` (владелец); `GET /api/v1/media/cards/{key}` sessionless |
+| Доступ | Чужая карточка `404`; без auth `401`; ошибка загрузки не меняет карточку |
+| UI | Блок «Фото» в редакторе: preview, upload/replace/delete; публичный placeholder с инициалами |

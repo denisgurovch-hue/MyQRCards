@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '../../../../lib/api';
+import { CardPhotoEditor } from './card-photo-editor';
 
 type Card = {
   id: string;
@@ -15,6 +16,7 @@ type Card = {
   email: string | null;
   showEmail: boolean;
   websiteUrl: string | null;
+  photoUrl: string | null;
   slug: string;
   status: string;
   links: Array<{ label: string | null; url: string }>;
@@ -161,7 +163,17 @@ export default function EditCardPage() {
           </p>
         </div>
         {error ? <p className="error">{error}</p> : null}
-        <form onSubmit={onSubmit} className="stack">
+        <CardPhotoEditor
+          cardId={card.id}
+          photoUrl={card.photoUrl}
+          displayName={card.displayName}
+          onPhotoChange={(next) =>
+            setCard((current) =>
+              current ? { ...current, photoUrl: next } : current,
+            )
+          }
+        />
+        <form onSubmit={onSubmit} className="stack" style={{ marginTop: '1.25rem' }}>
           <label>
             Имя *
             <input
