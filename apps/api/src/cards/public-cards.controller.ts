@@ -9,13 +9,33 @@ import {
 import type { Response } from 'express';
 import { PublicCardsService } from './public-cards.service';
 import { QrCodeService } from './qr-code.service';
+import { VcardService } from './vcard.service';
 
 @Controller('public/cards')
 export class PublicCardsController {
   constructor(
     private readonly publicCards: PublicCardsService,
     private readonly qrCodes: QrCodeService,
+    private readonly vcards: VcardService,
   ) {}
+
+  @Get(':slug/vcard')
+  @Header('Cache-Control', 'no-store')
+  @Header('X-Content-Type-Options', 'nosniff')
+  async getVcard(
+    @Param('slug') slug: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const { body, filename } = await this.vcards.generate(slug);
+    res.setHeader('Content-Type', 'text/vcard; charset=utf-8');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${filename}"`,
+    );
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return new StreamableFile(Buffer.from(body, 'utf8'));
+  }
 
   @Get(':slug/qr.png')
   @Header('Cache-Control', 'no-store')
