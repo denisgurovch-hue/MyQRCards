@@ -2,12 +2,16 @@
 
 Mark items only when actually performed on a real device against the **public HTTPS** origin.
 
+**Current staging/prod URL:** `https://smartvizitka.ru`  
+**Sample published slug (smoke):** `/u/smoke-4417136`  
+**Phone scan / import status:** NOT verified in agent runs.
+
 ## Preconditions
 
-- [ ] DNS + TLS live (`https://<domain>/`)
-- [ ] `.env.production` has identical `NEXT_PUBLIC_APP_URL` and `WEB_ORIGIN`
-- [ ] Web image rebuilt after setting those URLs
-- [ ] Published card exists (not the local-only localhost QR)
+- [x] DNS + TLS live (`https://smartvizitka.ru/`)
+- [x] `.env.production` has identical `NEXT_PUBLIC_APP_URL` and `WEB_ORIGIN`
+- [x] Web image rebuilt after setting those URLs
+- [x] Published card exists (`smoke-4417136`)
 
 ## Automatable (from laptop / CI against staging URL)
 
