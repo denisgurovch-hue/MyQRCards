@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LogoutButton } from './logout-button';
 import { PublicLinkActions } from './public-link-actions';
+import { QrActions } from './qr-actions';
 import { serverApiFetch } from '../../lib/server-api';
 
 type MeResponse = {
@@ -84,6 +85,11 @@ export default async function DashboardPage() {
                 </div>
                 <div className="card-row-actions">
                   <Link href={`/cards/${card.id}/edit`}>Редактировать</Link>
+                  <QrActions
+                    slug={card.slug}
+                    status={card.status}
+                    displayName={card.displayName}
+                  />
                 </div>
                 <PublicLinkActions slug={card.slug} status={card.status} />
               </li>

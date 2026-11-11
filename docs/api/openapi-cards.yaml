@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: MyQRCards Cards API
-  version: 0.2.0
-  description: Owner card management (T-003) and public card read (T-004)
+  version: 0.3.0
+  description: Owner cards (T-003), public card (T-004), public QR PNG/SVG (T-005)
 servers:
   - url: http://localhost:3001/api/v1
 paths:
@@ -33,6 +33,82 @@ paths:
                     $ref: '#/components/schemas/PublicCard'
         '404':
           description: Card not found (draft/archived/deleted/unknown/invalid slug)
+  /public/cards/{slug}/qr.png:
+    get:
+      summary: Download QR PNG for a published card
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 32
+      responses:
+        '200':
+          description: PNG 1024x1024 encoding canonical /u/{slug}
+          headers:
+            Cache-Control:
+              schema: { type: string, example: no-store }
+            Content-Disposition:
+              schema: { type: string, example: 'attachment; filename="qrcard-ivan-ivanov.png"' }
+            X-Content-Type-Options:
+              schema: { type: string, example: nosniff }
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Card not found (draft/archived/deleted/unknown/invalid slug)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Configuration or generation failure (JSON error, not an image)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /public/cards/{slug}/qr.svg:
+    get:
+      summary: Download QR SVG for a published card
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 32
+      responses:
+        '200':
+          description: SVG QR encoding canonical /u/{slug}
+          headers:
+            Cache-Control:
+              schema: { type: string, example: no-store }
+            Content-Disposition:
+              schema: { type: string, example: 'attachment; filename="qrcard-ivan-ivanov.svg"' }
+            X-Content-Type-Options:
+              schema: { type: string, example: nosniff }
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Card not found (draft/archived/deleted/unknown/invalid slug)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Configuration or generation failure (JSON error, not an image)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /cards:
     get:
       summary: List current user cards
@@ -253,3 +329,15 @@ components:
           maxItems: 20
           items:
             $ref: '#/components/schemas/CardLink'
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: {}
+

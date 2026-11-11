@@ -70,3 +70,17 @@ NestJS API
 | Индексация | Временно `robots: noindex, nofollow` |
 | Приватность e-mail | При `showEmail=false` поле `email` в публичном ответе всегда `null` |
 | Канонический URL | `{PUBLIC_APP_URL}/u/{slug}` (`NEXT_PUBLIC_APP_URL` / `WEB_ORIGIN`) |
+
+### 3.3 QR-код визитки (T-005)
+
+| Решение | Значение |
+|---|---|
+| Содержимое QR | Только canonical URL `/u/{slug}` (без UTM, токенов, PII) |
+| Генерация | Серверная (`qrcode`), без внешних API и без хранения файлов |
+| Форматы | PNG `1024×1024`; SVG с `viewBox` |
+| Стиль | Чёрный на белом; `margin=4`; ECC `M`; без query-параметров стиля |
+| Доступ | Только `published` + `deleted_at IS NULL`; sessionless |
+| Endpoints | `GET /api/v1/public/cards/{slug}/qr.png` и `.../qr.svg` |
+| Кэш | `Cache-Control: no-store` (не `public, max-age=86400`) |
+| Базовый URL | Существующий `WEB_ORIGIN` на API (согласован с `NEXT_PUBLIC_APP_URL`); не из `Host` |
+| Старые slug | Без редиректов в T-005 |

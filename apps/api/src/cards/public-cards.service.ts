@@ -9,15 +9,39 @@ import { isValidSlug, normalizeSlug } from './slug.util';
 export class PublicCardsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getBySlug(rawSlug: string) {
+  private notFound(): never {
+    throw new AppError(
+      'CARD_NOT_FOUND',
+      'Card not found',
+      HttpStatus.NOT_FOUND,
+    );
+  }
+
+  /** Published + not soft-deleted slug, or identical 404. */
+  async requirePublishedSlug(rawSlug: string): Promise<string> {
     const slug = normalizeSlug(rawSlug ?? '');
     if (!isValidSlug(slug)) {
-      throw new AppError(
-        'CARD_NOT_FOUND',
-        'Card not found',
-        HttpStatus.NOT_FOUND,
-      );
+      this.notFound();
     }
+
+    const card = await this.prisma.card.findFirst({
+      where: {
+        slug,
+        status: CardStatus.published,
+        deletedAt: null,
+      },
+      select: { slug: true },
+    });
+
+    if (!card) {
+      this.notFound();
+    }
+
+    return card.slug;
+  }
+
+  async getBySlug(rawSlug: string) {
+    const slug = await this.requirePublishedSlug(rawSlug);
 
     const card = await this.prisma.card.findFirst({
       where: {
@@ -29,11 +53,7 @@ export class PublicCardsService {
     });
 
     if (!card) {
-      throw new AppError(
-        'CARD_NOT_FOUND',
-        'Card not found',
-        HttpStatus.NOT_FOUND,
-      );
+      this.notFound();
     }
 
     return { card: toPublicCardDto(card) };
