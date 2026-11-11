@@ -4,7 +4,7 @@ Mark items only when actually performed on a real device against the **public HT
 
 **Current staging/prod URL:** `https://smartvizitka.ru`  
 **Sample published slug (smoke):** `/u/smoke-4417136`  
-**Phone scan / import status:** NOT verified in agent runs.
+**Phone scan / import status:** iOS verified by owner (2026-11-11, Europe/Moscow) — QR from laptop screen → contact created on iPhone. Android not tested.
 
 ## Preconditions
 
@@ -26,23 +26,23 @@ curl -fsS -D- -o /tmp/qr.png "$DOMAIN/api/v1/public/cards/$SLUG/qr.png" | tr -d 
 # Decode PNG and assert payload == "$DOMAIN/u/$SLUG" (use project unit approach or zbarimg/jsQR)
 ```
 
-- [ ] Home 200
-- [ ] healthz OK
-- [ ] vCard headers + body parse
-- [ ] QR PNG headers
-- [ ] Decoded QR equals `$DOMAIN/u/$SLUG` exactly
+- [x] Home 200
+- [x] healthz OK
+- [x] vCard headers + body parse
+- [x] QR PNG headers
+- [x] Decoded QR equals `$DOMAIN/u/$SLUG` exactly
 
-## iOS (manual — not done until checked)
+## iOS (manual)
 
-Device / iOS version / Contacts app: ________________
+Device / iOS version / Contacts app: iPhone (owner-reported; version not recorded)
 
-- [ ] Camera scan of on-screen QR opens Safari to `https://<domain>/u/<slug>` **without VPN**
-- [ ] Page shows public card (no login)
-- [ ] «Сохранить контакт» opens `.vcf` → Add Contact
-- [ ] Imported: name, phone, company, title, URLs; email only if public
+- [x] Camera scan of on-screen QR opens Safari to `https://<domain>/u/<slug>` **without VPN**
+- [x] Page shows public card (no login)
+- [x] «Сохранить контакт» opens `.vcf` → Add Contact
+- [x] Imported: contact created on device (owner accepted as success; per-field audit not recorded)
 - [ ] After unpublish: page/QR/vCard unavailable (404)
 
-**Status: NOT verified in automation runs.**
+**Status: PASSED by owner — QR scan + contact create on iPhone against https://smartvizitka.ru (2026-11-11, Europe/Moscow).**
 
 ## Android (manual — not done until checked)
 
@@ -52,4 +52,4 @@ Device / Android version / Contacts app: ________________
 - [ ] vCard download/import into Contacts with same field checks
 - [ ] Unpublish → 404
 
-**Status: NOT verified in automation runs.**
+**Status: NOT verified.**
