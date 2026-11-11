@@ -84,3 +84,16 @@ NestJS API
 | Кэш | `Cache-Control: no-store` (не `public, max-age=86400`) |
 | Базовый URL | Существующий `WEB_ORIGIN` на API (согласован с `NEXT_PUBLIC_APP_URL`); не из `Host` |
 | Старые slug | Без редиректов в T-005 |
+
+### 3.4 vCard (T-006)
+
+| Решение | Значение |
+|---|---|
+| Формат | vCard 3.0, UTF-8, CRLF; `FN` + `N:{displayName};;;;` без авто-разбора ФИО |
+| Источник данных | Только `PublicCardDto` + canonical URL; не Prisma entity / не e-mail аккаунта |
+| Поля | FN, N, ORG?, TITLE?, TEL;TYPE=VOICE?, EMAIL;TYPE=INTERNET?, URL? (сайт), URL (canonical), NOTE? |
+| Не экспортировать | фото, CardLink, скрытый email, userId, сессии, Identity |
+| Доступ | Только `published` + `deleted_at IS NULL`; sessionless `GET /api/v1/public/cards/{slug}/vcard` |
+| Кэш / хранение | `Cache-Control: no-store`; файлы не сохраняются |
+| Аналитика | Событие `contact_save` **не** входит в T-006 |
+| UI | Кнопка «Сохранить контакт»; без сообщения «Контакт сохранён» |

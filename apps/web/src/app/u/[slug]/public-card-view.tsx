@@ -7,6 +7,7 @@ import {
   safeMailtoHref,
   safeTelHref,
 } from '../../../lib/safe-url';
+import { SaveContactButton } from './save-contact-button';
 
 type Props = {
   card: PublicCard;
@@ -86,6 +87,8 @@ export function PublicCardView({ card }: Props) {
           ))}
         </nav>
       ) : null}
+
+      <SaveContactButton slug={card.slug} />
     </section>
   );
 }
