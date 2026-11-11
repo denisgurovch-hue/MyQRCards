@@ -7,6 +7,7 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 60_000,
   fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   use: {
@@ -25,10 +26,11 @@ export default defineConfig({
       url: `http://127.0.0.1:${apiPort}/api/v1/healthz`,
       reuseExistingServer: !process.env.CI,
       cwd: '../..',
+      timeout: 120_000,
       env: {
         ...process.env,
         API_PORT: apiPort,
-        NODE_ENV: 'test',
+        NODE_ENV: 'production',
       },
     },
     {
@@ -36,12 +38,16 @@ export default defineConfig({
       url: `http://127.0.0.1:${webPort}`,
       reuseExistingServer: !process.env.CI,
       cwd: '../..',
+      timeout: 120_000,
       env: {
         ...process.env,
         WEB_PORT: webPort,
         API_URL: `http://127.0.0.1:${apiPort}`,
-        NODE_ENV: 'test',
+        NEXT_PUBLIC_APP_URL: `http://127.0.0.1:${webPort}`,
+        WEB_ORIGIN: `http://127.0.0.1:${webPort}`,
+        NODE_ENV: 'production',
       },
     },
   ],
 });
+

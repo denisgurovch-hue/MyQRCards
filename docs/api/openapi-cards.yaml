@@ -1,11 +1,38 @@
 openapi: 3.0.3
 info:
   title: MyQRCards Cards API
-  version: 0.1.0
-  description: Owner card management (T-003)
+  version: 0.2.0
+  description: Owner card management (T-003) and public card read (T-004)
 servers:
   - url: http://localhost:3001/api/v1
 paths:
+  /public/cards/{slug}:
+    get:
+      summary: Get published public card by slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+            minLength: 6
+            maxLength: 32
+      responses:
+        '200':
+          description: Published card (PublicCardDto)
+          headers:
+            Cache-Control:
+              schema: { type: string, example: no-store }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [card]
+                properties:
+                  card:
+                    $ref: '#/components/schemas/PublicCard'
+        '404':
+          description: Card not found (draft/archived/deleted/unknown/invalid slug)
   /cards:
     get:
       summary: List current user cards
@@ -145,6 +172,40 @@ components:
         type: string
         format: uuid
   schemas:
+    PublicCard:
+      type: object
+      additionalProperties: false
+      required:
+        - slug
+        - displayName
+        - jobTitle
+        - companyName
+        - summary
+        - photoUrl
+        - phone
+        - email
+        - websiteUrl
+        - links
+      properties:
+        slug: { type: string }
+        displayName: { type: string }
+        jobTitle: { type: string, nullable: true }
+        companyName: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        photoUrl: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        email: { type: string, nullable: true, description: Always null when showEmail=false }
+        websiteUrl: { type: string, nullable: true }
+        links:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [type, label, url]
+            properties:
+              type: { type: string, nullable: true }
+              label: { type: string, nullable: true }
+              url: { type: string }
     CardLink:
       type: object
       required: [url]
