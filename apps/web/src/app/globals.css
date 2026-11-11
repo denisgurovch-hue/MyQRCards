@@ -276,3 +276,95 @@ button.linkish {
   image-rendering: pixelated;
 }
 
+.card-analytics {
+  margin-top: 1rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--line);
+}
+
+.card-analytics-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.65rem;
+}
+
+.card-analytics-title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 1.15rem;
+}
+
+.card-analytics-subtitle {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.95rem;
+}
+
+.card-analytics-periods {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+
+.card-analytics-period {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 0.3rem 0.55rem;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.card-analytics-period.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.card-analytics-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.card-analytics-metric-value {
+  font-family: var(--font);
+  font-size: 1.45rem;
+  line-height: 1.1;
+}
+
+.card-analytics-channels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.card-analytics-channels li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.92rem;
+}
+
+.card-analytics-table-wrap {
+  overflow-x: auto;
+}
+
+.card-analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.card-analytics-table th,
+.card-analytics-table td {
+  text-align: left;
+  padding: 0.35rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+

@@ -1,12 +1,18 @@
 import {
+  Body,
   Controller,
   Get,
   Header,
+  HttpCode,
   Param,
+  Post,
   Res,
   StreamableFile,
 } from '@nestjs/common';
 import type { Response } from 'express';
+import { AnalyticsService } from './analytics.service';
+import { RecordContactClickDto } from './dto/record-contact-click.dto';
+import { toPublicCardDto } from './public-card.mapper';
 import { PublicCardsService } from './public-cards.service';
 import { QrCodeService } from './qr-code.service';
 import { VcardService } from './vcard.service';
@@ -17,7 +23,18 @@ export class PublicCardsController {
     private readonly publicCards: PublicCardsService,
     private readonly qrCodes: QrCodeService,
     private readonly vcards: VcardService,
+    private readonly analytics: AnalyticsService,
   ) {}
+
+  @Post(':slug/clicks')
+  @HttpCode(204)
+  @Header('Cache-Control', 'no-store')
+  async recordClick(
+    @Param('slug') slug: string,
+    @Body() dto: RecordContactClickDto,
+  ): Promise<void> {
+    await this.analytics.recordContactClickBySlug(slug, dto.channel);
+  }
 
   @Get(':slug/vcard')
   @Header('Cache-Control', 'no-store')
@@ -26,7 +43,8 @@ export class PublicCardsController {
     @Param('slug') slug: string,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const { body, filename } = await this.vcards.generate(slug);
+    const { body, filename, cardId } = await this.vcards.generate(slug);
+    this.analytics.recordVcardDownload(cardId);
     res.setHeader('Content-Type', 'text/vcard; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
@@ -80,6 +98,8 @@ export class PublicCardsController {
     @Res({ passthrough: true }) res: Response,
   ) {
     res.setHeader('Cache-Control', 'no-store');
-    return this.publicCards.getBySlug(slug);
+    const card = await this.publicCards.getPublishedCard(slug);
+    this.analytics.recordCardView(card.id);
+    return { card: toPublicCardDto(card) };
   }
 }

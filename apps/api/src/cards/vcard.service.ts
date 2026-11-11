@@ -5,6 +5,7 @@ import {
   normalizePublicAppUrl,
   publicCardCanonicalUrl,
 } from './public-app-url';
+import { toPublicCardDto } from './public-card.mapper';
 import { PublicCardsService } from './public-cards.service';
 import { buildVCard30 } from './vcard.serializer';
 
@@ -32,8 +33,10 @@ export class VcardService {
     body: string;
     filename: string;
     slug: string;
+    cardId: string;
   }> {
-    const { card } = await this.publicCards.getBySlug(rawSlug);
+    const entity = await this.publicCards.getPublishedCard(rawSlug);
+    const card = toPublicCardDto(entity);
     try {
       const body = buildVCard30({
         displayName: card.displayName,
@@ -49,6 +52,7 @@ export class VcardService {
         body,
         filename: `contact-${card.slug}.vcf`,
         slug: card.slug,
+        cardId: entity.id,
       };
     } catch (error) {
       if (error instanceof AppError) {

@@ -1,9 +1,15 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { CardStatus } from '@prisma/client';
+import { CardStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppError } from '../common/errors/app-error';
 import { toPublicCardDto } from './public-card.mapper';
 import { isValidSlug, normalizeSlug } from './slug.util';
+
+const publishedInclude = { links: true } as const;
+
+export type PublishedCard = Prisma.CardGetPayload<{
+  include: typeof publishedInclude;
+}>;
 
 @Injectable()
 export class PublicCardsService {
@@ -40,8 +46,11 @@ export class PublicCardsService {
     return card.slug;
   }
 
-  async getBySlug(rawSlug: string) {
-    const slug = await this.requirePublishedSlug(rawSlug);
+  async getPublishedCard(rawSlug: string): Promise<PublishedCard> {
+    const slug = normalizeSlug(rawSlug ?? '');
+    if (!isValidSlug(slug)) {
+      this.notFound();
+    }
 
     const card = await this.prisma.card.findFirst({
       where: {
@@ -49,13 +58,18 @@ export class PublicCardsService {
         status: CardStatus.published,
         deletedAt: null,
       },
-      include: { links: true },
+      include: publishedInclude,
     });
 
     if (!card) {
       this.notFound();
     }
 
+    return card;
+  }
+
+  async getBySlug(rawSlug: string) {
+    const card = await this.getPublishedCard(rawSlug);
     return { card: toPublicCardDto(card) };
   }
 }

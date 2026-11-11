@@ -97,3 +97,16 @@ NestJS API
 | Кэш / хранение | `Cache-Control: no-store`; файлы не сохраняются |
 | Аналитика | Событие `contact_save` **не** входит в T-006 |
 | UI | Кнопка «Сохранить контакт»; без сообщения «Контакт сохранён» |
+
+### 3.5 Базовая аналитика (T-007)
+
+| Решение | Значение |
+|---|---|
+| Хранение | Таблица `card_events` (UUID): `card_id`, `event_type`, `channel`, `occurred_at`, `day`, `visitor_hash` (nullable, не используется для дедупа в MVP) |
+| События | `card_view` (GET public card 200), `contact_click` (POST public clicks), `vcard_download` (успешный `.vcf`) |
+| Каналы клика | `phone`, `email`, `whatsapp`, `telegram`, `link`; для vCard — `vcard`; для view — `null` |
+| Privacy | Не хранить IP, User-Agent, query URL, PII; ошибка записи не ломает public/QR/vCard |
+| Owner API | `GET /api/v1/cards/{card_id}/analytics?period=7d\|30d` → `totals`, `by_channel`, `daily` |
+| Доступ | Только владелец; чужая карточка `404`; без auth `401` |
+| Public click | `POST /api/v1/public/cards/{slug}/clicks` body `{ "channel": "..." }` → `204` |
+| UI | Блок «Аналитика» в кабинете: метрики, период 7/30, каналы, таблица по дням, empty/loading/error |

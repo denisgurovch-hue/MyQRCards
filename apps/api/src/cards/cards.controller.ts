@@ -11,6 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import { AnalyticsService } from './analytics.service';
 import { CardsService } from './cards.service';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -20,7 +21,10 @@ import { UpdateCardDto } from './dto/update-card.dto';
 @Controller('cards')
 @UseGuards(AuthGuard)
 export class CardsController {
-  constructor(private readonly cards: CardsService) {}
+  constructor(
+    private readonly cards: CardsService,
+    private readonly analytics: AnalyticsService,
+  ) {}
 
   @Post()
   @HttpCode(201)
@@ -42,6 +46,15 @@ export class CardsController {
       page ? Number(page) : 1,
       limit ? Number(limit) : 20,
     );
+  }
+
+  @Get(':id/analytics')
+  getAnalytics(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('period') period?: string,
+  ) {
+    return this.analytics.getForOwner(user.id, id, period);
   }
 
   @Get(':id')

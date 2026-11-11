@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { CardAnalytics } from './card-analytics';
 import { LogoutButton } from './logout-button';
 import { PublicLinkActions } from './public-link-actions';
 import { QrActions } from './qr-actions';
@@ -92,6 +93,7 @@ export default async function DashboardPage() {
                   />
                 </div>
                 <PublicLinkActions slug={card.slug} status={card.status} />
+                <CardAnalytics cardId={card.id} />
               </li>
             ))}
           </ul>
