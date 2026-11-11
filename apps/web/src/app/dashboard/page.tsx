@@ -37,52 +37,51 @@ export default async function DashboardPage() {
   );
 
   return (
-    <main className="auth-shell">
-      <section className="panel" style={{ width: 'min(640px, 100%)' }}>
-        <p className="brand">MyQRCards</p>
-        <p className="lede">Личный кабинет</p>
-        <p>
-          {me.user.displayName
-            ? `Здравствуйте, ${me.user.displayName}`
-            : 'Вы вошли в аккаунт'}
-        </p>
-        {me.user.email ? <p className="muted">{me.user.email}</p> : null}
+    <main className="app-shell">
+      <div className="workspace">
+        <header className="workspace-top">
+          <div>
+            <p className="brand brand-mark">
+              MyQR<span>Cards</span>
+            </p>
+            <p className="lede">
+              {me.user.displayName
+                ? `Здравствуйте, ${me.user.displayName}`
+                : 'Личный кабинет'}
+            </p>
+            {me.user.email ? <p className="muted">{me.user.email}</p> : null}
+          </div>
+          <div className="workspace-actions">
+            <Link className="button accent" href="/cards/new">
+              Создать визитку
+            </Link>
+            <LogoutButton />
+          </div>
+        </header>
 
-        <div
-          style={{
-            display: 'flex',
-            gap: '0.75rem',
-            marginTop: '1.25rem',
-            flexWrap: 'wrap',
-          }}
-        >
-          <Link className="button" href="/cards/new">
-            Создать визитку
-          </Link>
-          <LogoutButton />
-        </div>
-
-        <h2 style={{ marginTop: '1.75rem', fontFamily: 'var(--font)' }}>
-          Мои визитки
-        </h2>
+        <h2 className="section-title">Мои визитки</h2>
         {!cards || cards.items.length === 0 ? (
-          <p className="muted">Пока нет визиток. Создайте первую.</p>
+          <p className="muted">Пока нет визиток. Создайте первую — это займёт минуту.</p>
         ) : (
-          <ul className="stack" style={{ listStyle: 'none', padding: 0 }}>
+          <ul className="card-list">
             {cards.items.map((card) => (
-              <li
-                key={card.id}
-                style={{
-                  border: '1px solid var(--line)',
-                  borderRadius: 12,
-                  padding: '0.9rem 1rem',
-                  background: '#fff',
-                }}
-              >
-                <strong>{card.displayName}</strong>
+              <li key={card.id} className="card-item">
+                <div className="card-item-top">
+                  <strong>{card.displayName}</strong>
+                  <span
+                    className={
+                      card.status === 'published'
+                        ? 'status-pill is-published'
+                        : 'status-pill'
+                    }
+                  >
+                    {card.status}
+                  </span>
+                </div>
                 <div className="muted">
-                  /{card.slug} · {card.status}
+                  /{card.slug}
                   {card.jobTitle ? ` · ${card.jobTitle}` : ''}
+                  {card.companyName ? ` · ${card.companyName}` : ''}
                 </div>
                 <div className="card-row-actions">
                   <Link href={`/cards/${card.id}/edit`}>Редактировать</Link>
@@ -98,7 +97,7 @@ export default async function DashboardPage() {
             ))}
           </ul>
         )}
-      </section>
+      </div>
     </main>
   );
 }

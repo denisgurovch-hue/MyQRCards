@@ -34,38 +34,49 @@ export default function LoginPage() {
 
   return (
     <main className="auth-shell">
-      <section className="panel">
-        <p className="brand">MyQRCards</p>
-        <p className="lede">Вход в личный кабинет</p>
-        {error ? <p className="error">{error}</p> : null}
-        <form onSubmit={onSubmit} className="stack">
-          <label>
-            E-mail
-            <input name="email" type="email" autoComplete="email" required />
-          </label>
-          <label>
-            Пароль
-            <input
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              minLength={8}
-            />
-          </label>
-          <button type="submit" disabled={pending}>
-            {pending ? 'Входим…' : 'Войти'}
-          </button>
-        </form>
-        <div className="stack" style={{ marginTop: '1rem' }}>
-          <a className="button secondary" href="/api/v1/auth/vkid/authorize">
-            Войти через VK ID
-          </a>
-          <p className="muted">
-            Нет аккаунта? <Link href="/register">Зарегистрироваться</Link>
+      <div className="auth-layout">
+        <aside className="auth-aside">
+          <p className="brand brand-mark">
+            MyQR<span>Cards</span>
           </p>
-        </div>
-      </section>
+          <p>Войдите, чтобы управлять визитками, QR и аналитикой просмотров.</p>
+        </aside>
+        <section className="panel">
+          <div className="panel-head">
+            <p className="eyebrow">Кабинет</p>
+            <h1 className="section-title">Вход</h1>
+            <p className="muted">E-mail и пароль или VK ID</p>
+          </div>
+          {error ? <p className="error">{error}</p> : null}
+          <form onSubmit={onSubmit} className="stack">
+            <label>
+              E-mail
+              <input name="email" type="email" autoComplete="email" required />
+            </label>
+            <label>
+              Пароль
+              <input
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                minLength={8}
+              />
+            </label>
+            <button className="accent" type="submit" disabled={pending}>
+              {pending ? 'Входим…' : 'Войти'}
+            </button>
+          </form>
+          <div className="stack" style={{ marginTop: '1rem' }}>
+            <a className="button secondary" href="/api/v1/auth/vkid/authorize">
+              Войти через VK ID
+            </a>
+            <p className="muted">
+              Нет аккаунта? <Link href="/register">Зарегистрироваться</Link>
+            </p>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }

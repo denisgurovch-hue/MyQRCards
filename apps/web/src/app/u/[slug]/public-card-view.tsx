@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import type { PublicCard } from '../../../lib/public-card.types';
 import {
@@ -122,6 +123,9 @@ export function PublicCardView({ card }: Props) {
       ) : null}
 
       <SaveContactButton slug={card.slug} />
+      <p className="public-foot">
+        <Link href="/">MyQRCards</Link>
+      </p>
     </section>
   );
 }
