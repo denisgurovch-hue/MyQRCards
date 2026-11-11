@@ -206,3 +206,37 @@ button.secondary,
   margin-top: 0.55rem;
 }
 
+.qr-dialog {
+  width: min(360px, calc(100vw - 2rem));
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 0;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.qr-dialog::backdrop {
+  background: rgb(20 32 26 / 45%);
+}
+
+.qr-dialog-body {
+  padding: 1.15rem 1.1rem 1.25rem;
+}
+
+.qr-dialog-title {
+  margin: 0 0 0.35rem;
+  font-family: var(--font);
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+.qr-preview {
+  display: block;
+  width: min(240px, 100%);
+  height: auto;
+  margin: 0.75rem auto 1rem;
+  background: #fff;
+  image-rendering: pixelated;
+}
+
