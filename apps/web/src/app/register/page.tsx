@@ -74,9 +74,14 @@ export default function RegisterPage() {
               {pending ? 'Создаём…' : 'Зарегистрироваться'}
             </button>
           </form>
-          <p className="muted" style={{ marginTop: '1rem' }}>
-            Уже есть аккаунт? <Link href="/login">Войти</Link>
-          </p>
+          <div className="stack" style={{ marginTop: '1rem' }}>
+            <a className="button secondary" href="/api/v1/auth/vkid/authorize">
+              Войти через VK ID
+            </a>
+            <p className="muted">
+              Уже есть аккаунт? <Link href="/login">Войти</Link>
+            </p>
+          </div>
         </section>
       </div>
     </main>

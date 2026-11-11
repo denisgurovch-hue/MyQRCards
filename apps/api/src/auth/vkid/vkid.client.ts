@@ -26,6 +26,10 @@ export type VkUserInfo = {
 export class VkidClient {
   constructor(private readonly config: ConfigService) {}
 
+  isConfigured(): boolean {
+    return Boolean(this.config.get<string>('VK_ID_CLIENT_ID')?.trim());
+  }
+
   authorizeUrl(params: {
     state: string;
     codeChallenge: string;
@@ -39,7 +43,9 @@ export class VkidClient {
     url.searchParams.set('state', params.state);
     url.searchParams.set('code_challenge', params.codeChallenge);
     url.searchParams.set('code_challenge_method', 'S256');
+    // Keep scopes aligned with the VK ID app settings (email enabled there).
     url.searchParams.set('scope', 'email');
+    url.searchParams.set('lang_id', '0');
     return url.toString();
   }
 
@@ -75,12 +81,23 @@ export class VkidClient {
     if (!response.ok) {
       throw new AppError(
         'OAUTH_PROVIDER_ERROR',
-        'VK ID token exchange failed',
+        `VK ID token exchange failed (${response.status})`,
         HttpStatus.BAD_GATEWAY,
       );
     }
 
-    return (await response.json()) as VkTokenResponse;
+    const json = (await response.json()) as VkTokenResponse & {
+      error?: string;
+      error_description?: string;
+    };
+    if (!json.access_token) {
+      throw new AppError(
+        'OAUTH_PROVIDER_ERROR',
+        'VK ID token exchange failed',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+    return json;
   }
 
   async fetchUserInfo(accessToken: string): Promise<VkUserInfo> {

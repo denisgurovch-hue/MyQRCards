@@ -126,13 +126,20 @@ Handles VK ID redirect.
 
 ### Query
 
+Either flat params:
+
 - `code`
 - `state`
 - `device_id`
 
+or VK ID Web `payload` JSON (preferred by current VK docs):
+
+- `payload={"code":"...","state":"...","type":"code_v2","device_id":"..."}`
+
 ### Response `302`
 
 Redirect to `/dashboard` after successful login. Sets session cookies.
+On failure redirects to `/login?error=...`.
 
 ### Errors
 
@@ -140,3 +147,4 @@ Redirect to `/dashboard` after successful login. Sets session cookies.
 - `400 OAUTH_INVALID_CODE`
 - `429 RATE_LIMITED`
 - `502 OAUTH_PROVIDER_ERROR`
+- `503 OAUTH_NOT_CONFIGURED` (missing `VK_ID_CLIENT_ID`)

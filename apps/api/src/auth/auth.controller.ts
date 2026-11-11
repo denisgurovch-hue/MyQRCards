@@ -17,6 +17,7 @@ import { RateLimit } from '../common/rate-limit/rate-limit.decorator';
 import { RateLimitGuard } from '../common/rate-limit/rate-limit.guard';
 import { AuthGuard, type AuthenticatedRequest } from './guards/auth.guard';
 import { SessionService } from './session/session.service';
+import { AppError } from '../common/errors/app-error';
 
 @Controller('auth')
 @UseGuards(RateLimitGuard)
@@ -62,8 +63,21 @@ export class AuthController {
   @Get('vkid/authorize')
   @RateLimit({ key: 'auth:vkid:authorize', limit: 30, windowSeconds: 60 })
   async vkidAuthorize(@Res() res: Response): Promise<void> {
-    const { url } = await this.auth.startVkidAuth();
-    res.redirect(302, url);
+    try {
+      const { url } = await this.auth.startVkidAuth();
+      res.redirect(302, url);
+    } catch (error) {
+      const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
+      const body =
+        error instanceof AppError
+          ? (error.getResponse() as { error?: { code?: string } })
+          : null;
+      const code = body?.error?.code ?? 'OAUTH_PROVIDER_ERROR';
+      res.redirect(
+        302,
+        `${webOrigin}/login?error=${encodeURIComponent(code)}`,
+      );
+    }
   }
 
   @Get('vkid/callback')
@@ -75,10 +89,16 @@ export class AuthController {
       state?: string;
       device_id?: string;
       error?: string;
+      payload?: string;
     },
     @Res() res: Response,
   ): Promise<void> {
-    const redirectTo = await this.auth.handleVkidCallback(query, res);
-    res.redirect(302, redirectTo);
+    try {
+      const redirectTo = await this.auth.handleVkidCallback(query, res);
+      res.redirect(302, redirectTo);
+    } catch {
+      const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
+      res.redirect(302, `${webOrigin}/login?error=OAUTH_PROVIDER_ERROR`);
+    }
   }
 }
