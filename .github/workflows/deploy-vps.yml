@@ -1,0 +1,57 @@
+name: Deploy VPS
+
+# Optional manual deploy. Requires repository secrets:
+#   VPS_HOST          e.g. 203.0.113.10
+#   VPS_USER          e.g. deploy
+#   VPS_SSH_KEY       private key (full PEM)
+#   VPS_APP_DIR       e.g. /opt/myqrcards  (optional, default /opt/myqrcards)
+#
+# The server must already be provisioned and contain .env.production.
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: Git branch to deploy
+        required: true
+        default: main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [ -z "$VPS_HOST" ] || [ -z "$VPS_USER" ] || [ -z "$VPS_SSH_KEY" ]; then
+            echo "Missing VPS_HOST / VPS_USER / VPS_SSH_KEY secrets. Skipping remote deploy."
+            echo "blocker=missing_secrets" >> "$GITHUB_ENV"
+          else
+            echo "blocker=" >> "$GITHUB_ENV"
+          fi
+
+      - name: Deploy over SSH
+        if: env.blocker == ''
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            APP_DIR="${{ secrets.VPS_APP_DIR }}"
+            APP_DIR="${APP_DIR:-/opt/myqrcards}"
+            cd "$APP_DIR"
+            git fetch origin
+            git checkout "${{ inputs.branch }}"
+            git pull --ff-only origin "${{ inputs.branch }}"
+            BRANCH="${{ inputs.branch }}" ./deploy/scripts/deploy.sh
+
+      - name: Report blocker
+        if: env.blocker == 'missing_secrets'
+        run: |
+          echo "::notice::Configure VPS_HOST, VPS_USER, VPS_SSH_KEY to enable remote deploy."
+          exit 0
