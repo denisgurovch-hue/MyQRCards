@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LogoutButton } from './logout-button';
+import { PublicLinkActions } from './public-link-actions';
 import { serverApiFetch } from '../../lib/server-api';
 
 type MeResponse = {
@@ -29,7 +30,9 @@ export default async function DashboardPage() {
     redirect('/login');
   }
 
-  const cards = await serverApiFetch<CardsResponse>('/api/v1/cards?page=1&limit=50');
+  const cards = await serverApiFetch<CardsResponse>(
+    '/api/v1/cards?page=1&limit=50',
+  );
 
   return (
     <main className="auth-shell">
@@ -79,7 +82,10 @@ export default async function DashboardPage() {
                   /{card.slug} · {card.status}
                   {card.jobTitle ? ` · ${card.jobTitle}` : ''}
                 </div>
-                <Link href={`/cards/${card.id}/edit`}>Редактировать</Link>
+                <div className="card-row-actions">
+                  <Link href={`/cards/${card.id}/edit`}>Редактировать</Link>
+                </div>
+                <PublicLinkActions slug={card.slug} status={card.status} />
               </li>
             ))}
           </ul>

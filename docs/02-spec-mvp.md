@@ -57,3 +57,16 @@ NestJS API
       |
       v
 Публичная страница визитки /u/{slug}
+```
+
+### 3.2 Публичная страница визитки (T-004)
+
+| Решение | Значение |
+|---|---|
+| Публичный доступ | Только `status=published` и `deleted_at IS NULL` |
+| Недоступные карточки | Единый `404 CARD_NOT_FOUND` (draft/archived/deleted/unknown slug) |
+| Публичный API | `GET /api/v1/public/cards/{slug}` без сессии; отдельный PublicCardDto |
+| Кэш | `Cache-Control: no-store`; без ISR/SSG и межзапросного кэша данных карточки |
+| Индексация | Временно `robots: noindex, nofollow` |
+| Приватность e-mail | При `showEmail=false` поле `email` в публичном ответе всегда `null` |
+| Канонический URL | `{PUBLIC_APP_URL}/u/{slug}` (`NEXT_PUBLIC_APP_URL` / `WEB_ORIGIN`) |
