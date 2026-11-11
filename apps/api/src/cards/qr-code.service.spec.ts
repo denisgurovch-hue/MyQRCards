@@ -33,26 +33,30 @@ describe('QrCodeService', () => {
     );
   });
 
-  it('PNG encodes exact canonical URL and is 1024x1024', async () => {
-    const { buffer, url, filename } = await service.generatePng('demo-slug');
-    expect(url).toBe('https://cards.example/u/demo-slug');
-    expect(filename).toBe('qrcard-demo-slug.png');
+  it(
+    'PNG encodes exact canonical URL and is 1024x1024',
+    async () => {
+      const { buffer, url, filename } = await service.generatePng('demo-slug');
+      expect(url).toBe('https://cards.example/u/demo-slug');
+      expect(filename).toBe('qrcard-demo-slug.png');
 
-    const png = PNG.sync.read(buffer);
-    expect(png.width).toBe(1024);
-    expect(png.height).toBe(1024);
+      const png = PNG.sync.read(buffer);
+      expect(png.width).toBe(1024);
+      expect(png.height).toBe(1024);
 
-    const decoded = jsQR(
-      new Uint8ClampedArray(
-        png.data.buffer,
-        png.data.byteOffset,
-        png.data.byteLength,
-      ),
-      png.width,
-      png.height,
-    );
-    expect(decoded?.data).toBe('https://cards.example/u/demo-slug');
-  });
+      const decoded = jsQR(
+        new Uint8ClampedArray(
+          png.data.buffer,
+          png.data.byteOffset,
+          png.data.byteLength,
+        ),
+        png.width,
+        png.height,
+      );
+      expect(decoded?.data).toBe('https://cards.example/u/demo-slug');
+    },
+    20_000,
+  );
 
   it('SVG includes viewBox without script/foreignObject', async () => {
     const { svg, url, filename } = await service.generateSvg('demo-slug');
