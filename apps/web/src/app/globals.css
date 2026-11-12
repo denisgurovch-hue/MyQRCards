@@ -663,6 +663,22 @@ button.linkish:hover {
   z-index: 0;
 }
 
+.public-shell[data-cover='color']::before {
+  background: linear-gradient(
+    180deg,
+    var(--public-cover-color, #0b1520) 0%,
+    var(--public-cover-color, #0b1520) 42%,
+    #e8eef4 42%,
+    #f5f8fb 100%
+  );
+}
+
+.public-shell[data-cover='image']::before {
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 42%, #e8eef4 42%, #f5f8fb 100%),
+    var(--public-cover-image) center top / cover no-repeat;
+}
+
 .public-card {
   position: relative;
   z-index: 1;
@@ -921,6 +937,49 @@ a.phone-contact-value:focus-visible {
   margin: 0 0 0.5rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--line);
+}
+
+.cover-editor {
+  margin: 1rem 0 0.5rem;
+  padding: 0 0 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.cover-editor legend {
+  font-family: var(--font);
+  font-weight: 700;
+  padding: 0;
+}
+
+.cover-editor-preview {
+  width: 100%;
+  height: 120px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  margin: 0.75rem 0;
+}
+
+.cover-editor-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+  margin-bottom: 0.65rem;
+}
+
+.cover-color-label {
+  font-weight: 600;
+}
+
+.cover-editor input[type='color'] {
+  width: 3rem;
+  height: 2.4rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
 }
 
 .photo-editor-preview {

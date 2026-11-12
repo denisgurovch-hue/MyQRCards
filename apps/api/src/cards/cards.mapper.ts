@@ -14,6 +14,8 @@ export function toCardResponse(card: CardWithLinks) {
     showEmail: card.showEmail,
     websiteUrl: card.websiteUrl,
     photoUrl: card.photoUrl,
+    coverColor: card.coverColor,
+    coverImageUrl: card.coverImageUrl,
     slug: card.slug,
     status: card.status,
     createdAt: card.createdAt.toISOString(),

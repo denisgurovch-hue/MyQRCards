@@ -5,6 +5,8 @@ export type PublicCard = {
   companyName: string | null;
   summary: string | null;
   photoUrl: string | null;
+  coverColor: string | null;
+  coverImageUrl: string | null;
   phone: string | null;
   email: string | null;
   websiteUrl: string | null;

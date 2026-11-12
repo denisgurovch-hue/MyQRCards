@@ -9,6 +9,8 @@ export type PublicCardDto = {
   companyName: string | null;
   summary: string | null;
   photoUrl: string | null;
+  coverColor: string | null;
+  coverImageUrl: string | null;
   phone: string | null;
   email: string | null;
   websiteUrl: string | null;
@@ -33,6 +35,8 @@ export function toPublicCardDto(card: CardWithLinks): PublicCardDto {
     companyName: card.companyName,
     summary: card.summary,
     photoUrl: card.photoUrl,
+    coverColor: card.coverColor,
+    coverImageUrl: card.coverImageUrl,
     phone: card.phone,
     email,
     websiteUrl: card.websiteUrl,

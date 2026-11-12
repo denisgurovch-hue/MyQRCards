@@ -14,6 +14,10 @@ function baseCard(overrides: Record<string, unknown> = {}) {
     showEmail: false,
     websiteUrl: 'https://example.com',
     photoUrl: null,
+    coverColor: null,
+    coverImageUrl: null,
+    photoId: null,
+    coverPhotoId: null,
     slug: 'ivan-ivanov',
     status: CardStatus.published,
     deletedAt: null,
@@ -51,6 +55,8 @@ describe('toPublicCardDto', () => {
     expect(Object.keys(dto).sort()).toEqual(
       [
         'companyName',
+        'coverColor',
+        'coverImageUrl',
         'displayName',
         'email',
         'jobTitle',

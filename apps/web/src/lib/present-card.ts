@@ -51,6 +51,9 @@ export function toPresentCardView(card: OwnerCardForPresent): PresentCardView {
     companyName: card.companyName,
     summary: card.summary,
     photoUrl: card.photoUrl,
+    // Cover is public-page only; present screen never applies it.
+    coverColor: null,
+    coverImageUrl: null,
     phone: card.phone,
     email,
     websiteUrl: card.websiteUrl,

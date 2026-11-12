@@ -7,6 +7,8 @@ import { processCardPhotoUpload } from './card-photo.processor';
 import { photoFilePath } from './card-photo.storage';
 import { normalizePublicAppUrl } from './public-app-url';
 
+type MediaSlot = 'avatar' | 'cover';
+
 @Injectable()
 export class CardPhotoService {
   private readonly logger = new Logger(CardPhotoService.name);
@@ -23,10 +25,20 @@ export class CardPhotoService {
     return `${base}/api/v1/media/cards/${encodeURIComponent(storageKey)}`;
   }
 
+  private slotFields(slot: MediaSlot) {
+    return slot === 'cover'
+      ? ({ idKey: 'coverPhotoId', urlKey: 'coverImageUrl' } as const)
+      : ({ idKey: 'photoId', urlKey: 'photoUrl' } as const);
+  }
+
   private async requireOwnedCard(userId: string, cardId: string) {
     const card = await this.prisma.card.findFirst({
       where: { id: cardId, userId, deletedAt: null },
-      select: { id: true, photoId: true },
+      select: {
+        id: true,
+        photoId: true,
+        coverPhotoId: true,
+      },
     });
     if (!card) {
       throw new AppError('NOT_FOUND', 'Card not found', HttpStatus.NOT_FOUND);
@@ -35,7 +47,33 @@ export class CardPhotoService {
   }
 
   async upload(userId: string, cardId: string, file: Express.Multer.File) {
+    return this.uploadSlot(userId, cardId, file, 'avatar');
+  }
+
+  async uploadCover(
+    userId: string,
+    cardId: string,
+    file: Express.Multer.File,
+  ) {
+    return this.uploadSlot(userId, cardId, file, 'cover');
+  }
+
+  async remove(userId: string, cardId: string) {
+    return this.removeSlot(userId, cardId, 'avatar');
+  }
+
+  async removeCover(userId: string, cardId: string) {
+    return this.removeSlot(userId, cardId, 'cover');
+  }
+
+  private async uploadSlot(
+    userId: string,
+    cardId: string,
+    file: Express.Multer.File,
+    slot: MediaSlot,
+  ) {
     const card = await this.requireOwnedCard(userId, cardId);
+    const { idKey, urlKey } = this.slotFields(slot);
 
     let processed;
     try {
@@ -64,7 +102,7 @@ export class CardPhotoService {
       );
     }
 
-    const previousPhotoId = card.photoId;
+    const previousPhotoId = card[idKey];
     let previousKey: string | null = null;
     if (previousPhotoId) {
       const previous = await this.prisma.cardPhoto.findUnique({
@@ -91,8 +129,8 @@ export class CardPhotoService {
         await tx.card.update({
           where: { id: card.id },
           data: {
-            photoId: created.id,
-            photoUrl: url,
+            [idKey]: created.id,
+            [urlKey]: url,
           },
         });
 
@@ -132,20 +170,26 @@ export class CardPhotoService {
     }
   }
 
-  async remove(userId: string, cardId: string) {
+  private async removeSlot(
+    userId: string,
+    cardId: string,
+    slot: MediaSlot,
+  ) {
     const card = await this.requireOwnedCard(userId, cardId);
-    if (!card.photoId) {
+    const { idKey, urlKey } = this.slotFields(slot);
+    const currentId = card[idKey];
+    if (!currentId) {
       return { photo: null };
     }
 
     const existing = await this.prisma.cardPhoto.findUnique({
-      where: { id: card.photoId },
+      where: { id: currentId },
     });
 
     await this.prisma.$transaction(async (tx) => {
       await tx.card.update({
         where: { id: card.id },
-        data: { photoId: null, photoUrl: null },
+        data: { [idKey]: null, [urlKey]: null },
       });
       if (existing) {
         await tx.cardPhoto.delete({ where: { id: existing.id } });
