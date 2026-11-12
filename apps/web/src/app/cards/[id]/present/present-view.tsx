@@ -12,7 +12,12 @@ import {
   safeMailtoHref,
   safeTelHref,
 } from '../../../../lib/safe-url';
-import { PresentSharePanel } from './present-share-panel';
+import {
+  PresentContactIcon,
+  resolvePresentContactKind,
+} from './present-contact-icon';
+import { PresentOwnerTools } from './present-owner-tools';
+import { PresentQrBlock, type QrViewState } from './present-qr-block';
 
 type Props = {
   card: PresentCardView;
@@ -22,11 +27,14 @@ type ContactRow = {
   key: string;
   label: string;
   href: string | null;
+  type?: string | null;
+  url?: string | null;
 };
 
 export function PresentView({ card }: Props) {
   const [photoFailed, setPhotoFailed] = useState(false);
   const [shareEnabled, setShareEnabled] = useState(card.canSharePublic);
+  const [qrState, setQrState] = useState<QrViewState>({ kind: 'idle' });
   const previewOnly = presentShareActions(card.status).showPreviewNotice;
 
   const onShareUnavailable = useCallback(() => {
@@ -34,6 +42,8 @@ export function PresentView({ card }: Props) {
   }, []);
 
   const photoUrl = safeHttpUrl(card.photoUrl);
+  const metaLine = [card.jobTitle, card.companyName].filter(Boolean).join(' · ');
+
   const contacts = useMemo(() => {
     const rows: ContactRow[] = [];
     const phoneHref = safeTelHref(card.phone);
@@ -46,7 +56,12 @@ export function PresentView({ card }: Props) {
     }
     const websiteHref = safeHttpUrl(card.websiteUrl);
     if (websiteHref) {
-      rows.push({ key: 'website', label: websiteHref, href: websiteHref });
+      rows.push({
+        key: 'website',
+        label: websiteHref.replace(/^https?:\/\//, ''),
+        href: websiteHref,
+        url: websiteHref,
+      });
     }
     for (const link of card.links) {
       const href = safeHttpUrl(link.url);
@@ -55,15 +70,21 @@ export function PresentView({ card }: Props) {
         key: `${link.type ?? 'link'}-${href}`,
         label: link.label?.trim() || link.type || href,
         href,
+        type: link.type,
+        url: link.url,
       });
     }
     return rows;
   }, [card]);
 
+  const showUnavailableNotice =
+    qrState.kind === 'unavailable' ||
+    (!shareEnabled && card.status === 'published');
+
   return (
     <main className="present-shell">
       <header className="present-top">
-        <p className="brand brand-mark">
+        <p className="brand brand-mark present-brand">
           Sign<span>et</span>
         </p>
         <Link className="button secondary" href="/dashboard">
@@ -71,71 +92,83 @@ export function PresentView({ card }: Props) {
         </Link>
       </header>
 
-      <div className="present-layout">
-        <section className="present-card" aria-label="Визитка">
-          <div className="present-card-inner">
-            <div className="present-head">
-              {photoUrl && !photoFailed ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  className="present-avatar present-avatar-photo"
-                  src={photoUrl}
-                  alt=""
-                  onError={() => setPhotoFailed(true)}
-                />
-              ) : (
-                <div className="present-avatar" aria-hidden="true">
-                  {card.displayName.slice(0, 1).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <h1 className="present-name">{card.displayName}</h1>
-                {card.jobTitle ? (
-                  <p className="present-meta">{card.jobTitle}</p>
-                ) : null}
-                {card.companyName ? (
-                  <p className="present-meta">{card.companyName}</p>
-                ) : null}
+      <div className="present-stage phone-stage" aria-label="Визитка">
+        <div className="phone-screen present-screen">
+          <div className="phone-head">
+            {photoUrl && !photoFailed ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                className="phone-avatar phone-avatar-photo"
+                src={photoUrl}
+                alt=""
+                onError={() => setPhotoFailed(true)}
+              />
+            ) : (
+              <div className="phone-avatar" aria-hidden="true">
+                {card.displayName.slice(0, 1).toUpperCase()}
               </div>
+            )}
+            <div>
+              <h1 className="phone-name">{card.displayName}</h1>
+              {metaLine ? <p className="phone-meta">{metaLine}</p> : null}
             </div>
-
-            {card.summary ? (
-              <p className="present-summary">{card.summary}</p>
-            ) : null}
-
-            {contacts.length > 0 ? (
-              <ul className="present-contacts">
-                {contacts.map((row) => (
-                  <li key={row.key}>
-                    {row.href ? (
-                      <a href={row.href} className="present-contact-value">
-                        {row.label}
-                      </a>
-                    ) : (
-                      <span className="present-contact-value">{row.label}</span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
           </div>
-        </section>
 
-        <aside className="present-side">
-          {previewOnly ? (
-            <p className="present-notice" role="status">
-              {PRESENT_PREVIEW_NOTICE}
-            </p>
-          ) : null}
-
-          <PresentSharePanel
+          <PresentQrBlock
             slug={card.slug}
             displayName={card.displayName}
             enabled={shareEnabled}
             onShareUnavailable={onShareUnavailable}
+            onStateChange={setQrState}
           />
-        </aside>
+
+          {card.summary ? (
+            <p className="present-screen-summary">{card.summary}</p>
+          ) : null}
+
+          {contacts.length > 0 ? (
+            <ul className="phone-contacts">
+              {contacts.map((row) => {
+                const kind = resolvePresentContactKind(row);
+                return (
+                  <li key={row.key}>
+                    <span className="phone-contact-icon">
+                      <PresentContactIcon kind={kind} />
+                    </span>
+                    {row.href ? (
+                      <a href={row.href} className="phone-contact-value">
+                        {row.label}
+                      </a>
+                    ) : (
+                      <span className="phone-contact-value">{row.label}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
       </div>
+
+      {previewOnly ? (
+        <p className="present-notice" role="status">
+          {PRESENT_PREVIEW_NOTICE}
+        </p>
+      ) : null}
+
+      {showUnavailableNotice ? (
+        <p className="present-notice" role="status">
+          {qrState.kind === 'unavailable'
+            ? qrState.message
+            : 'Публичное распространение недоступно. Визитка снята с публикации или недоступна.'}
+        </p>
+      ) : null}
+
+      <PresentOwnerTools
+        slug={card.slug}
+        enabled={shareEnabled && qrState.kind !== 'unavailable'}
+        onShareUnavailable={onShareUnavailable}
+      />
     </main>
   );
 }
