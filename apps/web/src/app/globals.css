@@ -673,10 +673,20 @@ button.linkish:hover {
   );
 }
 
+/* Image fills only the top cover band so baked crop matches the editor frame. */
 .public-shell[data-cover='image']::before {
-  background:
-    linear-gradient(180deg, transparent 0%, transparent 42%, #e8eef4 42%, #f5f8fb 100%),
-    var(--public-cover-image) center top / cover no-repeat;
+  inset: 0 0 auto 0;
+  height: 42%;
+  background: var(--public-cover-image) center / cover no-repeat;
+}
+
+.public-shell[data-cover='image']::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 42%, #e8eef4 42%, #f5f8fb 100%);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .public-card {
@@ -958,6 +968,31 @@ a.phone-contact-value:focus-visible {
   border-radius: var(--radius-sm);
   border: 1px solid var(--line);
   margin: 0.75rem 0;
+}
+
+.cover-aligner {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0.75rem 0 0.35rem;
+  max-width: 360px;
+}
+
+.cover-aligner-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(14, 154, 167, 0.12), transparent 55%),
+    var(--paper);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  box-shadow: inset 0 0 0 1px rgba(11, 21, 32, 0.04);
+}
+
+.cover-aligner-frame:active {
+  cursor: grabbing;
 }
 
 .cover-editor-row {
