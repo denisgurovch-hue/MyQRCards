@@ -86,12 +86,23 @@ export function PresentView({ card }: Props) {
         <p className="brand brand-mark present-brand">
           Sign<span>et</span>
         </p>
-        <Link className="button secondary" href="/dashboard">
-          К списку визиток
-        </Link>
       </header>
 
       <div className="present-stage phone-stage" aria-label="Визитка">
+        <Link
+          className="present-close"
+          href="/dashboard"
+          aria-label="Закрыть и вернуться к списку визиток"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M7 7l10 10M17 7 7 17"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+            />
+          </svg>
+        </Link>
         <div className="phone-screen present-screen">
           <div className="phone-head">
             {photoUrl && !photoFailed ? (

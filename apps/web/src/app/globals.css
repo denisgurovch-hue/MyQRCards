@@ -811,10 +811,7 @@ button.linkish:hover {
 
 .present-top {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.75rem;
-  align-items: center;
+  justify-content: center;
   width: min(420px, 100%);
 }
 
@@ -823,10 +820,42 @@ button.linkish:hover {
 }
 
 .present-stage.phone-stage {
+  position: relative;
   width: min(340px, 92vw);
   aspect-ratio: auto;
   min-height: min(640px, 78vh);
   animation: none;
+}
+
+.present-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: rgb(244 248 251 / 62%);
+  background: rgb(245 248 251 / 8%);
+  border: 1px solid rgb(245 248 251 / 12%);
+  text-decoration: none;
+  transition: color 160ms var(--ease), background 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.present-close svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.present-close:hover,
+.present-close:focus-visible {
+  color: #f4f8fb;
+  background: rgb(245 248 251 / 14%);
+  border-color: rgb(245 248 251 / 22%);
+  outline: none;
 }
 
 .present-screen.phone-screen {
