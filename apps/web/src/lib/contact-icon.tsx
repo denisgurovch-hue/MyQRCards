@@ -109,34 +109,43 @@ export function resolveContactKind(input: {
   url?: string | null;
   channel?: string | null;
 }): ContactIconKind {
-  const raw =
-    `${input.key ?? ''} ${input.type ?? ''} ${input.url ?? ''} ${input.channel ?? ''}`.toLowerCase();
+  const key = (input.key ?? '').toLowerCase();
+  const type = (input.type ?? '').toLowerCase();
+  const url = (input.url ?? '').toLowerCase();
+  const channel = (input.channel ?? '').toLowerCase();
+  const raw = `${key} ${type} ${url} ${channel}`;
+
+  // Telegram before phone: "telegram" contains the substring "tel".
   if (
-    input.key === 'phone' ||
-    input.channel === 'phone' ||
+    channel === 'telegram' ||
+    type === 'telegram' ||
+    key.includes('telegram') ||
+    url.includes('t.me/') ||
+    url.includes('telegram.')
+  ) {
+    return 'telegram';
+  }
+  if (
+    key === 'phone' ||
+    channel === 'phone' ||
+    type === 'phone' ||
     raw.includes('phone') ||
-    raw.includes('tel')
+    url.startsWith('tel:')
   ) {
     return 'phone';
   }
   if (
-    input.key === 'email' ||
-    input.channel === 'email' ||
+    key === 'email' ||
+    channel === 'email' ||
+    type === 'email' ||
     raw.includes('mail')
   ) {
     return 'email';
   }
-  if (raw.includes('t.me') || raw.includes('telegram') || input.channel === 'telegram') {
-    return 'telegram';
-  }
   if (raw.includes('linkedin')) {
     return 'linkedin';
   }
-  if (
-    input.key === 'website' ||
-    input.channel === 'website' ||
-    raw.includes('http')
-  ) {
+  if (key === 'website' || channel === 'website' || url.startsWith('http')) {
     return 'website';
   }
   return 'link';
