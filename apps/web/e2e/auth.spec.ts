@@ -18,7 +18,9 @@ test.describe('auth pages', () => {
     await page.getByRole('button', { name: 'Зарегистрироваться' }).click();
 
     await expect(page).toHaveURL(/\/dashboard/);
-    await expect(page.getByText('Личный кабинет')).toBeVisible();
+    // With displayName set at register, dashboard greets the user.
+    await expect(page.getByText('Здравствуйте, E2E User')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Мои визитки' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Выйти' }).click();
     await expect(page).toHaveURL(/\/login/);
