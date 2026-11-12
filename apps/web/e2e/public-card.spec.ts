@@ -38,8 +38,13 @@ test.describe('public card page', () => {
     const guestPage = await guest.newPage();
     await guestPage.goto(`/u/${slug}`);
     await expect(guestPage.getByRole('heading', { name: 'Public Name' })).toBeVisible();
-    await expect(guestPage.getByRole('link', { name: /Написать/ })).toBeVisible();
-    await expect(guestPage.getByRole('link', { name: /Позвонить/ })).toBeVisible();
+    await expect(
+      guestPage.getByRole('link', { name: 'Написать · visible@example.com' }),
+    ).toBeVisible();
+    await expect(
+      guestPage.getByRole('link', { name: 'Позвонить · +79991112233' }),
+    ).toBeVisible();
+    await expect(guestPage.locator('.public-contact-icon')).toHaveCount(2);
 
     const publicJson = await guestPage.request.get(
       `/api/v1/public/cards/${slug}`,
@@ -71,7 +76,12 @@ test.describe('public card page', () => {
 
     await guestPage.reload();
     await expect(guestPage.getByRole('heading', { name: 'Public Name' })).toBeVisible();
-    await expect(guestPage.getByRole('link', { name: /Написать/ })).toHaveCount(0);
+    await expect(
+      guestPage.getByRole('link', { name: 'Написать · visible@example.com' }),
+    ).toHaveCount(0);
+    await expect(
+      guestPage.getByRole('link', { name: 'Позвонить · +79991112233' }),
+    ).toBeVisible();
 
     await ownerPage.getByRole('button', { name: 'Снять с публикации' }).click();
     await expect(ownerPage.getByText('статус')).toContainText('draft');
