@@ -799,41 +799,123 @@ button.linkish:hover {
   font-weight: 700;
 }
 
-/* ——— QR dialog / analytics ——— */
-.qr-dialog {
-  width: min(360px, calc(100vw - 2rem));
-  max-width: 100%;
-  border: 1px solid var(--line);
-  border-radius: calc(var(--radius) + 4px);
-  padding: 0;
-  background: var(--panel);
-  color: var(--ink);
+/* ——— Owner presentation (T-013): landing phone mock as attachment ——— */
+.present-shell {
+  min-height: 100vh;
+  padding: clamp(1rem, 3vw, 2rem);
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 1rem;
 }
 
-.qr-dialog::backdrop {
-  background: rgb(11 21 32 / 55%);
+.present-top {
+  display: flex;
+  justify-content: center;
+  width: min(420px, 100%);
 }
 
-.qr-dialog-body {
-  padding: 1.15rem 1.1rem 1.25rem;
+.present-brand {
+  white-space: nowrap;
 }
 
-.qr-dialog-title {
-  margin: 0 0 0.35rem;
-  font-family: var(--font);
-  font-size: 1.35rem;
-  line-height: 1.15;
+.present-stage.phone-stage {
+  position: relative;
+  width: min(340px, 92vw);
+  aspect-ratio: auto;
+  min-height: min(640px, 78vh);
+  animation: none;
 }
 
-.qr-preview {
+.present-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: rgb(244 248 251 / 62%);
+  background: rgb(245 248 251 / 8%);
+  border: 1px solid rgb(245 248 251 / 12%);
+  text-decoration: none;
+  transition: color 160ms var(--ease), background 160ms var(--ease), border-color 160ms var(--ease);
+}
+
+.present-close svg {
+  width: 14px;
+  height: 14px;
   display: block;
-  width: min(240px, 100%);
-  height: auto;
-  margin: 0.75rem auto 1rem;
-  background: #fff;
-  image-rendering: pixelated;
-  border-radius: 12px;
 }
+
+.present-close:hover,
+.present-close:focus-visible {
+  color: #f4f8fb;
+  background: rgb(245 248 251 / 14%);
+  border-color: rgb(245 248 251 / 22%);
+  outline: none;
+}
+
+.present-screen.phone-screen {
+  grid-template-rows: auto auto auto 1fr;
+  gap: 0.75rem;
+  min-height: min(600px, 74vh);
+}
+
+.present-screen .phone-name {
+  font-size: clamp(1.15rem, 4vw, 1.35rem);
+  overflow-wrap: anywhere;
+}
+
+.present-screen-summary {
+  margin: 0;
+  color: rgb(244 248 251 / 78%);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.present-screen .phone-contact-value {
+  text-decoration: none;
+  color: #f4f8fb;
+}
+
+a.phone-contact-value:hover,
+a.phone-contact-value:focus-visible {
+  color: color-mix(in srgb, var(--accent) 70%, #fff);
+}
+
+.present-qr-image.phone-qr,
+.present-qr-slot.phone-qr {
+  width: min(168px, 58%);
+  height: auto;
+  aspect-ratio: 1;
+  margin: 0.15rem auto;
+  padding: 10px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  background: #f5f8fb;
+}
+
+.present-qr-loading {
+  color: #0b1520;
+  font-weight: 700;
+}
+
+.present-notice {
+  margin: 0;
+  width: min(420px, 100%);
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--panel) 88%, var(--accent));
+  border: 1px solid var(--line);
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+/* ——— Analytics ——— */
 
 .photo-editor {
   margin: 0 0 0.5rem;
@@ -1053,6 +1135,14 @@ button.linkish:hover {
 
   .auth-aside {
     min-height: 220px;
+  }
+
+  .present-shell {
+    padding: 1rem;
+  }
+
+  .present-stage.phone-stage {
+    width: min(340px, 100%);
   }
 }
 

@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { CardAnalytics } from './card-analytics';
 import { LogoutButton } from './logout-button';
 import { PublicLinkActions } from './public-link-actions';
-import { QrActions } from './qr-actions';
 import { serverApiFetch } from '../../lib/server-api';
 
 type MeResponse = {
@@ -90,11 +89,12 @@ export default async function DashboardPage() {
                   >
                     Редактировать
                   </Link>
-                  <QrActions
-                    slug={card.slug}
-                    status={card.status}
-                    displayName={card.displayName}
-                  />
+                  <Link
+                    className="button secondary"
+                    href={`/cards/${card.id}/present`}
+                  >
+                    Показать визитку
+                  </Link>
                   <PublicLinkActions slug={card.slug} status={card.status} />
                 </div>
                 <CardAnalytics cardId={card.id} />
