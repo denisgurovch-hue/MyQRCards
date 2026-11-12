@@ -27,12 +27,16 @@ test.describe('cabinet QR', () => {
     await expect(page).toHaveURL(new RegExp(`/cards/.+/edit`));
 
     await page.goto('/dashboard');
-    await expect(page.getByText('Опубликуйте визитку, чтобы открыть QR-код.')).toBeVisible();
+    await expect(
+      page.getByText(
+        'Опубликуйте визитку, чтобы получить публичную ссылку и QR-код.',
+      ),
+    ).toBeVisible();
     await expect(page.getByRole('button', { name: 'QR-код' })).toHaveCount(0);
 
     await page.getByRole('link', { name: 'Редактировать' }).click();
     await page.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(page.getByText('статус')).toContainText('published');
+    await expect(page.getByText(/статус/i)).toContainText('published');
 
     await page.goto('/dashboard');
     await page.getByRole('button', { name: 'QR-код' }).click();
