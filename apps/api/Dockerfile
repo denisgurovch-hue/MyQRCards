@@ -16,8 +16,10 @@ RUN npx prisma generate && npm run build
 
 FROM node:20-alpine AS runner
 WORKDIR /app
+ARG GIT_SHA=unknown
 ENV NODE_ENV=production
 ENV API_PORT=3001
+ENV GIT_SHA=$GIT_SHA
 
 RUN addgroup -S nodejs && adduser -S nestjs -G nodejs
 

@@ -32,14 +32,14 @@ VK_ID_CLIENT_SECRET=<client_secret>
 VK_ID_REDIRECT_URI=https://smartvizitka.ru/api/v1/auth/vkid/callback
 ```
 
-Затем пересоздайте API-контейнер (env подхватывается при старте):
+Это **env-only** правка (без смены кода). Достаточно пересоздать API:
 
 ```bash
 cd /opt/myqrcards
-docker compose -f docker-compose.prod.yml --env-file .env.production up -d api
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --force-recreate --no-deps api
 ```
 
-Полный `./deploy/scripts/deploy.sh` тоже подходит.
+Если параллельно менялся код `apps/*`, не делайте partial recreate — только полный `./deploy/scripts/deploy.sh` (он всегда пересобирает **web** и **api**).
 
 ## 3. Локально
 

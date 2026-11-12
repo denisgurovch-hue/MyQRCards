@@ -1,6 +1,7 @@
 name: Deploy VPS
 
-# Optional manual deploy. Requires repository secrets:
+# Deploys via deploy/scripts/deploy.sh (rebuilds api + web, checks GIT_SHA markers).
+# Requires repository secrets:
 #   VPS_HOST          e.g. 203.0.113.10
 #   VPS_USER          e.g. deploy
 #   VPS_SSH_KEY       private key (full PEM)
@@ -9,6 +10,8 @@ name: Deploy VPS
 # The server must already be provisioned and contain .env.production.
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       branch:
@@ -20,6 +23,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve branch
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=main" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check secrets
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -40,18 +52,16 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          # Full script rebuilds web+api and verifies /build-id.txt + healthz.gitSha.
           script: |
             set -euo pipefail
             APP_DIR="${{ secrets.VPS_APP_DIR }}"
             APP_DIR="${APP_DIR:-/opt/myqrcards}"
             cd "$APP_DIR"
-            git fetch origin
-            git checkout "${{ inputs.branch }}"
-            git pull --ff-only origin "${{ inputs.branch }}"
-            BRANCH="${{ inputs.branch }}" ./deploy/scripts/deploy.sh
+            BRANCH="${{ steps.meta.outputs.branch }}" ./deploy/scripts/deploy.sh
 
       - name: Report blocker
         if: env.blocker == 'missing_secrets'
         run: |
-          echo "::notice::Configure VPS_HOST, VPS_USER, VPS_SSH_KEY to enable remote deploy."
+          echo "::notice::Configure VPS_HOST, VPS_USER, VPS_SSH_KEY to enable remote deploy after merges to main."
           exit 0

@@ -17,8 +17,11 @@ export class HealthService {
     private readonly redis: RedisService,
   ) {}
 
-  liveness(): { status: 'ok' } {
-    return { status: 'ok' };
+  liveness(): { status: 'ok'; gitSha: string } {
+    return {
+      status: 'ok',
+      gitSha: process.env.GIT_SHA?.trim() || 'unknown',
+    };
   }
 
   async readiness(): Promise<ReadyCheck> {
