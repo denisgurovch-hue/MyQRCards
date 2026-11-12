@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { apiFetch } from '../../../../lib/api';
+import { CardCoverEditor } from './card-cover-editor';
 import { CardPhotoEditor } from './card-photo-editor';
 
 type Card = {
@@ -17,6 +18,8 @@ type Card = {
   showEmail: boolean;
   websiteUrl: string | null;
   photoUrl: string | null;
+  coverColor: string | null;
+  coverImageUrl: string | null;
   slug: string;
   status: string;
   links: Array<{ label: string | null; url: string }>;
@@ -170,6 +173,28 @@ export default function EditCardPage() {
           onPhotoChange={(next) =>
             setCard((current) =>
               current ? { ...current, photoUrl: next } : current,
+            )
+          }
+        />
+        <CardCoverEditor
+          cardId={card.id}
+          coverColor={card.coverColor}
+          coverImageUrl={card.coverImageUrl}
+          onCoverChange={(next) =>
+            setCard((current) =>
+              current
+                ? {
+                    ...current,
+                    coverColor:
+                      next.coverColor !== undefined
+                        ? next.coverColor
+                        : current.coverColor,
+                    coverImageUrl:
+                      next.coverImageUrl !== undefined
+                        ? next.coverImageUrl
+                        : current.coverImageUrl,
+                  }
+                : current,
             )
           }
         />

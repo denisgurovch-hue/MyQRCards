@@ -114,6 +114,9 @@ export class CardsService {
     if (dto.photoUrl !== undefined) {
       data.photoUrl = dto.photoUrl || null;
     }
+    if (dto.coverColor !== undefined) {
+      data.coverColor = dto.coverColor?.trim() || null;
+    }
     if (dto.slug !== undefined) {
       const slug = normalizeSlug(dto.slug);
       if (!isValidSlug(slug)) {

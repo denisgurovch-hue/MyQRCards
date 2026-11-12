@@ -18,7 +18,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { AnalyticsService } from './analytics.service';
 import { CardPhotoService } from './card-photo.service';
-import { PHOTO_FIELD, PHOTO_MAX_BYTES } from './card-photo.constants';
+import {
+  COVER_FIELD,
+  PHOTO_FIELD,
+  PHOTO_MAX_BYTES,
+} from './card-photo.constants';
 import { CardsService } from './cards.service';
 import { MulterExceptionFilter } from './multer-exception.filter';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -93,6 +97,33 @@ export class CardsController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.photos.remove(user.id, id);
+  }
+
+  @Post(':id/cover')
+  @HttpCode(201)
+  @RateLimit({ key: 'cards:cover', limit: 20, windowSeconds: 60 })
+  @UseFilters(MulterExceptionFilter)
+  @UseInterceptors(
+    FileInterceptor(COVER_FIELD, {
+      storage: memoryStorage(),
+      limits: { fileSize: PHOTO_MAX_BYTES, files: 1 },
+    }),
+  )
+  uploadCover(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.photos.uploadCover(user.id, id, file);
+  }
+
+  @Delete(':id/cover')
+  @RateLimit({ key: 'cards:cover-delete', limit: 30, windowSeconds: 60 })
+  deleteCover(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.photos.removeCover(user.id, id);
   }
 
   @Get(':id')

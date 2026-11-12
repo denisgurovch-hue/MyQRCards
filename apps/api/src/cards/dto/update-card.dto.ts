@@ -59,6 +59,13 @@ export class UpdateCardDto {
 
   @IsOptional()
   @IsString()
+  @Matches(/^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$/, {
+    message: 'coverColor must be a hex color like #0B1520',
+  })
+  coverColor?: string | null;
+
+  @IsOptional()
+  @IsString()
   @MinLength(6)
   @MaxLength(32)
   @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {

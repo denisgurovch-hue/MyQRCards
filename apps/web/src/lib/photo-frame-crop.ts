@@ -1,12 +1,10 @@
-/** Square avatar frame crop helpers (client-side only). */
+/** Frame crop helpers (client-side only). Supports square avatars and wide covers. */
 
 export type FrameCropState = {
-  /** Image natural width */
   imageWidth: number;
-  /** Image natural height */
   imageHeight: number;
-  /** Viewport / frame size in CSS pixels (square) */
-  frameSize: number;
+  frameWidth: number;
+  frameHeight: number;
   /** User zoom multiplier (>= 1). 1 = cover-fit */
   zoom: number;
   /** Image left edge relative to frame, CSS px */
@@ -18,16 +16,33 @@ export type FrameCropState = {
 export function coverScale(
   imageWidth: number,
   imageHeight: number,
-  frameSize: number,
+  frameWidth: number,
+  frameHeight: number,
 ): number {
-  if (imageWidth <= 0 || imageHeight <= 0 || frameSize <= 0) {
+  if (
+    imageWidth <= 0 ||
+    imageHeight <= 0 ||
+    frameWidth <= 0 ||
+    frameHeight <= 0
+  ) {
     return 1;
   }
-  return Math.max(frameSize / imageWidth, frameSize / imageHeight);
+  return Math.max(frameWidth / imageWidth, frameHeight / imageHeight);
 }
 
-export function displayedSize(state: Pick<FrameCropState, 'imageWidth' | 'imageHeight' | 'frameSize' | 'zoom'>) {
-  const scale = coverScale(state.imageWidth, state.imageHeight, state.frameSize) * state.zoom;
+export function displayedSize(
+  state: Pick<
+    FrameCropState,
+    'imageWidth' | 'imageHeight' | 'frameWidth' | 'frameHeight' | 'zoom'
+  >,
+) {
+  const scale =
+    coverScale(
+      state.imageWidth,
+      state.imageHeight,
+      state.frameWidth,
+      state.frameHeight,
+    ) * state.zoom;
   return {
     scale,
     width: state.imageWidth * scale,
@@ -36,10 +51,12 @@ export function displayedSize(state: Pick<FrameCropState, 'imageWidth' | 'imageH
 }
 
 /** Clamp pan so the frame never shows empty space outside the image. */
-export function clampOffsets(state: FrameCropState): Pick<FrameCropState, 'offsetX' | 'offsetY'> {
+export function clampOffsets(
+  state: FrameCropState,
+): Pick<FrameCropState, 'offsetX' | 'offsetY'> {
   const { width, height } = displayedSize(state);
-  const minX = state.frameSize - width;
-  const minY = state.frameSize - height;
+  const minX = state.frameWidth - width;
+  const minY = state.frameHeight - height;
   return {
     offsetX: Math.min(0, Math.max(minX, state.offsetX)),
     offsetY: Math.min(0, Math.max(minY, state.offsetY)),
@@ -53,8 +70,8 @@ export function withZoom(state: FrameCropState, zoom: number): FrameCropState {
     return state;
   }
   const oldScale = displayedSize(state).scale;
-  const centerX = state.frameSize / 2;
-  const centerY = state.frameSize / 2;
+  const centerX = state.frameWidth / 2;
+  const centerY = state.frameHeight / 2;
   const imageX = (centerX - state.offsetX) / oldScale;
   const imageY = (centerY - state.offsetY) / oldScale;
   const next: FrameCropState = { ...state, zoom: nextZoom };
@@ -70,22 +87,25 @@ export function withZoom(state: FrameCropState, zoom: number): FrameCropState {
 export function initialCropState(
   imageWidth: number,
   imageHeight: number,
-  frameSize: number,
+  frameWidth: number,
+  frameHeight = frameWidth,
 ): FrameCropState {
   const zoom = 1;
   const { width, height } = displayedSize({
     imageWidth,
     imageHeight,
-    frameSize,
+    frameWidth,
+    frameHeight,
     zoom,
   });
   return {
     imageWidth,
     imageHeight,
-    frameSize,
+    frameWidth,
+    frameHeight,
     zoom,
-    offsetX: (frameSize - width) / 2,
-    offsetY: (frameSize - height) / 2,
+    offsetX: (frameWidth - width) / 2,
+    offsetY: (frameHeight - height) / 2,
   };
 }
 
@@ -93,13 +113,16 @@ export function initialCropState(
 export function sourceRect(state: FrameCropState): {
   sx: number;
   sy: number;
-  sSize: number;
+  sWidth: number;
+  sHeight: number;
 } {
   const { scale } = displayedSize(state);
-  const sx = -state.offsetX / scale;
-  const sy = -state.offsetY / scale;
-  const sSize = state.frameSize / scale;
-  return { sx, sy, sSize };
+  return {
+    sx: -state.offsetX / scale,
+    sy: -state.offsetY / scale,
+    sWidth: state.frameWidth / scale,
+    sHeight: state.frameHeight / scale,
+  };
 }
 
 function isRemoteHttpUrl(src: string): boolean {
@@ -151,26 +174,37 @@ export async function loadHtmlImage(src: string): Promise<HTMLImageElement> {
 }
 
 /**
- * Rasterize the framed region to a square JPEG blob for upload.
+ * Rasterize the framed region to a JPEG blob for upload.
  * Server still re-encodes to WebP and strips metadata.
  */
 export async function exportFramedJpeg(
   image: CanvasImageSource,
   state: FrameCropState,
-  outputSize = 800,
+  outputWidth = 800,
+  outputHeight = outputWidth,
   quality = 0.9,
 ): Promise<Blob> {
-  const { sx, sy, sSize } = sourceRect(state);
+  const { sx, sy, sWidth, sHeight } = sourceRect(state);
   const canvas = document.createElement('canvas');
-  canvas.width = outputSize;
-  canvas.height = outputSize;
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
   const ctx = canvas.getContext('2d');
   if (!ctx) {
     throw new Error('Не удалось подготовить изображение');
   }
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(image, sx, sy, sSize, sSize, 0, 0, outputSize, outputSize);
+  ctx.drawImage(
+    image,
+    sx,
+    sy,
+    sWidth,
+    sHeight,
+    0,
+    0,
+    outputWidth,
+    outputHeight,
+  );
 
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob(resolve, 'image/jpeg', quality),

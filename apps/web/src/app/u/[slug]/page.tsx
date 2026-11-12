@@ -1,7 +1,12 @@
+import type { CSSProperties } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { fetchPublicCard } from '../../../lib/public-api';
+import {
+  publicCoverCssVars,
+  resolvePublicCoverMode,
+} from '../../../lib/public-cover';
 import { publicCardAbsoluteUrl } from '../../../lib/public-url';
 import { PublicCardView } from './public-card-view';
 
@@ -77,8 +82,15 @@ export default async function PublicCardPage({ params }: PageProps) {
     );
   }
 
+  const coverMode = resolvePublicCoverMode(result.card);
+  const coverStyle = publicCoverCssVars(result.card);
+
   return (
-    <main className="public-shell">
+    <main
+      className="public-shell"
+      data-cover={coverMode}
+      style={coverStyle as CSSProperties}
+    >
       <PublicCardView card={result.card} />
     </main>
   );

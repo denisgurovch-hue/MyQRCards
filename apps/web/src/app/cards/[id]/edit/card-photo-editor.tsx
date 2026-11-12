@@ -240,8 +240,8 @@ export function CardPhotoEditor({
     session == null
       ? 1
       : Math.max(
-          session.crop.frameSize / session.crop.imageWidth,
-          session.crop.frameSize / session.crop.imageHeight,
+          session.crop.frameWidth / session.crop.imageWidth,
+          session.crop.frameHeight / session.crop.imageHeight,
         ) * session.crop.zoom;
 
   return (
@@ -257,7 +257,10 @@ export function CardPhotoEditor({
         <div className="photo-aligner">
           <div
             className="photo-aligner-frame"
-            style={{ width: FRAME_SIZE, height: FRAME_SIZE }}
+            style={{
+              width: session.crop.frameWidth,
+              height: session.crop.frameHeight,
+            }}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}
