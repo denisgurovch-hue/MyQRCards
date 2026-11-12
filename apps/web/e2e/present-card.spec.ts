@@ -16,7 +16,7 @@ async function register(page: import('@playwright/test').Page, name: string, mai
 }
 
 test.describe('present card (T-013)', () => {
-  test('draft preview without share; published shows QR downloads', async ({
+  test('draft preview without QR; published shows in-card QR', async ({
     page,
   }) => {
     const ownerEmail = email('present-owner');
@@ -36,7 +36,6 @@ test.describe('present card (T-013)', () => {
     await page.goto('/dashboard');
     await expect(page.getByRole('link', { name: 'Показать визитку' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'QR-код' })).toHaveCount(0);
-    await expect(page.getByText('Показать QR код')).toHaveCount(0);
 
     await page.getByRole('link', { name: 'Показать визитку' }).click();
     await expect(page).toHaveURL(new RegExp(`/cards/${cardId}/present`));
@@ -46,7 +45,10 @@ test.describe('present card (T-013)', () => {
         'Предпросмотр. Визитка не опубликована — QR-код и публичная ссылка недоступны',
       ),
     ).toBeVisible();
+    await expect(page.getByRole('img', { name: /QR-код визитки/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Скачать PNG' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Скачать SVG' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Копировать ссылку' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Открыть визитку' })).toHaveCount(0);
 
     await page.goto(`/cards/${cardId}/edit`);
@@ -57,25 +59,9 @@ test.describe('present card (T-013)', () => {
     await expect(page.getByRole('img', { name: /QR-код визитки/ })).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByText(new RegExp(`/u/${slug}`))).toBeVisible();
-
-    const pngDownloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Скачать PNG' }).click();
-    const pngDownload = await pngDownloadPromise;
-    expect(pngDownload.suggestedFilename()).toBe(`qrcard-${slug}.png`);
-
-    const svgDownloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Скачать SVG' }).click();
-    const svgDownload = await svgDownloadPromise;
-    expect(svgDownload.suggestedFilename()).toBe(`qrcard-${slug}.svg`);
-
-    const openPublic = page.getByRole('link', { name: 'Открыть визитку' });
-    await expect(openPublic).toHaveAttribute('href', `/u/${slug}`);
-    const popupPromise = page.waitForEvent('popup');
-    await openPublic.click();
-    const popup = await popupPromise;
-    await expect(popup).toHaveURL(new RegExp(`/u/${slug}`));
-    await popup.close();
+    await expect(page.getByRole('button', { name: 'Скачать PNG' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Открыть визитку' })).toHaveCount(0);
+    await expect(page.getByText(`http://127.0.0.1:3000/u/${slug}`)).toHaveCount(0);
   });
 
   test('foreign card present returns 404', async ({ page, browser }) => {

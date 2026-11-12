@@ -16,7 +16,6 @@ import {
   PresentContactIcon,
   resolvePresentContactKind,
 } from './present-contact-icon';
-import { PresentOwnerTools } from './present-owner-tools';
 import { PresentQrBlock, type QrViewState } from './present-qr-block';
 
 type Props = {
@@ -163,12 +162,6 @@ export function PresentView({ card }: Props) {
             : 'Публичное распространение недоступно. Визитка снята с публикации или недоступна.'}
         </p>
       ) : null}
-
-      <PresentOwnerTools
-        slug={card.slug}
-        enabled={shareEnabled && qrState.kind !== 'unavailable'}
-        onShareUnavailable={onShareUnavailable}
-      />
     </main>
   );
 }

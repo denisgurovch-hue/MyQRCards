@@ -886,27 +886,6 @@ a.phone-contact-value:focus-visible {
   line-height: 1.4;
 }
 
-.present-owner-tools {
-  width: min(420px, 100%);
-  display: grid;
-  gap: 0.55rem;
-}
-
-.present-owner-url {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.86rem;
-  overflow-wrap: anywhere;
-  text-align: center;
-}
-
-.present-owner-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
 /* ——— Analytics ——— */
 
 .photo-editor {
