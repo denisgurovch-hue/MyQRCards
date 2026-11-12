@@ -25,17 +25,19 @@ export default function HomePage() {
       <aside className="landing-visual" aria-hidden="true">
         <div className="phone-stage">
           <div className="phone-screen">
-            <Image
-              className="phone-avatar phone-avatar-photo"
-              src="/images/mock-card-portrait.jpg"
-              alt=""
-              width={88}
-              height={88}
-              priority
-            />
-            <div>
-              <p className="phone-name">Мария Орлова</p>
-              <p className="phone-meta">Product · SmartVizitka</p>
+            <div className="phone-head">
+              <Image
+                className="phone-avatar phone-avatar-photo"
+                src="/images/mock-card-portrait.jpg"
+                alt=""
+                width={72}
+                height={72}
+                priority
+              />
+              <div>
+                <p className="phone-name">Мария Орлова</p>
+                <p className="phone-meta">Product · Signet</p>
+              </div>
             </div>
             <div className="phone-qr" role="img" aria-label="Пример QR-кода">
               <svg
@@ -54,6 +56,24 @@ export default function HomePage() {
                 />
               </svg>
             </div>
+            <ul className="phone-contacts">
+              <li>
+                <span className="phone-contact-label">Телефон</span>
+                <span className="phone-contact-value">+7 999 123-45-67</span>
+              </li>
+              <li>
+                <span className="phone-contact-label">E-mail</span>
+                <span className="phone-contact-value">maria@signet.app</span>
+              </li>
+              <li>
+                <span className="phone-contact-label">Telegram</span>
+                <span className="phone-contact-value">@maria_orlova</span>
+              </li>
+              <li>
+                <span className="phone-contact-label">LinkedIn</span>
+                <span className="phone-contact-value">linkedin.com/in/orlova</span>
+              </li>
+            </ul>
             <span className="phone-chip">Сохранить контакт</span>
           </div>
         </div>
