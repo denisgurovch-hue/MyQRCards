@@ -2,6 +2,10 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import {
+  ContactIcon,
+  resolveContactKind,
+} from '../../../lib/contact-icon';
 import type { PublicCard } from '../../../lib/public-card.types';
 import {
   safeHttpUrl,
@@ -20,10 +24,14 @@ type Props = {
 };
 
 type Action = {
+  key: string;
   href: string;
   label: string;
+  ariaLabel: string;
   external?: boolean;
   channel: ContactClickChannel;
+  type?: string | null;
+  url?: string | null;
 };
 
 export function PublicCardView({ card }: Props) {
@@ -42,39 +50,51 @@ export function PublicCardView({ card }: Props) {
   const actions: Action[] = [];
   if (phoneHref && card.phone) {
     actions.push({
+      key: 'phone',
       href: phoneHref,
-      label: `Позвонить · ${card.phone}`,
+      label: card.phone,
+      ariaLabel: `Позвонить · ${card.phone}`,
       channel: 'phone',
     });
   }
   if (emailHref && card.email) {
     actions.push({
+      key: 'email',
       href: emailHref,
-      label: `Написать · ${card.email}`,
+      label: card.email,
+      ariaLabel: `Написать · ${card.email}`,
       channel: 'email',
     });
   }
   if (websiteHref) {
     actions.push({
+      key: 'website',
       href: websiteHref,
-      label: 'Сайт',
+      label: websiteHref.replace(/^https?:\/\//, ''),
+      ariaLabel: 'Сайт',
       external: true,
       channel: resolveContactChannel({
         kind: 'website',
         url: websiteHref,
       }),
+      url: websiteHref,
     });
   }
   for (const link of links) {
+    const label = link.label?.trim() || link.type || link.href!;
     actions.push({
+      key: `${link.type ?? 'link'}-${link.href}`,
       href: link.href!,
-      label: link.label?.trim() || link.type || link.href!,
+      label,
+      ariaLabel: label,
       external: true,
       channel: resolveContactChannel({
         kind: 'link',
         type: link.type,
         url: link.url,
       }),
+      type: link.type,
+      url: link.url,
     });
   }
 
@@ -105,20 +125,32 @@ export function PublicCardView({ card }: Props) {
       {card.summary ? <p className="public-summary">{card.summary}</p> : null}
 
       {actions.length > 0 ? (
-        <nav className="public-actions" aria-label="Контакты">
-          {actions.map((action) => (
-            <a
-              key={`${action.href}-${action.label}`}
-              className="public-action"
-              href={action.href}
-              onClick={() => trackContactClick(card.slug, action.channel)}
-              {...(action.external
-                ? { target: '_blank', rel: 'noopener noreferrer' }
-                : {})}
-            >
-              {action.label}
-            </a>
-          ))}
+        <nav className="public-contacts" aria-label="Контакты">
+          {actions.map((action) => {
+            const kind = resolveContactKind({
+              key: action.key,
+              type: action.type,
+              url: action.url ?? action.href,
+              channel: action.channel,
+            });
+            return (
+              <a
+                key={action.key}
+                className="public-contact"
+                href={action.href}
+                aria-label={action.ariaLabel}
+                onClick={() => trackContactClick(card.slug, action.channel)}
+                {...(action.external
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+              >
+                <span className="public-contact-icon">
+                  <ContactIcon kind={kind} />
+                </span>
+                <span className="public-contact-value">{action.label}</span>
+              </a>
+            );
+          })}
         </nav>
       ) : null}
 
