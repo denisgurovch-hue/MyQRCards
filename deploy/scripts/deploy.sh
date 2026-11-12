@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Deploy / update MyQRCards on a provisioned VPS.
+# Always rebuilds and recreates BOTH api and web — do not replace this with
+# a partial `docker compose up … api` after frontend/backend code changes.
 # Run from the app directory (default /opt/myqrcards) as the deploy user.
 set -euo pipefail
 
@@ -43,21 +45,50 @@ if [[ -d .git ]]; then
   git pull --ff-only origin "$BRANCH"
 fi
 
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" build
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d
+GIT_SHA="$(git rev-parse HEAD)"
+export GIT_SHA
+echo "Deploying branch=${BRANCH} sha=${GIT_SHA}"
 
-echo "Waiting for health…"
+compose() {
+  docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
+}
+
+# Explicit app rebuild — Next bakes UI into the web image; git pull alone is not enough.
+compose build api web
+# Keep data services up; always recreate app containers onto the new images.
+compose up -d --remove-orphans postgres redis
+compose up -d --force-recreate --no-deps api web
+
+echo "Waiting for health and build markers…"
 for i in $(seq 1 60); do
   if curl -fsS "http://127.0.0.1:3001/api/v1/healthz" >/dev/null \
-    && curl -fsS "http://127.0.0.1:3000/" >/dev/null; then
-    echo "Deploy healthy."
-    docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps
+    && curl -fsS "http://127.0.0.1:3000/" >/dev/null \
+    && curl -fsS "http://127.0.0.1:3000/build-id.txt" >/dev/null; then
+    web_id="$(curl -fsS "http://127.0.0.1:3000/build-id.txt" | tr -d '[:space:]')"
+    api_sha="$(
+      curl -fsS "http://127.0.0.1:3001/api/v1/healthz" \
+        | python3 -c 'import sys, json; print(json.load(sys.stdin).get("gitSha", ""))'
+    )"
+    if [[ "$web_id" != "$GIT_SHA" ]]; then
+      echo "web build-id mismatch: got '${web_id}' want '${GIT_SHA}'" >&2
+      compose ps
+      compose logs --tail=80 web
+      exit 1
+    fi
+    if [[ "$api_sha" != "$GIT_SHA" ]]; then
+      echo "api gitSha mismatch: got '${api_sha}' want '${GIT_SHA}'" >&2
+      compose ps
+      compose logs --tail=80 api
+      exit 1
+    fi
+    echo "Deploy healthy (web+api @ ${GIT_SHA})."
+    compose ps
     exit 0
   fi
   sleep 2
 done
 
 echo "Health check timed out." >&2
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" ps
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" logs --tail=80
+compose ps
+compose logs --tail=80
 exit 1

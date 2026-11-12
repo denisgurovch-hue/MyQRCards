@@ -10,15 +10,18 @@ FROM node:20-alpine AS build
 WORKDIR /app
 ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ARG NEXT_PUBLIC_API_URL=http://localhost:3000
+ARG GIT_SHA=unknown
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV API_URL=http://api:3001
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV GIT_SHA=$GIT_SHA
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json ./
 COPY apps/web ./apps/web
-RUN mkdir -p apps/web/public
+RUN mkdir -p apps/web/public \
+  && printf '%s\n' "$GIT_SHA" > apps/web/public/build-id.txt
 WORKDIR /app/apps/web
 RUN npm run build
 

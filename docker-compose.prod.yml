@@ -43,12 +43,15 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
     restart: unless-stopped
     env_file:
       - .env.production
     environment:
       NODE_ENV: production
       API_PORT: 3001
+      GIT_SHA: ${GIT_SHA:-unknown}
       DATABASE_URL: postgresql://${POSTGRES_USER:-myqrcards}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-myqrcards}?schema=public
       REDIS_URL: redis://redis:6379
       COOKIE_SECURE: "true"
@@ -86,6 +89,7 @@ services:
       args:
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:?set NEXT_PUBLIC_APP_URL}
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?set NEXT_PUBLIC_API_URL}
+        GIT_SHA: ${GIT_SHA:-unknown}
     restart: unless-stopped
     env_file:
       - .env.production

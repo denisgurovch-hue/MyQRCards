@@ -7,7 +7,7 @@ import { HealthService } from './health.service';
 describe('HealthController', () => {
   let app: INestApplication;
   const healthService = {
-    liveness: jest.fn().mockReturnValue({ status: 'ok' }),
+    liveness: jest.fn().mockReturnValue({ status: 'ok', gitSha: 'test-sha' }),
     readiness: jest.fn(),
   };
 
@@ -37,7 +37,7 @@ describe('HealthController', () => {
     await request(app.getHttpServer())
       .get('/api/v1/healthz')
       .expect(200)
-      .expect({ status: 'ok' });
+      .expect({ status: 'ok', gitSha: 'test-sha' });
   });
 
   it('GET /readyz returns 200 when dependencies are up', async () => {

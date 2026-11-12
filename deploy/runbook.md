@@ -42,13 +42,32 @@ Postgres/Redis are **not** published publicly; web/api bind `127.0.0.1:3000/3001
 
 ## Deploy (update)
 
+After every merge that should reach production (frontend **or** backend):
+
 ```bash
 cd /opt/myqrcards
 ./deploy/scripts/deploy.sh
 # or: BRANCH=cursor/… ./deploy/scripts/deploy.sh
 ```
 
+`deploy.sh` always:
+1. Fast-forwards git to `BRANCH`
+2. Rebuilds **api** and **web** images with `GIT_SHA`
+3. Force-recreates **api** and **web** containers
+4. Checks `/api/v1/healthz` (`gitSha`) and `/build-id.txt` match that SHA
+
 API container runs `prisma migrate deploy` on start.
+
+### Do not (anti-patterns)
+
+| Bad | Why it fails |
+|---|---|
+| `git pull` only | Host checkout updates; running Docker images do not |
+| `docker compose up -d --force-recreate api` after UI merge | Web keeps serving the previous Next build |
+| Rely on browser cache clear | Prod HTML comes from the old `web` image |
+| Skip deploy after merging to `main` | Merge ≠ release until `deploy.sh` (or CI Deploy VPS) runs |
+
+**Env-only** changes (e.g. `VK_ID_*` in `.env.production`) may recreate just `api` without a rebuild. Any change under `apps/web` or `apps/api` requires full `./deploy/scripts/deploy.sh`.
 
 ## Rollback
 
@@ -92,3 +111,4 @@ Schedule daily backup via cron as `deploy`:
 - `COOKIE_SECURE=true`.
 - Canonical QR/vCard URLs come from `WEB_ORIGIN`, never from request `Host`.
 - Rebuild **web** after changing `NEXT_PUBLIC_*` (baked at image build time).
+- Deployed revision: `curl -fsS https://$DOMAIN/build-id.txt` and `…/api/v1/healthz` → `gitSha` must equal `git rev-parse HEAD` on the VPS.

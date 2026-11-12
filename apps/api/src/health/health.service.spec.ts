@@ -18,8 +18,30 @@ describe('HealthService', () => {
     service = new HealthService(prisma, redis);
   });
 
-  it('returns ok for liveness', () => {
-    expect(service.liveness()).toEqual({ status: 'ok' });
+  it('returns ok for liveness with gitSha', () => {
+    const previous = process.env.GIT_SHA;
+    process.env.GIT_SHA = 'abc123';
+    try {
+      expect(service.liveness()).toEqual({ status: 'ok', gitSha: 'abc123' });
+    } finally {
+      if (previous === undefined) {
+        delete process.env.GIT_SHA;
+      } else {
+        process.env.GIT_SHA = previous;
+      }
+    }
+  });
+
+  it('defaults gitSha to unknown when unset', () => {
+    const previous = process.env.GIT_SHA;
+    delete process.env.GIT_SHA;
+    try {
+      expect(service.liveness()).toEqual({ status: 'ok', gitSha: 'unknown' });
+    } finally {
+      if (previous !== undefined) {
+        process.env.GIT_SHA = previous;
+      }
+    }
   });
 
   it('returns ok when database and redis are up', async () => {
