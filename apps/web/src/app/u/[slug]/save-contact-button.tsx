@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 type Props = {
   slug: string;
@@ -35,20 +35,19 @@ async function fetchVcardBlob(slug: string): Promise<Blob> {
 
 function triggerDownload(blob: Blob, filename: string) {
   const objectUrl = URL.createObjectURL(blob);
-  try {
-    const anchor = document.createElement('a');
-    anchor.href = objectUrl;
-    anchor.download = filename;
-    anchor.rel = 'noopener';
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  // Defer revoke: immediate revoke races the download handoff on mobile Safari.
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 2_000);
 }
 
 export function SaveContactButton({ slug }: Props) {
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,19 +68,32 @@ export function SaveContactButton({ slug }: Props) {
       );
     } finally {
       setPending(false);
+      // iOS Safari often leaves the label unpainted after a download/share sheet
+      // if the control was disabled mid-tap; blur forces a fresh paint.
+      requestAnimationFrame(() => {
+        buttonRef.current?.blur();
+      });
     }
   }
 
   return (
     <div className="public-vcard">
       <button
+        ref={buttonRef}
         type="button"
         className="public-action public-action-secondary"
         onClick={() => void onSave()}
-        disabled={pending}
         aria-busy={pending}
+        aria-disabled={pending}
+        data-pending={pending ? 'true' : undefined}
       >
-        {pending ? 'Готовим файл…' : 'Сохранить контакт'}
+        {/* Keep both labels mounted so WebKit does not drop the text node paint. */}
+        <span className="public-action-label" hidden={pending}>
+          Сохранить контакт
+        </span>
+        <span className="public-action-label" hidden={!pending}>
+          Готовим файл…
+        </span>
       </button>
       <p className="muted public-vcard-hint">
         Откроется файл контакта. Подтвердите добавление на устройстве.
@@ -93,7 +105,7 @@ export function SaveContactButton({ slug }: Props) {
             type="button"
             className="linkish"
             onClick={() => void onSave()}
-            disabled={pending}
+            aria-disabled={pending}
           >
             Повторить
           </button>
