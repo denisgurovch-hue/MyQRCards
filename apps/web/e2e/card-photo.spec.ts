@@ -36,7 +36,8 @@ test.describe('card photo editor (T-015)', () => {
     await expect(page.getByRole('button', { name: 'Подогнать' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Загрузить фото' })).toHaveCount(0);
 
-    const fileInput = page.locator('input[type="file"][accept*="image/jpeg"]');
+    const photoRegion = page.getByRole('region', { name: 'Фото' });
+    const fileInput = photoRegion.locator('input[type="file"][accept*="image/jpeg"]');
     await fileInput.setInputFiles({
       name: 'avatar.jpg',
       mimeType: 'image/jpeg',
