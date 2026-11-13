@@ -1,19 +1,19 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import {
-  PointerEvent as ReactPointerEvent,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import {
-  clampOffsets,
   exportFramedJpeg,
   initialCropState,
   loadHtmlImage,
-  withZoom,
+  rotateImageClockwiseJpeg,
   type FrameCropState,
 } from '../../../../lib/photo-frame-crop';
+import {
+  PHOTO_CLIENT_ACCEPT,
+  validatePhotoSourceFile,
+} from '../../../../lib/photo-source-limits';
+import { PhotoAvatarBlock } from './photo-avatar-block';
+import { PhotoCropDialog } from './photo-crop-dialog';
 
 type PhotoPayload = {
   id: string;
@@ -30,13 +30,13 @@ type Props = {
   onPhotoChange: (photoUrl: string | null) => void;
 };
 
-const ACCEPT = 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';
-const FRAME_SIZE = 240;
-const MAX_ZOOM = 3;
+const FRAME_SIZE = 280;
 
-type AlignSession = {
+type CropSession = {
   objectUrl: string;
   crop: FrameCropState;
+  /** Baseline crop for «Сброс» (after last file pick / rotate). */
+  initialCrop: FrameCropState;
 };
 
 export function CardPhotoEditor({
@@ -46,21 +46,11 @@ export function CardPhotoEditor({
   onPhotoChange,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const dragRef = useRef<{
-    pointerId: number;
-    startX: number;
-    startY: number;
-    originX: number;
-    originY: number;
-  } | null>(null);
-
-  const [session, setSession] = useState<AlignSession | null>(null);
+  const [session, setSession] = useState<CropSession | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imgFailed, setImgFailed] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
-  // Revoke only when the blob URL itself changes — not on every pan/zoom
-  // crop update (those also replace `session` and previously revoked the file).
   const sessionObjectUrl = session?.objectUrl ?? null;
   useEffect(() => {
     if (!sessionObjectUrl?.startsWith('blob:')) {
@@ -71,16 +61,13 @@ export function CardPhotoEditor({
     };
   }, [sessionObjectUrl]);
 
-  useEffect(() => {
-    setImgFailed(false);
-  }, [photoUrl]);
-
-  const initials = displayName.trim().slice(0, 1).toUpperCase() || '?';
-  const aligning = Boolean(session);
-
   function openPicker() {
     setError(null);
-    inputRef.current?.click();
+    setConfirmDelete(false);
+    if (inputRef.current) {
+      inputRef.current.value = '';
+      inputRef.current.click();
+    }
   }
 
   function clearSession() {
@@ -90,81 +77,67 @@ export function CardPhotoEditor({
     }
   }
 
-  async function beginAlign(src: string, revokeOnFail = false) {
-    setError(null);
-    try {
-      const image = await loadHtmlImage(src);
-      const crop = initialCropState(
-        image.naturalWidth,
-        image.naturalHeight,
-        FRAME_SIZE,
-      );
-      // Previous blob URL is revoked by the sessionObjectUrl effect cleanup.
-      setSession({ objectUrl: src, crop });
-    } catch (err) {
-      if (revokeOnFail && src.startsWith('blob:')) {
-        URL.revokeObjectURL(src);
-      }
-      setError(err instanceof Error ? err.message : 'Не удалось открыть изображение');
-    }
+  async function beginSessionFromObjectUrl(objectUrl: string) {
+    const image = await loadHtmlImage(objectUrl);
+    const crop = initialCropState(
+      image.naturalWidth,
+      image.naturalHeight,
+      FRAME_SIZE,
+    );
+    setSession({ objectUrl, crop, initialCrop: crop });
   }
 
-  function onFilePicked(file: File | null) {
+  async function onFilePicked(file: File | null) {
     if (!file) {
       return;
     }
-    const url = URL.createObjectURL(file);
-    void beginAlign(url, true);
-  }
-
-  function updateCrop(patch: Partial<FrameCropState>) {
-    setSession((current) => {
-      if (!current) {
-        return current;
+    setError(null);
+    try {
+      await validatePhotoSourceFile(file);
+      const objectUrl = URL.createObjectURL(file);
+      try {
+        await beginSessionFromObjectUrl(objectUrl);
+      } catch (err) {
+        URL.revokeObjectURL(objectUrl);
+        throw err;
       }
-      const next = { ...current.crop, ...patch };
-      const clamped = clampOffsets(next);
-      return {
-        ...current,
-        crop: { ...next, ...clamped },
-      };
-    });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Не удалось открыть изображение',
+      );
+    }
   }
 
-  function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (!session) {
+  async function onRotate() {
+    if (!session || uploading) {
       return;
     }
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      originX: session.crop.offsetX,
-      originY: session.crop.offsetY,
-    };
-  }
-
-  function onPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
-    const drag = dragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) {
-      return;
-    }
-    updateCrop({
-      offsetX: drag.originX + (event.clientX - drag.startX),
-      offsetY: drag.originY + (event.clientY - drag.startY),
-    });
-  }
-
-  function onPointerUp(event: ReactPointerEvent<HTMLDivElement>) {
-    if (dragRef.current?.pointerId === event.pointerId) {
-      dragRef.current = null;
+    setError(null);
+    try {
+      const blob = await rotateImageClockwiseJpeg(session.objectUrl);
+      const nextUrl = URL.createObjectURL(blob);
+      try {
+        const image = await loadHtmlImage(nextUrl);
+        const crop = initialCropState(
+          image.naturalWidth,
+          image.naturalHeight,
+          FRAME_SIZE,
+        );
+        // Previous blob revoked by sessionObjectUrl effect when URL changes.
+        setSession({ objectUrl: nextUrl, crop, initialCrop: crop });
+      } catch (err) {
+        URL.revokeObjectURL(nextUrl);
+        throw err;
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Не удалось повернуть изображение',
+      );
     }
   }
 
-  async function onSaveAligned() {
-    if (!session) {
-      openPicker();
+  async function onSave() {
+    if (!session || uploading) {
       return;
     }
     setUploading(true);
@@ -203,7 +176,10 @@ export function CardPhotoEditor({
     }
   }
 
-  async function onDelete() {
+  async function onDeleteConfirmed() {
+    if (uploading) {
+      return;
+    }
     setUploading(true);
     setError(null);
     try {
@@ -221,6 +197,7 @@ export function CardPhotoEditor({
         throw new Error(data?.error?.message ?? 'Не удалось удалить фото');
       }
       onPhotoChange(null);
+      setConfirmDelete(false);
       clearSession();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось удалить фото');
@@ -229,180 +206,94 @@ export function CardPhotoEditor({
     }
   }
 
-  async function onAdjustExisting() {
-    if (!photoUrl) {
-      return;
-    }
-    await beginAlign(photoUrl);
-  }
-
-  const scale =
-    session == null
-      ? 1
-      : Math.max(
-          session.crop.frameWidth / session.crop.imageWidth,
-          session.crop.frameHeight / session.crop.imageHeight,
-        ) * session.crop.zoom;
-
   return (
     <section className="photo-editor" aria-label="Фото">
       <h2 className="section-title" style={{ fontSize: '1.15rem' }}>
         Фото
       </h2>
-      <p className="muted" style={{ marginTop: 0 }}>
-        JPEG, PNG или WebP до 5 MB. Перетащите фото внутри рамки и подгоните масштаб.
-      </p>
 
-      {aligning && session ? (
-        <div className="photo-aligner">
-          <div
-            className="photo-aligner-frame"
-            style={{
-              width: session.crop.frameWidth,
-              height: session.crop.frameHeight,
-            }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            role="presentation"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={session.objectUrl}
-              alt=""
-              className="photo-aligner-image"
-              draggable={false}
-              style={{
-                width: session.crop.imageWidth * scale,
-                height: session.crop.imageHeight * scale,
-                transform: `translate(${session.crop.offsetX}px, ${session.crop.offsetY}px)`,
-              }}
-            />
-          </div>
-          <label className="photo-aligner-zoom">
-            Масштаб
-            <input
-              type="range"
-              min={1}
-              max={MAX_ZOOM}
-              step={0.01}
-              value={session.crop.zoom}
-              disabled={uploading}
-              onChange={(event) => {
-                const zoom = Number(event.target.value);
-                setSession((current) =>
-                  current
-                    ? { ...current, crop: withZoom(current.crop, zoom) }
-                    : current,
-                );
-              }}
-            />
-          </label>
-        </div>
-      ) : (
-        <div className="photo-editor-preview">
-          {photoUrl && !imgFailed ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={photoUrl}
-              alt=""
-              className="photo-editor-image"
-              onError={() => setImgFailed(true)}
-            />
-          ) : (
-            <div className="photo-editor-fallback" aria-hidden="true">
-              {initials}
-            </div>
-          )}
-        </div>
-      )}
+      <PhotoAvatarBlock
+        photoUrl={photoUrl}
+        displayName={displayName}
+        busy={uploading}
+        onAddPhoto={openPicker}
+        onChooseOther={openPicker}
+        onRequestDelete={() => {
+          setError(null);
+          setConfirmDelete(true);
+        }}
+      />
 
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPT}
+        accept={PHOTO_CLIENT_ACCEPT}
         hidden
-        onChange={(event) => onFilePicked(event.target.files?.[0] ?? null)}
+        onChange={(event) => void onFilePicked(event.target.files?.[0] ?? null)}
       />
 
-      {error ? (
+      {confirmDelete ? (
+        <div className="photo-delete-confirm" role="group" aria-label="Удаление фото">
+          <p className="muted" style={{ margin: 0 }}>
+            Удалить фото с визитки?
+          </p>
+          <div className="photo-delete-confirm-actions">
+            <button
+              type="button"
+              className="button accent"
+              disabled={uploading}
+              onClick={() => void onDeleteConfirmed()}
+            >
+              {uploading ? 'Удаляем…' : 'Удалить'}
+            </button>
+            <button
+              type="button"
+              className="button secondary"
+              disabled={uploading}
+              onClick={() => setConfirmDelete(false)}
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {error && !session ? (
         <p className="error" role="alert">
           {error}
         </p>
       ) : null}
-      {uploading ? <p className="muted">Загрузка фото…</p> : null}
 
-      <div className="card-row-actions">
-        {aligning ? (
-          <>
-            <button
-              type="button"
-              className="button accent"
-              onClick={() => void onSaveAligned()}
-              disabled={uploading}
-            >
-              {uploading ? 'Сохраняем…' : 'Сохранить фото'}
-            </button>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={openPicker}
-              disabled={uploading}
-            >
-              Выбрать другое
-            </button>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={clearSession}
-              disabled={uploading}
-            >
-              Отмена
-            </button>
-          </>
-        ) : null}
-
-        {!aligning && !photoUrl ? (
-          <button
-            type="button"
-            className="button secondary"
-            onClick={openPicker}
-            disabled={uploading}
-          >
-            Загрузить фото
-          </button>
-        ) : null}
-
-        {!aligning && photoUrl ? (
-          <>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => void onAdjustExisting()}
-              disabled={uploading}
-            >
-              Подогнать
-            </button>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={openPicker}
-              disabled={uploading}
-            >
-              Заменить фото
-            </button>
-            <button
-              type="button"
-              className="button secondary"
-              onClick={() => void onDelete()}
-              disabled={uploading}
-            >
-              Удалить фото
-            </button>
-          </>
-        ) : null}
-      </div>
+      {session ? (
+        <PhotoCropDialog
+          open
+          objectUrl={session.objectUrl}
+          crop={session.crop}
+          uploading={uploading}
+          error={error}
+          onCropChange={(crop) =>
+            setSession((current) =>
+              current ? { ...current, crop } : current,
+            )
+          }
+          onCancel={() => {
+            if (!uploading) {
+              clearSession();
+              setError(null);
+            }
+          }}
+          onSave={() => void onSave()}
+          onPickOther={openPicker}
+          onReset={() =>
+            setSession((current) =>
+              current
+                ? { ...current, crop: current.initialCrop }
+                : current,
+            )
+          }
+          onRotate={() => void onRotate()}
+        />
+      ) : null}
     </section>
   );
 }
