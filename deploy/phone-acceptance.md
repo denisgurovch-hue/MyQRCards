@@ -21,7 +21,8 @@ SLUG=your-published-slug
 
 curl -fsS -o /dev/null -w "%{http_code}\n" "$DOMAIN/"
 curl -fsS "$DOMAIN/api/v1/healthz"
-curl -fsS -D- -o /tmp/card.vcf "$DOMAIN/api/v1/public/cards/$SLUG/vcard" | tr -d '\r' | grep -Ei 'content-type: text/vcard|cache-control: no-store'
+curl -fsS -D- -o /tmp/card.vcf "$DOMAIN/api/v1/public/cards/$SLUG/vcard" | tr -d '\r' | grep -Ei 'content-type: text/vcard|content-disposition: inline|cache-control: no-store'
+curl -fsS -D- -o /tmp/card-dl.vcf "$DOMAIN/api/v1/public/cards/$SLUG/vcard?download=1" | tr -d '\r' | grep -Ei 'content-disposition: attachment'
 curl -fsS -D- -o /tmp/qr.png "$DOMAIN/api/v1/public/cards/$SLUG/qr.png" | tr -d '\r' | grep -Ei 'content-type: image/png|cache-control: no-store'
 # Decode PNG and assert payload == "$DOMAIN/u/$SLUG" (use project unit approach or zbarimg/jsQR)
 ```

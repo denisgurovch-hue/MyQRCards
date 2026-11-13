@@ -111,7 +111,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
   /public/cards/{slug}/vcard:
     get:
-      summary: Download vCard 3.0 for a published card
+      summary: Open or download vCard 3.0 for a published card
       parameters:
         - in: path
           name: slug
@@ -120,14 +120,24 @@ paths:
             type: string
             minLength: 6
             maxLength: 32
+        - in: query
+          name: download
+          required: false
+          description: Omit for inline open; only value `1` selects attachment download
+          schema:
+            type: string
+            enum: ['1']
       responses:
         '200':
-          description: UTF-8 vCard 3.0 from public card projection
+          description: UTF-8 vCard 3.0 from public card projection (same bytes for inline and attachment)
           headers:
             Cache-Control:
               schema: { type: string, example: no-store }
             Content-Disposition:
-              schema: { type: string, example: 'attachment; filename="contact-ivan-ivanov.vcf"' }
+              schema:
+                type: string
+                example: 'inline; filename="contact-ivan-ivanov.vcf"'
+                description: 'inline by default; attachment when download=1'
             X-Content-Type-Options:
               schema: { type: string, example: nosniff }
           content:
@@ -135,6 +145,12 @@ paths:
               schema:
                 type: string
                 format: binary
+        '400':
+          description: Invalid download query (JSON error, not a .vcf body)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: Card not found (draft/archived/deleted/unknown/invalid slug)
           content:
