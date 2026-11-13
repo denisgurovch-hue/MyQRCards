@@ -84,6 +84,50 @@ export function withZoom(state: FrameCropState, zoom: number): FrameCropState {
   return { ...next, ...offsets };
 }
 
+/** Nudge pan by CSS pixels (keyboard / buttons), then clamp. */
+export function nudgeOffsets(
+  state: FrameCropState,
+  deltaX: number,
+  deltaY: number,
+): FrameCropState {
+  return {
+    ...state,
+    ...clampOffsets({
+      ...state,
+      offsetX: state.offsetX + deltaX,
+      offsetY: state.offsetY + deltaY,
+    }),
+  };
+}
+
+/**
+ * Rotate source pixels 90° clockwise into a new JPEG blob.
+ * Callers re-init crop state from the result (avoids twisting FrameCropState).
+ */
+export async function rotateImageClockwiseJpeg(
+  src: string,
+  quality = 0.92,
+): Promise<Blob> {
+  const image = await loadHtmlImage(src);
+  const canvas = document.createElement('canvas');
+  canvas.width = image.naturalHeight;
+  canvas.height = image.naturalWidth;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Не удалось подготовить изображение');
+  }
+  ctx.translate(canvas.width, 0);
+  ctx.rotate(Math.PI / 2);
+  ctx.drawImage(image, 0, 0);
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', quality),
+  );
+  if (!blob) {
+    throw new Error('Не удалось подготовить изображение');
+  }
+  return blob;
+}
+
 export function initialCropState(
   imageWidth: number,
   imageHeight: number,

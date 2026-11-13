@@ -1,4 +1,6 @@
-# Card photos API (T-012)
+# Card photos API (T-012 / T-015)
+
+Owner UI uses **model B**: upload/delete happen via these endpoints immediately («Сохранить фото» / «Удалить»), independent of the card text `PATCH`. The editor applies a client-side square crop first; the API still validates the uploaded bytes (not a stored original). Clients also gate source files to JPEG/PNG/WebP ≤5 MB and ≤4000×4000 before opening the crop UI.
 
 ## Upload
 

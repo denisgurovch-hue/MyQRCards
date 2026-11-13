@@ -4,6 +4,7 @@ import {
   coverScale,
   displayedSize,
   initialCropState,
+  nudgeOffsets,
   sourceRect,
   withZoom,
 } from './photo-frame-crop';
@@ -61,5 +62,14 @@ describe('photo-frame-crop', () => {
     const afterCenterX = after.sx + after.sWidth / 2;
     expect(afterCenterX).toBeCloseTo(beforeCenterX, 5);
     expect(after.sWidth).toBeCloseTo(before.sWidth / 2, 5);
+  });
+
+  it('nudges offsets within clamp bounds', () => {
+    const state = initialCropState(2000, 1000, 200);
+    const nudged = nudgeOffsets(state, -50, 0);
+    expect(nudged.offsetX).toBe(state.offsetX - 50);
+    const clamped = nudgeOffsets(state, 9999, 9999);
+    expect(clamped.offsetX).toBe(0);
+    expect(clamped.offsetY).toBe(0);
   });
 });

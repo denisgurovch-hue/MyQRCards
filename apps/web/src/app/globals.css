@@ -1032,6 +1032,290 @@ a.phone-contact-value:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 
+.photo-avatar-block {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: start;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.photo-avatar-stage {
+  position: relative;
+  width: 112px;
+}
+
+.photo-avatar-preview {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  overflow: hidden;
+  border-radius: 28px;
+  border: 1px solid var(--line);
+}
+
+.photo-avatar-image,
+.photo-avatar-fallback {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-avatar-fallback {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, var(--accent), var(--ink-soft));
+  color: #fff;
+  font-family: var(--font);
+  font-size: 2.4rem;
+  font-weight: 700;
+}
+
+.photo-avatar-quiet {
+  position: absolute;
+  left: 0.45rem;
+  right: 0.45rem;
+  bottom: 0.45rem;
+  z-index: 2;
+  width: max-content;
+  max-width: calc(100% - 0.9rem);
+  margin-inline: auto;
+  appearance: none;
+  border: 0;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  background: rgb(11 21 32 / 62%);
+  color: #fff;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  /* Global `button:hover { transform }` must not shift this chip. */
+  transform: none;
+  transition: background 160ms var(--ease);
+}
+
+.photo-avatar-quiet:hover:not(:disabled),
+.photo-avatar-quiet:focus-visible {
+  background: rgb(11 21 32 / 78%);
+  transform: none;
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, white);
+  outline-offset: 1px;
+}
+
+.photo-avatar-quiet:disabled {
+  opacity: 0.55;
+  cursor: wait;
+  transform: none;
+}
+
+.photo-avatar-hint {
+  margin: 0;
+  max-width: 18rem;
+  font-size: 0.9rem;
+}
+
+.photo-avatar-menu {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  min-width: 13rem;
+  display: grid;
+  padding: 0.35rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.photo-avatar-menu-item {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.photo-avatar-menu-item:hover,
+.photo-avatar-menu-item:focus-visible {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  outline: none;
+}
+
+.photo-avatar-menu-item.is-danger {
+  color: var(--danger);
+}
+
+.photo-delete-confirm {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.75rem 0;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 6%, var(--panel));
+}
+
+.photo-delete-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.photo-crop-dialog {
+  width: min(100vw - 1.5rem, 28rem);
+  max-height: min(100vh - 1.5rem, 44rem);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+.photo-crop-dialog::backdrop {
+  background: rgb(11 21 32 / 55%);
+}
+
+.photo-crop-dialog-inner {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+
+.photo-crop-dialog-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.photo-crop-dialog-foot {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.photo-crop-dialog-foot .button {
+  width: 100%;
+}
+
+.photo-crop-dialog-title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 1.15rem;
+}
+
+.photo-crop-dialog-body {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  overflow: auto;
+  justify-items: center;
+}
+
+.photo-crop-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 36px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(14, 154, 167, 0.12), transparent 55%),
+    var(--paper);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  max-width: 100%;
+}
+
+.photo-crop-frame:active {
+  cursor: grabbing;
+}
+
+.photo-crop-frame:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.photo-crop-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.photo-crop-guide {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 55%);
+  pointer-events: none;
+}
+
+.photo-crop-zoom {
+  display: grid;
+  gap: 0.35rem;
+  width: min(100%, 20rem);
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.photo-crop-zoom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.photo-crop-zoom-row input[type='range'] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.photo-crop-icon-btn {
+  min-width: 2.6rem;
+  padding-inline: 0.55rem;
+}
+
+@media (max-width: 640px) {
+  .photo-crop-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0;
+    border: 0;
+  }
+
+  .photo-crop-dialog-inner {
+    height: 100%;
+  }
+
+  .photo-crop-dialog-body {
+    flex: 1;
+    align-content: start;
+  }
+}
+
 .cover-editor {
   margin: 1rem 0 0.5rem;
   padding: 0 0 1rem;
