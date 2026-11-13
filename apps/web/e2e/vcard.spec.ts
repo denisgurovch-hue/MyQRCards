@@ -7,7 +7,7 @@ function email(prefix: string) {
 }
 
 test.describe('public vCard download', () => {
-  test('guest downloads .vcf from public page without auth cookies', async ({
+  test('guest opens inline vCard link and can fallback to attachment', async ({
     browser,
   }) => {
     const owner = await browser.newContext();
@@ -41,34 +41,51 @@ test.describe('public vCard download', () => {
     ).toBeVisible();
     await expect(
       guestPage.getByText(
-        'Откроется файл контакта. Подтвердите добавление на устройстве.',
+        'Если файл скачался, откройте его из загрузок браузера',
       ),
     ).toBeVisible();
 
-    const saveButton = guestPage.getByRole('button', {
+    const saveLink = guestPage.getByRole('link', {
       name: 'Сохранить контакт',
     });
-    const downloadPromise = guestPage.waitForEvent('download');
-    await saveButton.click();
-    const download = await downloadPromise;
-    expect(download.suggestedFilename()).toBe(`contact-${slug}.vcf`);
-
-    // Mobile WebKit used to leave the label blank until the next tap after
-    // download; assert the idle label is visible again without further input.
-    await expect(saveButton).toBeVisible();
-    await expect(saveButton).toContainText('Сохранить контакт');
-    await expect(saveButton).not.toHaveAttribute('aria-busy', 'true');
-
-    const api = await guestPage.request.get(
+    await expect(saveLink).toHaveAttribute(
+      'href',
       `/api/v1/public/cards/${slug}/vcard`,
     );
-    expect(api.ok()).toBeTruthy();
-    expect(api.headers()['content-type'] ?? '').toMatch(/vcard/i);
-    const body = await api.text();
-    expect(body).toContain('BEGIN:VCARD');
-    expect(body).toContain('FN:VCard Person');
-    expect(body).toContain('card@example.com');
-    expect(body).not.toContain(ownerEmail);
+    await expect(saveLink).not.toHaveAttribute('download', /.*/);
+
+    const downloadLink = guestPage.getByRole('link', { name: 'Скачать .vcf' });
+    await expect(downloadLink).toHaveAttribute(
+      'href',
+      `/api/v1/public/cards/${slug}/vcard?download=1`,
+    );
+    await expect(downloadLink).not.toHaveAttribute('download', /.*/);
+
+    const inline = await guestPage.request.get(
+      `/api/v1/public/cards/${slug}/vcard`,
+    );
+    expect(inline.ok()).toBeTruthy();
+    expect(inline.headers()['content-type'] ?? '').toMatch(/vcard/i);
+    expect(inline.headers()['content-disposition'] ?? '').toMatch(/^inline;/i);
+    const inlineBody = await inline.text();
+    expect(inlineBody).toContain('BEGIN:VCARD');
+    expect(inlineBody).toContain('FN:VCard Person');
+    expect(inlineBody).toContain('card@example.com');
+    expect(inlineBody).not.toContain(ownerEmail);
+
+    const attachment = await guestPage.request.get(
+      `/api/v1/public/cards/${slug}/vcard?download=1`,
+    );
+    expect(attachment.ok()).toBeTruthy();
+    expect(attachment.headers()['content-disposition'] ?? '').toMatch(
+      /^attachment;/i,
+    );
+    expect(await attachment.text()).toBe(inlineBody);
+
+    const downloadPromise = guestPage.waitForEvent('download');
+    await downloadLink.click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe(`contact-${slug}.vcf`);
 
     await guest.close();
     await owner.close();

@@ -99,7 +99,7 @@ NestJS API
 | Owner tools on present | Без PNG/SVG/«Открыть визитку»/копирования ссылки на самом презентационном экране — эти действия остаются в кабинете |
 | QR-сервис | Без новых endpoints; генерация T-005 сохраняется |
 
-### 3.4 vCard (T-006)
+### 3.4 vCard (T-006 / T-014)
 
 | Решение | Значение |
 |---|---|
@@ -108,9 +108,13 @@ NestJS API
 | Поля | FN, N, ORG?, TITLE?, TEL;TYPE=VOICE?, EMAIL;TYPE=INTERNET?, URL? (сайт), URL (canonical), NOTE? |
 | Не экспортировать | фото, CardLink, скрытый email, userId, сессии, Identity |
 | Доступ | Только `published` + `deleted_at IS NULL`; sessionless `GET /api/v1/public/cards/{slug}/vcard` |
-| Кэш / хранение | `Cache-Control: no-store`; файлы не сохраняются |
-| Аналитика | Событие `contact_save` **не** входит в T-006 |
-| UI | Кнопка «Сохранить контакт»; без сообщения «Контакт сохранён» |
+| Режим по умолчанию (T-014) | `Content-Disposition: inline; filename="contact-{slug}.vcf"` — прямая навигация браузера, без `download` / Blob на клиенте |
+| Явное скачивание | `?download=1` → `Content-Disposition: attachment; …`; тот же сервис и те же байты; иные значения `download` → `400` |
+| Общие заголовки | `Content-Type: text/vcard; charset=utf-8`, `Cache-Control: no-store`, `X-Content-Type-Options: nosniff` |
+| Кэш / хранение | Файлы не сохраняются на сервере |
+| Аналитика | Успешный `.vcf` → `vcard_download` (T-007); без новых событий в T-014 |
+| UI | Основное: ссылка «Сохранить контакт»; fallback: «Скачать .vcf»; подсказка при скачивании; без «Контакт сохранён» |
+| Ограничение Android | `inline` **не** гарантирует системное открытие «Контактов» на любом Android/браузере |
 
 ### 3.5 Базовая аналитика (T-007)
 

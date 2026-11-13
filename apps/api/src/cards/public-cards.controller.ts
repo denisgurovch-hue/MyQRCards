@@ -6,6 +6,7 @@ import {
   HttpCode,
   Param,
   Post,
+  Query,
   Res,
   StreamableFile,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { RecordContactClickDto } from './dto/record-contact-click.dto';
 import { toPublicCardDto } from './public-card.mapper';
 import { PublicCardsService } from './public-cards.service';
 import { QrCodeService } from './qr-code.service';
+import { resolveVcardDisposition } from './vcard-disposition';
 import { VcardService } from './vcard.service';
 
 @Controller('public/cards')
@@ -41,14 +43,16 @@ export class PublicCardsController {
   @Header('X-Content-Type-Options', 'nosniff')
   async getVcard(
     @Param('slug') slug: string,
+    @Query('download') download: string | string[] | undefined,
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
+    const disposition = resolveVcardDisposition(download);
     const { body, filename, cardId } = await this.vcards.generate(slug);
     this.analytics.recordVcardDownload(cardId);
     res.setHeader('Content-Type', 'text/vcard; charset=utf-8');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${filename}"`,
+      `${disposition}; filename="${filename}"`,
     );
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');

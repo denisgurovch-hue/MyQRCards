@@ -106,9 +106,9 @@ describe('Public vCard API (e2e)', () => {
     return Buffer.from(res.body as ArrayBuffer).toString('utf8');
   }
 
-  function getVcard(slug: string) {
+  function getVcard(slug: string, query = '') {
     return request(app.getHttpServer())
-      .get(`/api/v1/public/cards/${slug}/vcard`)
+      .get(`/api/v1/public/cards/${slug}/vcard${query}`)
       .buffer(true)
       .parse((res, callback) => {
         const chunks: Buffer[] = [];
@@ -154,9 +154,11 @@ describe('Public vCard API (e2e)', () => {
     const res = await getVcard(card.slug).expect(200);
 
     expect(String(res.headers['cache-control'])).toMatch(/no-store/i);
-    expect(String(res.headers['content-type'])).toMatch(/text\/vcard/i);
-    expect(String(res.headers['content-disposition'])).toContain(
-      `contact-${card.slug}.vcf`,
+    expect(String(res.headers['content-type'])).toMatch(
+      /text\/vcard;\s*charset=utf-8/i,
+    );
+    expect(String(res.headers['content-disposition'])).toBe(
+      `inline; filename="contact-${card.slug}.vcf"`,
     );
     expect(String(res.headers['x-content-type-options'])).toMatch(/nosniff/i);
     expect(res.headers['set-cookie']).toBeUndefined();
@@ -171,6 +173,39 @@ describe('Public vCard API (e2e)', () => {
     expect(parsed.get('title').valueOf()).toBe('Инженер');
     expect(text).toContain(publicCardCanonicalUrl(expectedBase, card.slug));
     expect(text).not.toContain(accountEmail);
+  });
+
+  it('supports download=1 attachment with identical body to inline', async () => {
+    const { cookies } = await register(`dl-${Date.now()}@example.com`);
+    const card = await createPublishedCard(cookies, { slug: 'vcard-dl-1' });
+
+    const inlineRes = await getVcard(card.slug).expect(200);
+    const attachmentRes = await getVcard(card.slug, '?download=1').expect(200);
+
+    expect(String(inlineRes.headers['content-disposition'])).toBe(
+      `inline; filename="contact-${card.slug}.vcf"`,
+    );
+    expect(String(attachmentRes.headers['content-disposition'])).toBe(
+      `attachment; filename="contact-${card.slug}.vcf"`,
+    );
+    expect(String(attachmentRes.headers['content-type'])).toMatch(
+      /text\/vcard;\s*charset=utf-8/i,
+    );
+    expect(String(attachmentRes.headers['cache-control'])).toMatch(/no-store/i);
+    expect(readVcardBody(attachmentRes)).toBe(readVcardBody(inlineRes));
+  });
+
+  it('rejects invalid download query values with JSON 400', async () => {
+    const { cookies } = await register(`bad-dl-${Date.now()}@example.com`);
+    const card = await createPublishedCard(cookies, { slug: 'vcard-bad-dl' });
+
+    const res = await request(app.getHttpServer())
+      .get(`/api/v1/public/cards/${card.slug}/vcard?download=true`)
+      .expect(400);
+
+    expect(res.headers['content-disposition']).toBeUndefined();
+    expect(String(res.headers['content-type'] ?? '')).toMatch(/json/i);
+    expect(res.body.error.code).toBe('VALIDATION_ERROR');
   });
 
   it('omits EMAIL when showEmail=false and never uses account email', async () => {
