@@ -44,15 +44,16 @@ test.describe('card photo editor (T-015)', () => {
       buffer: tinyJpeg(),
     });
 
-    await expect(page.getByRole('heading', { name: 'Кадр фото' })).toBeVisible();
+    const cropDialog = page.getByRole('dialog', { name: 'Кадр фото' });
+    await expect(cropDialog).toBeVisible();
+    await expect(cropDialog.getByRole('button', { name: 'Сохранить фото' })).toBeVisible();
+    await expect(cropDialog.getByRole('button', { name: 'Повернуть 90°' })).toBeVisible();
     await expect(
-      page.getByRole('button', { name: 'Сохранить фото' }),
+      cropDialog.getByRole('button', { name: 'Сброс', exact: true }),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Повернуть 90°' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Сброс' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Заменить фото' })).toBeVisible();
-    await page.getByRole('button', { name: 'Отмена' }).click();
-    await expect(page.getByRole('heading', { name: 'Кадр фото' })).toHaveCount(0);
+    await expect(cropDialog.getByRole('button', { name: 'Заменить фото' })).toBeVisible();
+    await cropDialog.getByRole('button', { name: 'Отмена', exact: true }).click();
+    await expect(cropDialog).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Добавить фото' })).toBeVisible();
   });
 });
