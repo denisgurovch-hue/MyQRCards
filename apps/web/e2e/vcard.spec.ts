@@ -45,10 +45,19 @@ test.describe('public vCard download', () => {
       ),
     ).toBeVisible();
 
+    const saveButton = guestPage.getByRole('button', {
+      name: 'Сохранить контакт',
+    });
     const downloadPromise = guestPage.waitForEvent('download');
-    await guestPage.getByRole('button', { name: 'Сохранить контакт' }).click();
+    await saveButton.click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe(`contact-${slug}.vcf`);
+
+    // Mobile WebKit used to leave the label blank until the next tap after
+    // download; assert the idle label is visible again without further input.
+    await expect(saveButton).toBeVisible();
+    await expect(saveButton).toContainText('Сохранить контакт');
+    await expect(saveButton).not.toHaveAttribute('aria-busy', 'true');
 
     const api = await guestPage.request.get(
       `/api/v1/public/cards/${slug}/vcard`,

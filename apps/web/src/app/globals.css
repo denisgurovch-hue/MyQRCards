@@ -823,17 +823,13 @@ button.linkish:hover {
   background: var(--ink);
   color: #fff;
   font-weight: 700;
-  transition: transform 160ms var(--ease), background 160ms var(--ease);
-}
-
-.public-action:hover {
-  background: var(--ink-soft);
-  transform: translateY(-1px);
-  color: #fff;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 160ms var(--ease);
 }
 
 .public-action-secondary {
   width: 100%;
+  min-height: 3rem;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--ink);
@@ -844,15 +840,34 @@ button.linkish:hover {
   padding: 0.85rem 1rem;
 }
 
-.public-action-secondary:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
-  background: #fff;
-  transform: translateY(-1px);
-}
-
-.public-action-secondary:disabled {
+.public-action-secondary[data-pending='true'],
+.public-action-secondary[aria-busy='true'] {
   opacity: 0.65;
   cursor: wait;
+}
+
+.public-action-label[hidden] {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public-action {
+    transition:
+      transform 160ms var(--ease),
+      background 160ms var(--ease);
+  }
+
+  .public-action:hover {
+    background: var(--ink-soft);
+    transform: translateY(-1px);
+    color: #fff;
+  }
+
+  .public-action-secondary:hover {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    background: #fff;
+    transform: translateY(-1px);
+  }
 }
 
 .public-vcard {
