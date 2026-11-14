@@ -630,7 +630,7 @@ Ready
 - Прямой доступ к адресной книге устройства.
 - Импорт контактов в MyQRCards.
 - Экспорт нескольких визиток одним файлом.
-- Фото внутри vCard.
+- Фото внутри vCard (снято в T-019).
 - Произвольные внешние ссылки и мессенджеры внутри vCard.
 - Синхронизация ранее сохранённых контактов.
 - Обновление или удаление контакта на устройстве получателя.
@@ -664,6 +664,7 @@ Ready
 | websiteUrl | URL | Если заполнен и допустим |
 | canonical URL | URL | Ссылка на публичную визитку |
 | summary | NOTE | Только если заполнено |
+| photo (файл) | PHOTO;ENCODING=b;TYPE=JPEG | Только если есть фото; см. T-019 |
 
 Не экспортировать:
 - userId и внутренние ID;
@@ -2272,4 +2273,83 @@ Stage 4 — интеграция (вариант 2: UI edit-v2, POST на пер
 ### Связанные артефакты
 - Сравнение create vs edit: store `internal/create-vs-edit-v2-comparison.md`
 - Edit-v2 primary: PR #30 / `internal/edit-v2-primary-integration.md`
+
+T-019
+## Фото в vCard при «Сохранить контакт»
+
+### Статус
+Stage 2 — реализация в коде; тесты; ручная проверка iOS/Android и deploy — отдельно.
+
+### Цель
+При скачивании/открытии vCard с публичной визитки вместе с текстовыми
+полями передавать и фото владельца (если оно есть у published-карточки),
+чтобы контакт на iOS/Android сохранялся с аватаром.
+
+### Предусловия
+- T-006 — vCard 3.0 endpoint и кнопка «Сохранить контакт» работают.
+- T-012 / T-015 — фото карточки хранится и отдаётся на публичке.
+- T-014 — inline disposition на Android учтён (не ломать).
+
+### Связь с T-006
+В T-006 фото в vCard было **вне scope**. T-019 снимает этот запрет
+только для поля фото карточки; остальные исключения T-006 сохраняются
+(мессенджеры/CardLink в vCard не добавляем).
+
+### Текущее состояние
+- `VcardService` / `buildVCard30` сериализуют FN/N/ORG/TITLE/TEL/EMAIL/URL/NOTE.
+- `VCardSource` **не** содержит photo.
+- Фото живёт как `Card.photoUrl` + файл `storageKey` (webp) на диске / media URL.
+
+### Согласованные решения
+| Тема | Решение |
+|---|---|
+| Номер | T-019 |
+| Когда включать PHOTO | Только если у published-карточки есть фото |
+| Нет фото | Свойство PHOTO **не** добавлять; vCard как сейчас |
+| Формат вложения | **Inline** base64 в vCard 3.0 (`PHOTO;ENCODING=b;TYPE=JPEG:…`), не URI |
+| Почему не URI | Импорт в Contacts на iOS/Android часто игнорирует remote PHOTO |
+| Исходник | Файл с диска по `storageKey` / photo storage (не скачивать через публичный HTTP сам у себя) |
+| Кодировка картинки | Конвертировать stored webp → **JPEG** для TYPE=JPEG (совместимость) |
+| Размер | Перед встройкой уменьшить до контакто-дружественного квадрата (ориентир ≤512px по стороне) и разумного веса (ориентир ≤100–150 KB JPEG), без порчи UX импорта |
+| Ошибка чтения фото | vCard **без** PHOTO всё равно отдаём (не 5xx из‑за битого файла); залогировать без PII |
+| UI | Текст кнопки можно не менять; поведение «сохранить контакт» обогащается аватаром |
+| Аналитика | Событие `vcard_download` без изменений схемы |
+
+### Scope
+- Расширить `VCardSource` + `buildVCard30` свойством PHOTO (optional).
+- В `VcardService.generate`: при наличии фото прочитать файл, resize/convert, передать bytes/base64 в serializer.
+- Unit-тесты сериализатора (с PHOTO / без / folding длинной линии).
+- Integration/e2e: карточка с фото → `/api/v1/public/cards/:slug/vcard` (или актуальный путь) содержит `PHOTO;ENCODING=b`.
+- Ручная проверка импорта на iOS и Android (аватар в контакте).
+
+### Вне scope
+- PHOTO;VALUE=URI на CDN/media URL как основной вариант.
+- Несколько фото / логотип компании / cover как PHOTO.
+- Изменение модели БД.
+- CardLink / мессенджеры в vCard.
+- Синхронизация уже сохранённых контактов на устройстве.
+- Отдельный UI «включить фото в vCard» (всегда on, если фото есть).
+
+### Технический план (черновик)
+1. `vcard.serializer.ts`: optional `photoJpegBase64` → линия `PHOTO;ENCODING=b;TYPE=JPEG:` + fold по октетам.
+2. `vcard.service.ts`: resolve storage path from card photo; sharp (уже в photo pipeline) → jpeg buffer → base64; cap size.
+3. Не логировать base64 / не класть photo URL с токенами в логи.
+4. Сохранить Content-Type / Content-Disposition (T-014) без регрессий.
+5. Документировать в `docs/api` / acceptance T-006 дополнение.
+
+### Acceptance criteria
+- [x] Published карточка **с** фото: vCard содержит inline JPEG PHOTO.
+- [x] Published карточка **без** фото: vCard без PHOTO, остальное без регрессий.
+- [x] Скрытый email по-прежнему не попадает в vCard.
+- [x] Битый/отсутствующий файл фото не ломает выдачу vCard (без PHOTO).
+- [x] Размер ответа остаётся приемлемым (resize/compress).
+- [ ] iOS и Android: после «Сохранить контакт» аватар виден в карточке контакта (ручной чеклист).
+- [x] Регрессии: T-014 disposition, аналитика `vcard_download`, публичная страница.
+
+### Definition of Done
+- [x] Спека согласована (этот раздел)
+- [x] Интеграция + тесты
+- [x] lint / typecheck / tests / build
+- [ ] Ручная проверка iOS/Android
+- [ ] Deploy + отчёт
 

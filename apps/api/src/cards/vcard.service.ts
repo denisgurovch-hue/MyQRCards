@@ -1,12 +1,14 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppError } from '../common/errors/app-error';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   normalizePublicAppUrl,
   publicCardCanonicalUrl,
 } from './public-app-url';
 import { toPublicCardDto } from './public-card.mapper';
 import { PublicCardsService } from './public-cards.service';
+import { jpegBase64ForVcardPhoto } from './vcard-photo';
 import { buildVCard30 } from './vcard.serializer';
 
 @Injectable()
@@ -14,6 +16,7 @@ export class VcardService {
   constructor(
     private readonly publicCards: PublicCardsService,
     private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
   ) {}
 
   private canonicalUrlFor(slug: string): string {
@@ -29,6 +32,24 @@ export class VcardService {
     }
   }
 
+  private async resolvePhotoJpegBase64(
+    photoId: string | null,
+  ): Promise<string | null> {
+    if (!photoId) {
+      return null;
+    }
+
+    const photo = await this.prisma.cardPhoto.findUnique({
+      where: { id: photoId },
+      select: { storageKey: true },
+    });
+    if (!photo?.storageKey) {
+      return null;
+    }
+
+    return jpegBase64ForVcardPhoto(photo.storageKey);
+  }
+
   async generate(rawSlug: string): Promise<{
     body: string;
     filename: string;
@@ -37,6 +58,8 @@ export class VcardService {
   }> {
     const entity = await this.publicCards.getPublishedCard(rawSlug);
     const card = toPublicCardDto(entity);
+    const photoJpegBase64 = await this.resolvePhotoJpegBase64(entity.photoId);
+
     try {
       const body = buildVCard30({
         displayName: card.displayName,
@@ -47,6 +70,7 @@ export class VcardService {
         email: card.email,
         websiteUrl: card.websiteUrl,
         canonicalUrl: this.canonicalUrlFor(card.slug),
+        photoJpegBase64,
       });
       return {
         body,

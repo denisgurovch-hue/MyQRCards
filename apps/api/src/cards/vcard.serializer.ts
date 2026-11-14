@@ -13,6 +13,11 @@ export type VCardSource = {
   email: string | null;
   websiteUrl: string | null;
   canonicalUrl: string;
+  /**
+   * Optional JPEG bytes as standard base64 (no data: URI prefix).
+   * Emitted as PHOTO;ENCODING=b;TYPE=JPEG when non-empty and valid.
+   */
+  photoJpegBase64?: string | null;
 };
 
 const CRLF = '\r\n';
@@ -74,6 +79,15 @@ function isSafeHttpUrl(raw: string): boolean {
   }
 }
 
+/** Accept only standard base64 payload (no whitespace / data: URI). */
+function normalizeJpegBase64(raw: string): string | null {
+  const b64 = raw.replace(/\s+/g, '');
+  if (b64.length < 4 || !/^[A-Za-z0-9+/]+=*$/.test(b64)) {
+    return null;
+  }
+  return b64;
+}
+
 /**
  * Build a vCard 3.0 document from public card projection + canonical URL.
  */
@@ -117,6 +131,14 @@ export function buildVCard30(source: VCardSource): string {
   }
   if (source.summary?.trim()) {
     lines.push(propertyLine('NOTE', source.summary.trim()));
+  }
+
+  const photoB64 = source.photoJpegBase64
+    ? normalizeJpegBase64(source.photoJpegBase64)
+    : null;
+  if (photoB64) {
+    // Do not escapeVCardText — base64 must stay intact; fold by octets only.
+    lines.push(foldVCardLine(`PHOTO;ENCODING=b;TYPE=JPEG:${photoB64}`));
   }
 
   lines.push('END:VCARD');
