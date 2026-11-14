@@ -28,9 +28,9 @@ test.describe('present card (T-013)', () => {
     await page.getByLabel('Имя *').fill('Present Name');
     await page.getByLabel('Slug (необязательно)').fill(slug);
     await page.getByRole('button', { name: 'Создать' }).click();
-    await expect(page).toHaveURL(new RegExp(`/cards/.+/edit`));
+    await expect(page).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
     const editUrl = page.url();
-    const cardId = editUrl.match(/\/cards\/([^/]+)\/edit/)?.[1];
+    const cardId = editUrl.match(/\/cards\/([^/]+)\/edit-v2/)?.[1];
     expect(cardId).toBeTruthy();
 
     await page.goto('/dashboard');
@@ -51,9 +51,10 @@ test.describe('present card (T-013)', () => {
     await expect(page.getByRole('button', { name: 'Копировать ссылку' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Открыть визитку' })).toHaveCount(0);
 
-    await page.goto(`/cards/${cardId}/edit`);
+    await page.goto(`/cards/${cardId}/edit-v2`);
+    await page.getByRole('button', { name: 'Управление' }).click();
     await page.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(page.getByText(/статус/i)).toContainText('published');
+    await expect(page.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
 
     await page.goto(`/cards/${cardId}/present`);
     await expect(page.getByRole('img', { name: /QR-код визитки/ })).toBeVisible({
@@ -74,8 +75,8 @@ test.describe('present card (T-013)', () => {
     await page.getByLabel('Имя *').fill('Owner Card');
     await page.getByLabel('Slug (необязательно)').fill(slug);
     await page.getByRole('button', { name: 'Создать' }).click();
-    await expect(page).toHaveURL(new RegExp(`/cards/.+/edit`));
-    const cardId = page.url().match(/\/cards\/([^/]+)\/edit/)?.[1];
+    await expect(page).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
+    const cardId = page.url().match(/\/cards\/([^/]+)\/edit-v2/)?.[1];
     expect(cardId).toBeTruthy();
 
     const otherContext = await browser.newContext();

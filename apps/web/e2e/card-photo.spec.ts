@@ -29,15 +29,16 @@ test.describe('card photo editor (T-015)', () => {
     await page.goto('/cards/new');
     await page.getByLabel('Имя *').fill('Photo Person');
     await page.getByRole('button', { name: 'Создать' }).click();
-    await expect(page).toHaveURL(/\/cards\/.+\/edit/);
+    await expect(page).toHaveURL(/\/cards\/.+\/edit-v2/);
 
-    await expect(page.getByRole('button', { name: 'Добавить фото' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Изменить фото' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Подогнать' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Загрузить фото' })).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: 'Добавить фото' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Подогнать фото' }),
+    ).toHaveCount(0);
 
-    const photoRegion = page.getByRole('region', { name: 'Фото' });
-    const fileInput = photoRegion.locator('input[type="file"][accept*="image/jpeg"]');
+    const fileInput = page.locator('input[type="file"][accept*="image/jpeg"]').first();
     await fileInput.setInputFiles({
       name: 'avatar.jpg',
       mimeType: 'image/jpeg',
@@ -46,7 +47,7 @@ test.describe('card photo editor (T-015)', () => {
 
     const cropDialog = page.getByRole('dialog', { name: 'Кадр фото' });
     await expect(cropDialog).toBeVisible();
-    await expect(cropDialog.getByRole('button', { name: 'Сохранить фото' })).toBeVisible();
+    await expect(cropDialog.getByRole('button', { name: 'Применить' })).toBeVisible();
     await expect(cropDialog.getByRole('button', { name: 'Повернуть 90°' })).toBeVisible();
     await expect(
       cropDialog.getByRole('button', { name: 'Сброс', exact: true }),
@@ -54,6 +55,8 @@ test.describe('card photo editor (T-015)', () => {
     await expect(cropDialog.getByRole('button', { name: 'Заменить фото' })).toBeVisible();
     await cropDialog.getByRole('button', { name: 'Отмена', exact: true }).click();
     await expect(cropDialog).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Добавить фото' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Добавить фото' }),
+    ).toBeVisible();
   });
 });

@@ -39,7 +39,7 @@ export default function NewCardPage() {
         method: 'POST',
         body: JSON.stringify(body),
       });
-      router.push(`/cards/${result.card.id}/edit`);
+      router.push(`/cards/${result.card.id}/edit-v2`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось создать визитку');

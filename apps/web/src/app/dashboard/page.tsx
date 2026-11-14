@@ -85,7 +85,7 @@ export default async function DashboardPage() {
                 <div className="card-row-actions">
                   <Link
                     className="button secondary"
-                    href={`/cards/${card.id}/edit`}
+                    href={`/cards/${card.id}/edit-v2`}
                   >
                     Редактировать
                   </Link>

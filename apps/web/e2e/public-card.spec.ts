@@ -29,7 +29,7 @@ test.describe('public card page', () => {
     await ownerPage.getByLabel('Slug (необязательно)').fill(slug);
     await ownerPage.getByLabel('Телефон').fill('+79991112233');
     await ownerPage.getByRole('button', { name: 'Создать' }).click();
-    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit`));
+    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
 
     await ownerPage.getByRole('button', { name: 'Опубликовать' }).click();
     await expect(ownerPage.getByText('статус')).toContainText('published');

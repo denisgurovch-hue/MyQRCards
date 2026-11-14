@@ -29,7 +29,7 @@ test.describe('public vCard download', () => {
     await ownerPage.getByLabel('E-mail на карточке').fill('card@example.com');
     await ownerPage.getByLabel('Показывать e-mail публично').check();
     await ownerPage.getByRole('button', { name: 'Создать' }).click();
-    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit`));
+    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
     await ownerPage.getByRole('button', { name: 'Опубликовать' }).click();
     await expect(ownerPage.getByText('статус')).toContainText('published');
 
