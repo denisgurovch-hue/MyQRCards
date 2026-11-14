@@ -57,6 +57,30 @@ export default async function PublicCardPage({ params }: PageProps) {
     notFound();
   }
 
+  if (!result.ok && result.kind === 'rate_limited') {
+    return (
+      <main className="public-shell">
+        <section className="public-card">
+          <div className="public-photo-wrap" aria-hidden="true">
+            <div className="public-photo-fallback">…</div>
+          </div>
+          <h1 className="public-name">Слишком много запросов</h1>
+          <p className="public-summary muted">
+            Подождите минуту и обновите страницу.
+          </p>
+          <div className="public-actions">
+            <Link
+              className="public-action"
+              href={`/u/${encodeURIComponent(slug)}`}
+            >
+              Обновить
+            </Link>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   if (!result.ok) {
     return (
       <main className="public-shell">

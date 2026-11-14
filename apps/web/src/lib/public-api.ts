@@ -3,6 +3,7 @@ import type { PublicCard } from './public-card.types';
 export type PublicCardResult =
   | { ok: true; card: PublicCard }
   | { ok: false; kind: 'not_found' }
+  | { ok: false; kind: 'rate_limited' }
   | { ok: false; kind: 'error'; status: number };
 
 /**
@@ -29,6 +30,10 @@ export async function fetchPublicCard(slug: string): Promise<PublicCardResult> {
 
   if (response.status === 404) {
     return { ok: false, kind: 'not_found' };
+  }
+
+  if (response.status === 429) {
+    return { ok: false, kind: 'rate_limited' };
   }
 
   if (!response.ok) {

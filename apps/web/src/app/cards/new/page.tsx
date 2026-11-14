@@ -99,8 +99,13 @@ export default function NewCardPage() {
               pattern="[a-z0-9]+(-[a-z0-9]+)*"
               minLength={6}
               maxLength={32}
+              placeholder="если пусто — случайный"
             />
           </label>
+          <p className="muted" style={{ marginTop: '-0.5rem' }}>
+            Пустой slug безопаснее: система сгенерирует случайный идентификатор.
+            Свой короткий slug легче угадать.
+          </p>
           <label>
             Ссылка (label)
             <input name="linkLabel" maxLength={80} />

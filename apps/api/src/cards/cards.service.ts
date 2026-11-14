@@ -7,9 +7,9 @@ import { UpdateCardDto } from './dto/update-card.dto';
 import { CardLinkDto } from './dto/card-link.dto';
 import { toCardResponse } from './cards.mapper';
 import {
+  generateRandomSlug,
   isValidSlug,
   normalizeSlug,
-  slugifyFromName,
 } from './slug.util';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class CardsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateCardDto) {
-    const slug = await this.resolveSlug(dto.slug, dto.displayName);
+    const slug = await this.resolveSlug(dto.slug);
 
     try {
       const card = await this.prisma.$transaction(async (tx) => {
@@ -225,10 +225,7 @@ export class CardsService {
     return card;
   }
 
-  private async resolveSlug(
-    requested: string | undefined,
-    displayName: string,
-  ): Promise<string> {
+  private async resolveSlug(requested: string | undefined): Promise<string> {
     if (requested) {
       const slug = normalizeSlug(requested);
       if (!isValidSlug(slug)) {
@@ -249,8 +246,8 @@ export class CardsService {
       return slug;
     }
 
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const candidate = slugifyFromName(displayName);
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      const candidate = generateRandomSlug();
       const exists = await this.prisma.card.findUnique({
         where: { slug: candidate },
       });

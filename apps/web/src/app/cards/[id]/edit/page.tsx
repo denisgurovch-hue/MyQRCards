@@ -91,6 +91,12 @@ export default function EditCardPage() {
 
   async function runStatus(path: string) {
     if (!card) return;
+    if (path === 'publish' && card.status !== 'published') {
+      const ok = window.confirm(
+        'После публикации указанные публичные данные будут доступны любому, кто получит ссылку или QR-код. Ссылку можно переслать. Не размещайте конфиденциальную информацию.',
+      );
+      if (!ok) return;
+    }
     setPending(true);
     setError(null);
     try {

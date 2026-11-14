@@ -33,6 +33,10 @@ test.describe('public vCard download', () => {
     await ownerPage.getByRole('button', { name: 'Управление' }).click();
     const manage = ownerPage.getByRole('dialog', { name: 'Управление визиткой' });
     await manage.getByRole('button', { name: 'Опубликовать' }).click();
+    const publishConfirm = ownerPage.getByRole('dialog', {
+      name: 'Опубликовать визитку?',
+    });
+    await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
     await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
 
     const guest = await browser.newContext();

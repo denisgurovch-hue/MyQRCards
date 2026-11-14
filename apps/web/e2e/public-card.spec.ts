@@ -34,6 +34,11 @@ test.describe('public card page', () => {
     await ownerPage.getByRole('button', { name: 'Управление' }).click();
     const manage = ownerPage.getByRole('dialog', { name: 'Управление визиткой' });
     await manage.getByRole('button', { name: 'Опубликовать' }).click();
+    const publishConfirm = ownerPage.getByRole('dialog', {
+      name: 'Опубликовать визитку?',
+    });
+    await expect(publishConfirm.getByText(/конфиденциальную информацию/i)).toBeVisible();
+    await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
     await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
     await manage.getByRole('button', { name: 'Закрыть', exact: true }).click();
 

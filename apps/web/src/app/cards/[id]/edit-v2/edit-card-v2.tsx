@@ -72,6 +72,7 @@ type NestedKind =
   | 'add-link'
   | 'cover'
   | 'card-actions'
+  | 'publish-confirm'
   | 'cancel-confirm';
 
 type UiFlash = 'idle' | 'saving' | 'saved' | 'error';
@@ -780,6 +781,13 @@ export function EditCardV2({ cardId }: { cardId: string }) {
     closeNested();
   }
 
+  function requestPublish() {
+    if (draft.status === 'published') {
+      return;
+    }
+    setNested('publish-confirm');
+  }
+
   async function runStatus(path: 'publish' | 'unpublish' | 'archive') {
     setSaveError(null);
     try {
@@ -792,6 +800,9 @@ export function EditCardV2({ cardId }: { cardId: string }) {
       // if dirty, just update baseline+draft status from server for status field.
       setBaseline((current) => ({ ...current, status: next.status }));
       setDraft((current) => ({ ...current, status: next.status }));
+      if (path === 'publish') {
+        setNested('card-actions');
+      }
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Ошибка статуса');
       setFlash('error');
@@ -1558,7 +1569,8 @@ export function EditCardV2({ cardId }: { cardId: string }) {
           <button
             type="button"
             className="button secondary"
-            onClick={() => void runStatus('publish')}
+            onClick={requestPublish}
+            disabled={draft.status === 'published'}
           >
             Опубликовать
           </button>
@@ -1587,6 +1599,32 @@ export function EditCardV2({ cardId }: { cardId: string }) {
         <p className="muted">
           Slug сохранится вместе с остальными полями по кнопке «Сохранить».
           Статус и удаление применяются сразу.
+        </p>
+      </NestedSheet>
+
+      <NestedSheet
+        open={nested === 'publish-confirm'}
+        title="Опубликовать визитку?"
+        onClose={closeNested}
+        footer={
+          <>
+            <button type="button" className="button secondary" onClick={closeNested}>
+              Отмена
+            </button>
+            <button
+              type="button"
+              className="button accent"
+              onClick={() => void runStatus('publish')}
+            >
+              Опубликовать
+            </button>
+          </>
+        }
+      >
+        <p>
+          После публикации указанные публичные данные будут доступны любому, кто
+          получит ссылку или QR-код. Ссылку можно переслать. Не размещайте
+          конфиденциальную информацию.
         </p>
       </NestedSheet>
 

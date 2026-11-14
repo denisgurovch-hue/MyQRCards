@@ -132,20 +132,37 @@ describe('Card photos (e2e)', () => {
     expect(uploaded.body.photo.width).toBeGreaterThan(0);
 
     const key = String(uploaded.body.photo.url).split('/').pop();
+    // Draft cards must not expose media publicly.
     await request(app.getHttpServer())
       .get(`/api/v1/media/cards/${key}`)
-      .expect(200)
-      .expect('Content-Type', /image\/webp/);
+      .expect(404);
 
     await request(app.getHttpServer())
       .post(`/api/v1/cards/${card.id}/publish`)
       .set('Cookie', owner.cookies)
       .expect(201);
 
+    await request(app.getHttpServer())
+      .get(`/api/v1/media/cards/${key}`)
+      .expect(200)
+      .expect('Content-Type', /image\/webp/);
+
     const publicCard = await request(app.getHttpServer())
       .get(`/api/v1/public/cards/${card.slug}`)
       .expect(200);
     expect(publicCard.body.card.photoUrl).toBe(uploaded.body.photo.url);
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/cards/${card.id}/unpublish`)
+      .set('Cookie', owner.cookies)
+      .expect(201);
+    await request(app.getHttpServer())
+      .get(`/api/v1/media/cards/${key}`)
+      .expect(404);
+    await request(app.getHttpServer())
+      .post(`/api/v1/cards/${card.id}/publish`)
+      .set('Cookie', owner.cookies)
+      .expect(201);
 
     const png = await buffer('png');
     const replaced = await request(app.getHttpServer())
