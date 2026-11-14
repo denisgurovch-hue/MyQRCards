@@ -792,7 +792,6 @@ export function EditCardV2({ cardId }: { cardId: string }) {
       // if dirty, just update baseline+draft status from server for status field.
       setBaseline((current) => ({ ...current, status: next.status }));
       setDraft((current) => ({ ...current, status: next.status }));
-      closeNested();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Ошибка статуса');
       setFlash('error');
@@ -1269,7 +1268,7 @@ export function EditCardV2({ cardId }: { cardId: string }) {
           Показывать e-mail публично
         </label>
         <p className="muted">
-          Не подставляем e-mail аккаунта. Сейчас в моке:{' '}
+          Не подставляем e-mail аккаунта. Сейчас:{' '}
           {contactForm.showEmail ? 'виден' : 'скрыт на публичной странице'}.
         </p>
       </NestedSheet>

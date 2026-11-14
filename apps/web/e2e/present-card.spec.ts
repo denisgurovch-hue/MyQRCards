@@ -53,8 +53,9 @@ test.describe('present card (T-013)', () => {
 
     await page.goto(`/cards/${cardId}/edit-v2`);
     await page.getByRole('button', { name: 'Управление' }).click();
-    await page.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(page.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
+    const manage = page.getByRole('dialog', { name: 'Управление визиткой' });
+    await manage.getByRole('button', { name: 'Опубликовать' }).click();
+    await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
 
     await page.goto(`/cards/${cardId}/present`);
     await expect(page.getByRole('img', { name: /QR-код визитки/ })).toBeVisible({
