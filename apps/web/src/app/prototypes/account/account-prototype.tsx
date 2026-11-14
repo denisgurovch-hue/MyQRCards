@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { FormEvent, useMemo, useState } from 'react';
 
 type AuthKind = 'password' | 'vk';
@@ -28,12 +29,25 @@ const SCENES = [
 type SceneId = (typeof SCENES)[number]['id'];
 
 export function AccountPrototype() {
-  const [scene, setScene] = useState<SceneId>('view');
-  const [authKind, setAuthKind] = useState<AuthKind>('password');
+  const searchParams = useSearchParams();
+  const prodPreview = searchParams.get('preview') === 'prod';
+  const previewAuth = searchParams.get('auth');
+  const previewDelete = searchParams.get('delete') === '1';
 
-  const [baselineName, setBaselineName] = useState('Денис Гуров');
-  const [nameDraft, setNameDraft] = useState('Денис Гуров');
-  const [email] = useState('owner@example.com');
+  const [scene, setScene] = useState<SceneId>('view');
+  const [authKind, setAuthKind] = useState<AuthKind>(
+    previewAuth === 'vk' ? 'vk' : 'password',
+  );
+
+  const [baselineName, setBaselineName] = useState(
+    previewAuth === 'vk' ? 'VK User' : 'Денис Гуров',
+  );
+  const [nameDraft, setNameDraft] = useState(
+    previewAuth === 'vk' ? 'VK User' : 'Денис Гуров',
+  );
+  const [email] = useState(
+    previewAuth === 'vk' ? 'vk-user@example.com' : 'owner@example.com',
+  );
   const [flash, setFlash] = useState<Flash>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -44,7 +58,9 @@ export function AccountPrototype() {
   const [passwordFlash, setPasswordFlash] = useState<Flash>('idle');
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  const [deletePhase, setDeletePhase] = useState<DeletePhase>('idle');
+  const [deletePhase, setDeletePhase] = useState<DeletePhase>(
+    previewDelete ? 'confirm' : 'idle',
+  );
   const [deleteTyped, setDeleteTyped] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -216,37 +232,51 @@ export function AccountPrototype() {
             <p className="brand brand-mark">
               Sign<span>et</span>
             </p>
-            <p className="lede">Аккаунт (прототип на моках)</p>
-            <p className="muted">Без реальных API-мутаций · T-017 Stage 2</p>
+            <p className="lede">{prodPreview ? 'Аккаунт' : 'Аккаунт (прототип на моках)'}</p>
+            {prodPreview ? null : (
+              <p className="muted">Без реальных API-мутаций · T-017 Stage 2</p>
+            )}
           </div>
           <div className="workspace-actions">
-            <Link className="button secondary" href="/dashboard">
+            <Link
+              className="button secondary"
+              href="/dashboard"
+              onClick={(event) => {
+                if (!dirty) return;
+                event.preventDefault();
+                setLeaveOpen(true);
+              }}
+            >
               Кабинет
             </Link>
           </div>
         </header>
 
-        <nav className="account-proto-scenes" aria-label="Сценарии прототипа">
-          {SCENES.map((item) => (
+        {prodPreview ? null : (
+          <nav className="account-proto-scenes" aria-label="Сценарии прототипа">
+            {SCENES.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                className={
+                  scene === item.id ? 'button accent' : 'button secondary'
+                }
+                onClick={() => applyScene(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
             <button
-              key={item.id}
               type="button"
-              className={
-                scene === item.id ? 'button accent' : 'button secondary'
+              className="button secondary"
+              onClick={() =>
+                setAuthKind((k) => (k === 'password' ? 'vk' : 'password'))
               }
-              onClick={() => applyScene(item.id)}
             >
-              {item.label}
+              Режим: {authKind === 'password' ? 'password' : 'VK-only'}
             </button>
-          ))}
-          <button
-            type="button"
-            className="button secondary"
-            onClick={() => setAuthKind((k) => (k === 'password' ? 'vk' : 'password'))}
-          >
-            Режим: {authKind === 'password' ? 'password' : 'VK-only'}
-          </button>
-        </nav>
+          </nav>
+        )}
 
         <section className="account-proto-panel" aria-labelledby="account-profile-title">
           <h2 id="account-profile-title" className="section-title">
@@ -310,15 +340,6 @@ export function AccountPrototype() {
               >
                 Отменить
               </button>
-              <button
-                type="button"
-                className="button secondary"
-                onClick={() => {
-                  if (dirty) setLeaveOpen(true);
-                }}
-              >
-                Уйти с изменениями…
-              </button>
             </div>
           </form>
         </section>
@@ -378,12 +399,14 @@ export function AccountPrototype() {
                   {passwordFlash === 'saving' ? 'Сохраняем…' : 'Сменить пароль'}
                 </button>
               </div>
-              <p className="muted account-proto-hint">
-                Подсказка мока: текущий пароль `wrong` покажет ошибку.
-              </p>
+              {prodPreview ? null : (
+                <p className="muted account-proto-hint">
+                  Подсказка мока: текущий пароль `wrong` покажет ошибку.
+                </p>
+              )}
             </form>
           </section>
-        ) : (
+        ) : prodPreview ? null : (
           <section className="account-proto-panel">
             <h2 className="section-title">Смена пароля</h2>
             <p className="muted">
@@ -458,13 +481,15 @@ export function AccountPrototype() {
                 >
                   Отмена
                 </button>
-                <button
-                  type="button"
-                  className="button secondary"
-                  onClick={simulateDeleteError}
-                >
-                  Симулировать ошибку
-                </button>
+                {prodPreview ? null : (
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={simulateDeleteError}
+                  >
+                    Симулировать ошибку
+                  </button>
+                )}
               </div>
             </form>
           ) : null}
@@ -485,8 +510,8 @@ export function AccountPrototype() {
           aria-labelledby="leave-title"
         >
           <div className="account-proto-modal-card">
-            <h2 id="leave-title">Уйти без сохранения?</h2>
-            <p>Несохранённое имя аккаунта будет потеряно.</p>
+            <h2 id="leave-title">Данные не сохранены. Закрыть?</h2>
+            <p>Несохранённые изменения имени будут потеряны.</p>
             <div className="workspace-actions">
               <button
                 type="button"
@@ -503,7 +528,7 @@ export function AccountPrototype() {
                   setLeaveOpen(false);
                 }}
               >
-                Уйти
+                Закрыть
               </button>
             </div>
           </div>
