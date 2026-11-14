@@ -293,9 +293,6 @@ export function AccountPrototype() {
                 aria-readonly="true"
               />
             </label>
-            <p className="muted account-proto-hint">
-              E-mail используется для входа и пока не меняется в кабинете.
-            </p>
 
             <label>
               Имя аккаунта
