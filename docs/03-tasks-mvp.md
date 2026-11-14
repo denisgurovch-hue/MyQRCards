@@ -2445,7 +2445,7 @@ T-021
 ## Admin-панель платформы (метрики для главного администратора)
 
 ### Статус
-Stage 2 — реализация в коде; `ADMIN_USER_EMAILS` на VPS и deploy — отдельно.
+Stage 3 — задеплоено на prod (`main` @ `2589e54`); ручная проверка `/admin`.
 
 ### Цель
 Дать **главному администратору** Signet / MyQRCards отдельную
@@ -2542,5 +2542,5 @@ admin-панель для обзора платформенных метрик: 
 - [x] Спека согласована (этот раздел)
 - [x] Интеграция + тесты
 - [x] lint / typecheck / tests / build
-- [ ] `ADMIN_USER_EMAILS` на VPS + deploy
-- [ ] Deploy + отчёт
+- [x] `ADMIN_USER_EMAILS` на VPS + deploy
+- [x] Deploy + отчёт
