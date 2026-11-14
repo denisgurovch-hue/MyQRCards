@@ -10,6 +10,7 @@ type MeResponse = {
     id: string;
     email: string | null;
     displayName: string | null;
+    isAdmin?: boolean;
   };
 };
 
@@ -54,6 +55,11 @@ export default async function DashboardPage() {
             <Link className="button accent" href="/cards/new">
               Создать визитку
             </Link>
+            {me.user.isAdmin ? (
+              <Link className="button secondary" href="/admin">
+                Админ
+              </Link>
+            ) : null}
             <Link className="button secondary" href="/account">
               Аккаунт
             </Link>

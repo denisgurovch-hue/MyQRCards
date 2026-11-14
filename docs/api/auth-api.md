@@ -98,10 +98,13 @@ If the user row no longer exists, returns `401` (deleted account).
     "id": "uuid",
     "email": "user@example.com",
     "displayName": "Иван Иванов",
-    "hasPassword": true
+    "hasPassword": true,
+    "isAdmin": false
   }
 }
 ```
+
+`isAdmin` is true when the user email is listed in `ADMIN_USER_EMAILS` (T-021).
 
 ### Errors
 

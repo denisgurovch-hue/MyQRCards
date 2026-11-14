@@ -2440,3 +2440,107 @@ Stage 3 — задеплоено на prod (`main` @ `650a89d`); ручной sm
 - [x] lint / typecheck / tests / build
 - [x] Setup-док + секреты на VPS (док готов; секреты на VPS — у владельца)
 - [x] Deploy + отчёт
+
+T-021
+## Admin-панель платформы (метрики для главного администратора)
+
+### Статус
+Stage 2 — реализация в коде; `ADMIN_USER_EMAILS` на VPS и deploy — отдельно.
+
+### Цель
+Дать **главному администратору** Signet / MyQRCards отдельную
+admin-панель для обзора платформенных метрик: сколько визиток создано,
+сколько пользователей, активность (просмотры / клики / vCard) и другие
+агрегаты, без доступа владельцев карточек к чужим данным и без
+смешивания с кабинетом владельца (T-007).
+
+### Предусловия
+- T-002 / T-017 / T-020 — авторизация и сессия cookie работают.
+- T-003 — карточки и статусы (`draft` / `published` / `archived`).
+- T-007 — события `card_view` / `contact_click` / `vcard_download` пишутся.
+- T-016 — публичная безопасность не ослабляется admin-эндпоинтами.
+
+### Текущее состояние
+- Аналитика только **per-card для владельца** (`GET /api/v1/cards/:id/analytics`).
+- В модели `User` **нет** роли / флага admin.
+- Отдельного `/admin` UI и admin API нет.
+- Продуктовая аналитика privacy-first: без PII в `CardEvent`.
+
+### Согласованные решения
+| Тема | Решение |
+|---|---|
+| Номер | T-021 |
+| Аудитория | Один (или небольшой список) главных администраторов платформы |
+| Доступ (MVP) | Allowlist через env `ADMIN_USER_EMAILS` (comma-separated, lowercased) **без** смены схемы БД; пользователь должен быть залогинен обычной сессией |
+| Почему не role в БД | AGENTS: схема БД не меняется без явного подтверждения; allowlist достаточен для «главного админа» |
+| UI маршрут | Приватный `/admin` (App Router); не показывать ссылку обычным пользователям в dashboard |
+| API | `GET /api/v1/admin/metrics` (+ при необходимости `.../metrics?period=7\|30\|all`) под `AuthGuard` + `AdminGuard` |
+| Не-админ / аноним | `403 ADMIN_FORBIDDEN` / `401` — без утечки существования панели в публичных ответах сверх необходимости |
+| Метрики v1 (агрегаты) | См. таблицу ниже — только counts/sums, без списков PII |
+| Источник данных | Существующие таблицы `users`, `cards`, `card_events`, `identities` (read-only aggregates) |
+| Период | По умолчанию «всё время» + переключатель 7 / 30 дней для event-метрик и «новых» сущностей |
+| Soft-deleted cards | В counts **не** включать `deletedAt IS NOT NULL` (как в публичных правилах) |
+| Логи | Без e-mail/телефонов/токенов; факт доступа admin можно логировать без PII (`admin metrics read`) |
+| Навигация | Если текущий user в allowlist — пункт «Админ» в кабинете/аккаунте; иначе пункта нет |
+
+### Метрики v1
+| Метрика | Определение |
+|---|---|
+| `usersTotal` | Число пользователей |
+| `usersNew` | Пользователи с `createdAt` в выбранном периоде |
+| `cardsTotal` | Карточки без soft-delete |
+| `cardsByStatus` | Разбивка draft / published / archived |
+| `cardsNew` | Карточки, созданные в периоде |
+| `cardsPublished` | Сейчас published (или опубликованные за период — уточнить в UI подписью «сейчас published») |
+| `eventsViews` / `eventsClicks` / `eventsVcard` | Суммы событий за период (или all-time) |
+| `authProviders` (optional v1.1) | Counts Identity по `provider` (`password` N/A — пользователи с `passwordHash`, плюс `vkid` / `yandex`) |
+
+Не включать в v1: сырые списки пользователей/карточек с e-mail, поиск по slug, экспорт CSV, графики third-party.
+
+### Scope
+- `AdminGuard` (проверка email ∈ `ADMIN_USER_EMAILS`).
+- `AdminMetricsService` + controller `admin`.
+- Страница `/admin`: карточки/цифры метрик (существующий visual language кабинета, без маркетингового лендинга).
+- Unit/integration: allowlist allow/deny; метрики считают корректно на фикстурах.
+- E2E/Playwright: не-админ не видит пункт и получает 403 на API; админ видит цифры (seed/test email в allowlist).
+- Документация: `docs/api` admin metrics; `deploy` — как задать `ADMIN_USER_EMAILS` на VPS.
+- Обновить `.env.example` / `.env.production.example`.
+
+### Вне scope
+- Редактирование/удаление чужих карточек и пользователей из UI.
+- Impersonation («войти как пользователь»).
+- Роль `admin` в PostgreSQL / миграции (отдельное согласование, если allowlist перестанет хватать).
+- Биллинг, тарифы, feature flags UI.
+- Замена T-007 owner-analytics.
+- Подключение Яндекс.Метрики / GA / внешних BI.
+- Real-time websocket дашборд.
+- Модерация контента / баннеры / CMS.
+
+### Открытые вопросы (не блокируют Stage 1 спеку)
+1. Нужен ли в v1 список последних N карточек (только `id`/`slug`/`status`/`createdAt`, без контактов)? По умолчанию **нет**.
+2. Нужна ли разбивка событий по дням на admin (как у owner)? По умолчанию **только totals**; daily — follow-up.
+3. Переход на `User.role` позже — только после явного «ок» на миграцию.
+
+### Технический план (черновик)
+1. Env `ADMIN_USER_EMAILS=admin@example.com,...`.
+2. Guard: session user → load email → normalize → set membership.
+3. SQL/Prisma `count` / `groupBy` без `findMany` больших выборок.
+4. UI `/admin` force-dynamic, noindex.
+5. Rate limit умеренный на admin API (например 60/min).
+
+### Acceptance criteria
+- [x] Залогиненный admin из allowlist открывает `/admin` и видит метрики v1.
+- [x] Пользователь не из allowlist: нет пункта меню; `GET /api/v1/admin/metrics` → 403.
+- [x] Аноним → 401 на admin API; `/admin` → login.
+- [x] Счётчики карточек не включают soft-deleted.
+- [x] Event-метрики за 7/30/all совпадают с суммами в БД на тестовых фикстурах.
+- [x] В ответах API нет e-mail / телефонов / токенов пользователей.
+- [x] Owner analytics (T-007) и публичные страницы без регрессий.
+- [x] `ADMIN_USER_EMAILS` только в env; не в git.
+
+### Definition of Done
+- [x] Спека согласована (этот раздел)
+- [x] Интеграция + тесты
+- [x] lint / typecheck / tests / build
+- [ ] `ADMIN_USER_EMAILS` на VPS + deploy
+- [ ] Deploy + отчёт

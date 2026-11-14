@@ -2561,6 +2561,28 @@ a.phone-contact-value:focus-visible {
   box-shadow: var(--shadow);
 }
 
+.admin-metrics {
+  gap: 1.5rem;
+}
+
+.admin-metrics-section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-metric {
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--panel) 88%, var(--mist));
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
