@@ -192,6 +192,132 @@ describe('Auth API (e2e)', () => {
     expect(active).toBe(0);
   });
 
+  it('updates displayName via PATCH /auth/me without touching cards', async () => {
+    const email = uniqueEmail('patch-me');
+    const register = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        email,
+        password: 'StrongPassphrase123!',
+        displayName: 'Was Name',
+      })
+      .expect(201);
+
+    const cookies = register.headers['set-cookie'];
+    const userId = register.body.user.id as string;
+
+    const card = await prisma.card.create({
+      data: {
+        userId,
+        displayName: 'Card Person',
+        slug: `card-${Date.now()}`,
+        status: 'draft',
+      },
+    });
+
+    const meBefore = await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Cookie', cookies)
+      .expect(200);
+    expect(meBefore.body.user.hasPassword).toBe(true);
+
+    const patched = await request(app.getHttpServer())
+      .patch('/api/v1/auth/me')
+      .set('Cookie', cookies)
+      .send({ displayName: 'New Account Name' })
+      .expect(200);
+
+    expect(patched.body.user.displayName).toBe('New Account Name');
+    expect(patched.body.user.hasPassword).toBe(true);
+
+    const unchangedCard = await prisma.card.findUniqueOrThrow({
+      where: { id: card.id },
+    });
+    expect(unchangedCard.displayName).toBe('Card Person');
+  });
+
+  it('changes password via POST /auth/password and reissues session', async () => {
+    const email = uniqueEmail('pwd-api');
+    const register = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password: 'StrongPassphrase123!' })
+      .expect(201);
+    const cookies = register.headers['set-cookie'];
+
+    const wrong = await request(app.getHttpServer())
+      .post('/api/v1/auth/password')
+      .set('Cookie', cookies)
+      .send({
+        currentPassword: 'WrongPassphrase123!',
+        newPassword: 'AnotherStrongPass123!',
+      })
+      .expect(401);
+    expect(wrong.body.error.code).toBe('INVALID_CREDENTIALS');
+
+    const changed = await request(app.getHttpServer())
+      .post('/api/v1/auth/password')
+      .set('Cookie', cookies)
+      .send({
+        currentPassword: 'StrongPassphrase123!',
+        newPassword: 'AnotherStrongPass123!',
+      })
+      .expect(200);
+
+    expect(changed.body.user.hasPassword).toBe(true);
+    expect(changed.headers['set-cookie']).toBeDefined();
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email, password: 'AnotherStrongPass123!' })
+      .expect(200);
+  });
+
+  it('hard-deletes account when confirmation is Удалить', async () => {
+    const email = uniqueEmail('del');
+    const register = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password: 'StrongPassphrase123!' })
+      .expect(201);
+    const cookies = register.headers['set-cookie'];
+    const userId = register.body.user.id as string;
+
+    await prisma.card.create({
+      data: {
+        userId,
+        displayName: 'Doomed Card',
+        slug: `doom-${Date.now()}`,
+        status: 'published',
+      },
+    });
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/account/delete')
+      .set('Cookie', cookies)
+      .send({ confirmation: 'удалить' })
+      .expect(400);
+
+    expect(await prisma.user.count({ where: { id: userId } })).toBe(1);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/account/delete')
+      .set('Cookie', cookies)
+      .send({ confirmation: 'Удалить' })
+      .expect(204);
+
+    expect(await prisma.user.count({ where: { id: userId } })).toBe(0);
+    expect(await prisma.card.count({ where: { userId } })).toBe(0);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Cookie', cookies)
+      .expect(401);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password: 'StrongPassphrase123!' })
+      .expect(201);
+  });
+
   it('creates user on first VK ID login and reuses on next login', async () => {
     vkid.authorizeUrl.mockImplementation(
       (params: { state: string; codeChallenge: string; redirectUri: string }) => {

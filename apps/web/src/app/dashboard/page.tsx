@@ -54,6 +54,9 @@ export default async function DashboardPage() {
             <Link className="button accent" href="/cards/new">
               Создать визитку
             </Link>
+            <Link className="button secondary" href="/account">
+              Аккаунт
+            </Link>
             <LogoutButton />
           </div>
         </header>
