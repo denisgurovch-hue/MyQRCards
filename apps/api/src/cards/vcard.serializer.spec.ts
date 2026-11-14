@@ -122,4 +122,83 @@ describe('vcard.serializer', () => {
     expect(card.get('fn').valueOf()).toBe('Emoji User 🚀');
     expect(String(card.get('note').valueOf())).toContain('Привет');
   });
+
+  it('embeds PHOTO;ENCODING=b;TYPE=JPEG when base64 is provided', () => {
+    const jpegB64 = Buffer.from([0xff, 0xd8, 0xff, 0xd9]).toString('base64');
+    const raw = buildVCard30({
+      displayName: 'With Photo',
+      jobTitle: null,
+      companyName: null,
+      summary: null,
+      phone: null,
+      email: null,
+      websiteUrl: null,
+      canonicalUrl: 'https://cards.example/u/with-photo',
+      photoJpegBase64: jpegB64,
+    });
+
+    expect(raw).toMatch(/PHOTO;ENCODING=b;TYPE=JPEG:/);
+    expect(raw.replace(/\r\n /g, '')).toContain(jpegB64);
+    expect(raw).not.toMatch(/PHOTO;VALUE=URI/i);
+
+    const card = parseOne(raw);
+    expect(card.get('photo')).toBeDefined();
+  });
+
+  it('omits PHOTO when base64 is missing or invalid', () => {
+    const without = buildVCard30({
+      displayName: 'Only Name',
+      jobTitle: null,
+      companyName: null,
+      summary: null,
+      phone: null,
+      email: null,
+      websiteUrl: null,
+      canonicalUrl: 'https://cards.example/u/only-name-2',
+    });
+    expect(without).not.toMatch(/\r\nPHOTO[;:]/i);
+
+    const invalid = buildVCard30({
+      displayName: 'Bad B64',
+      jobTitle: null,
+      companyName: null,
+      summary: null,
+      phone: null,
+      email: null,
+      websiteUrl: null,
+      canonicalUrl: 'https://cards.example/u/bad-b64',
+      photoJpegBase64: 'not!valid;base64',
+    });
+    expect(invalid).not.toMatch(/\r\nPHOTO[;:]/i);
+  });
+
+  it('folds long PHOTO lines on octet boundaries', () => {
+    const longB64 = Buffer.alloc(400, 0xab).toString('base64');
+    const raw = buildVCard30({
+      displayName: 'Fold Photo',
+      jobTitle: null,
+      companyName: null,
+      summary: null,
+      phone: null,
+      email: null,
+      websiteUrl: null,
+      canonicalUrl: 'https://cards.example/u/fold-photo',
+      photoJpegBase64: longB64,
+    });
+
+    const lines = raw.split('\r\n');
+    const photoStart = lines.findIndex((line) => line.startsWith('PHOTO;'));
+    expect(photoStart).toBeGreaterThanOrEqual(0);
+    const photoLines = [lines[photoStart]];
+    for (let i = photoStart + 1; i < lines.length; i++) {
+      if (!lines[i].startsWith(' ')) {
+        break;
+      }
+      photoLines.push(lines[i]);
+    }
+    expect(photoLines.length).toBeGreaterThan(1);
+    for (const physical of photoLines) {
+      expect(Buffer.byteLength(physical, 'utf8')).toBeLessThanOrEqual(75);
+    }
+  });
 });

@@ -6,6 +6,10 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
+import { mkdtempSync, rmSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import sharp from 'sharp';
 import request from 'supertest';
 import vCard from 'vcf';
 import { AppModule } from '../src/app.module';
@@ -17,16 +21,20 @@ import {
   normalizePublicAppUrl,
   publicCardCanonicalUrl,
 } from '../src/cards/public-app-url';
+import { photoFilePath } from '../src/cards/card-photo.storage';
 
 describe('Public vCard API (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let redis: RedisService;
+  let storageDir: string;
   const expectedBase = normalizePublicAppUrl(
     process.env.WEB_ORIGIN ?? 'http://localhost:3000',
   );
 
   beforeAll(async () => {
+    storageDir = mkdtempSync(join(tmpdir(), 'vcard-photos-'));
+    process.env.CARD_PHOTO_STORAGE_DIR = storageDir;
     process.env.WEB_ORIGIN = expectedBase;
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
@@ -68,10 +76,16 @@ describe('Public vCard API (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    rmSync(storageDir, { recursive: true, force: true });
   });
 
   beforeEach(async () => {
+    await prisma.cardEvent.deleteMany();
     await prisma.cardLink.deleteMany();
+    await prisma.card.updateMany({
+      data: { photoId: null, photoUrl: null, coverPhotoId: null },
+    });
+    await prisma.cardPhoto.deleteMany();
     await prisma.card.deleteMany();
     await prisma.refreshToken.deleteMany();
     await prisma.identity.deleteMany();
@@ -280,6 +294,102 @@ describe('Public vCard API (e2e)', () => {
     const [parsed] = vCard.parse(readVcardBody(res));
     expect(parsed.get('fn').valueOf()).toBe('Новое Имя');
     expect(parsed.get('tel').valueOf()).toBe('+71112223344');
+  });
+
+  it('embeds inline JPEG PHOTO when published card has a photo', async () => {
+    const { cookies } = await register(`photo-${Date.now()}@example.com`);
+    const card = await createPublishedCard(cookies, { slug: 'vcard-photo-1' });
+
+    const jpeg = await sharp({
+      create: {
+        width: 160,
+        height: 160,
+        channels: 3,
+        background: '#4a90e2',
+      },
+    })
+      .jpeg()
+      .toBuffer();
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/cards/${card.id}/photo`)
+      .set('Cookie', cookies)
+      .attach('photo', jpeg, {
+        filename: 'avatar.jpg',
+        contentType: 'image/jpeg',
+      })
+      .expect(201);
+
+    const withoutPhoto = await createPublishedCard(cookies, {
+      slug: 'vcard-no-photo-1',
+      displayName: 'No Avatar',
+    });
+
+    const withPhotoRes = await getVcard(card.slug).expect(200);
+    const withPhotoText = readVcardBody(withPhotoRes);
+    expect(withPhotoText).toMatch(/PHOTO;ENCODING=b;TYPE=JPEG:/);
+    expect(withPhotoText).not.toMatch(/PHOTO;VALUE=URI/i);
+    expect(String(withPhotoRes.headers['content-disposition'])).toBe(
+      `inline; filename="contact-${card.slug}.vcf"`,
+    );
+
+    const [parsed] = vCard.parse(withPhotoText);
+    expect(parsed.get('photo')).toBeDefined();
+    expect(parsed.get('fn').valueOf()).toBe('Иван Тест');
+
+    const unfolded = withPhotoText.replace(/\r\n /g, '');
+    const match = unfolded.match(/PHOTO;ENCODING=b;TYPE=JPEG:([A-Za-z0-9+/=]+)/);
+    expect(match).toBeTruthy();
+    const photoBytes = Buffer.from(match![1], 'base64');
+    expect(photoBytes[0]).toBe(0xff);
+    expect(photoBytes[1]).toBe(0xd8);
+    const meta = await sharp(photoBytes).metadata();
+    expect(meta.format).toBe('jpeg');
+    expect(meta.width).toBeLessThanOrEqual(512);
+    expect(meta.height).toBeLessThanOrEqual(512);
+
+    const noPhotoText = readVcardBody(
+      await getVcard(withoutPhoto.slug).expect(200),
+    );
+    expect(noPhotoText).not.toMatch(/\r\nPHOTO[;:]/i);
+  });
+
+  it('still returns vCard without PHOTO when photo file is missing', async () => {
+    const { cookies } = await register(`missing-${Date.now()}@example.com`);
+    const card = await createPublishedCard(cookies, {
+      slug: 'vcard-missing-photo',
+    });
+
+    const jpeg = await sharp({
+      create: {
+        width: 80,
+        height: 80,
+        channels: 3,
+        background: '#112233',
+      },
+    })
+      .jpeg()
+      .toBuffer();
+
+    const uploaded = await request(app.getHttpServer())
+      .post(`/api/v1/cards/${card.id}/photo`)
+      .set('Cookie', cookies)
+      .attach('photo', jpeg, {
+        filename: 'avatar.jpg',
+        contentType: 'image/jpeg',
+      })
+      .expect(201);
+
+    const key = String(uploaded.body.photo.url).split('/').pop()!;
+    unlinkSync(photoFilePath(key));
+
+    const res = await getVcard(card.slug).expect(200);
+    const text = readVcardBody(res);
+    expect(text).not.toMatch(/\r\nPHOTO[;:]/i);
+    expect(text).toContain('FN:Иван Тест');
+    expect(String(res.headers['content-type'])).toMatch(
+      /text\/vcard;\s*charset=utf-8/i,
+    );
   });
 });
 
