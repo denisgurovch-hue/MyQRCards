@@ -2445,7 +2445,7 @@ T-021
 ## Admin-панель платформы (метрики для главного администратора)
 
 ### Статус
-Stage 1 — задача зафиксирована; реализация не начата.
+Stage 2 — реализация в коде; `ADMIN_USER_EMAILS` на VPS и deploy — отдельно.
 
 ### Цель
 Дать **главному администратору** Signet / MyQRCards отдельную
@@ -2529,18 +2529,18 @@ admin-панель для обзора платформенных метрик: 
 5. Rate limit умеренный на admin API (например 60/min).
 
 ### Acceptance criteria
-- [ ] Залогиненный admin из allowlist открывает `/admin` и видит метрики v1.
-- [ ] Пользователь не из allowlist: нет пункта меню; `GET /api/v1/admin/metrics` → 403.
-- [ ] Аноним → 401 на admin API; `/admin` → login.
-- [ ] Счётчики карточек не включают soft-deleted.
-- [ ] Event-метрики за 7/30/all совпадают с суммами в БД на тестовых фикстурах.
-- [ ] В ответах API нет e-mail / телефонов / токенов пользователей.
-- [ ] Owner analytics (T-007) и публичные страницы без регрессий.
-- [ ] `ADMIN_USER_EMAILS` только в env; не в git.
+- [x] Залогиненный admin из allowlist открывает `/admin` и видит метрики v1.
+- [x] Пользователь не из allowlist: нет пункта меню; `GET /api/v1/admin/metrics` → 403.
+- [x] Аноним → 401 на admin API; `/admin` → login.
+- [x] Счётчики карточек не включают soft-deleted.
+- [x] Event-метрики за 7/30/all совпадают с суммами в БД на тестовых фикстурах.
+- [x] В ответах API нет e-mail / телефонов / токенов пользователей.
+- [x] Owner analytics (T-007) и публичные страницы без регрессий.
+- [x] `ADMIN_USER_EMAILS` только в env; не в git.
 
 ### Definition of Done
-- [ ] Спека согласована (этот раздел)
-- [ ] Интеграция + тесты
-- [ ] lint / typecheck / tests / build
+- [x] Спека согласована (этот раздел)
+- [x] Интеграция + тесты
+- [x] lint / typecheck / tests / build
 - [ ] `ADMIN_USER_EMAILS` на VPS + deploy
 - [ ] Deploy + отчёт

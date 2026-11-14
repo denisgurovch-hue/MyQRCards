@@ -22,6 +22,7 @@ import { LoginDto } from './dto/login.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
+import { isAdminEmail } from '../admin/admin-emails';
 
 const VK_OAUTH_STATE_PREFIX = 'oauth:vkid:';
 const YANDEX_OAUTH_STATE_PREFIX = 'oauth:yandex:';
@@ -138,6 +139,10 @@ export class AuthService {
         email: user.email,
         displayName: user.displayName,
         hasPassword: Boolean(user.passwordHash),
+        isAdmin: isAdminEmail(
+          user.email,
+          this.config.get<string>('ADMIN_USER_EMAILS'),
+        ),
       },
     };
   }

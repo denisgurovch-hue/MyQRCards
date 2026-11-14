@@ -27,3 +27,4 @@
 - VK ID keys: see `deploy/vkid-setup.md` (`VK_ID_CLIENT_ID` / `VK_ID_CLIENT_SECRET`)
 - `YANDEX_ID_REDIRECT_URI=https://smartvizitka.ru/api/v1/auth/yandex/callback`
 - Yandex ID keys: see `deploy/yandex-id-setup.md` (`YANDEX_ID_CLIENT_ID` / `YANDEX_ID_CLIENT_SECRET`)
+- Admin allowlist: `ADMIN_USER_EMAILS=you@example.com` (comma-separated); see T-021 / `/admin`
