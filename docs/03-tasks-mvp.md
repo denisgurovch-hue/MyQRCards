@@ -2353,3 +2353,90 @@ Stage 3 — задеплоено на prod (`main` @ `cb54164`); остаётс�
 - [ ] Ручная проверка iOS/Android
 - [x] Deploy + отчёт
 
+T-020
+## Вход через Яндекс ID
+
+### Статус
+Stage 1 — задача зафиксирована; реализация не начата.
+
+### Цель
+Дать владельцу визиток вход и регистрацию через **Яндекс ID**
+наряду с e-mail/паролем и VK ID (как заложено в product brief и
+`docs/02-spec-mvp.md`), с той же сессией cookie (`mq_access` /
+`mq_refresh`), что и у остальных способов входа.
+
+### Предусловия
+- T-002 — e-mail/пароль и VK ID OAuth (Code + PKCE) работают.
+- Модель `Identity` уже provider-agnostic (`provider` + `providerUserId`).
+- T-017 — экран аккаунта: блок пароля скрыт при `hasPassword=false`
+  (Yandex-only без пароля покрывается этим же правилом).
+
+### Текущее состояние
+- Login/Register UI: только e-mail и кнопка «Войти через VK ID».
+- API: `GET /api/v1/auth/vkid/authorize` + `.../callback`.
+- Provider в БД для VK: `vkid`.
+- Яндекс ID в коде **не** реализован; секреты/redirect не заведены.
+
+### Согласованные решения
+| Тема | Решение |
+|---|---|
+| Номер | T-020 |
+| Провайдер в `Identity.provider` | `yandex` |
+| Протокол | OAuth 2.0 Authorization Code (Яндекс ID / oauth.yandex.ru) |
+| PKCE | Предпочтительно как у VK (если кабинет Яндекса для приложения это поддерживает); иначе code + `client_secret` на бэкенде |
+| Endpoints | `GET /api/v1/auth/yandex/authorize`, `GET /api/v1/auth/yandex/callback` |
+| Redirect URI (prod) | `https://smartvizitka.ru/api/v1/auth/yandex/callback` |
+| Redirect URI (local) | `http://localhost:3000/api/v1/auth/yandex/callback` |
+| Env | `YANDEX_ID_CLIENT_ID`, `YANDEX_ID_CLIENT_SECRET`, `YANDEX_ID_REDIRECT_URI` (только env; не в репозиторий) |
+| Сессия | Те же httpOnly cookie / `SessionsService`, что после login и VK |
+| Успех | `302` → `/dashboard` |
+| Ошибка | `302` → `/login?error=...` (коды в духе VK: `OAUTH_*`, `OAUTH_NOT_CONFIGURED`) |
+| Создание / линк пользователя | Как VK: (1) existing Identity `yandex`+id → user; (2) иначе e-mail из Яндекса → link к existing User; (3) иначе создать User + Identity |
+| E-mail от Яндекса | Нормализовать lower/trim; если Яндекс не отдал e-mail — создать User с `email=null` (как допустимо для OAuth-only) |
+| Display name | Из профиля Яндекса (`display_name` / имя+фамилия), если есть |
+| UI | Кнопка «Войти через Яндекс ID» на `/login` и `/register` рядом с VK |
+| Аккаунт (T-017) | Без отдельного UI «привязать Яндекс»; Yandex-only → нет блока смены пароля |
+| Rate limit | Отдельные ключи `auth:yandex:authorize` / `auth:yandex:callback` (лимиты как у VK) |
+| Логи | Без e-mail, токенов, authorization code, client_secret |
+
+### Scope
+- `YandexIdClient` (authorize URL, exchange code, user info) + wiring в `AuthModule` / `AuthService` / `AuthController`.
+- Redis state для CSRF/`state` (+ PKCE verifier при использовании), TTL как у VK (~600s), отдельный prefix `oauth:yandex:`.
+- Кнопки и тексты ошибок на login/register.
+- Документация: `docs/api/auth-api.md`, `deploy/yandex-id-setup.md` (зеркало `deploy/vkid-setup.md`).
+- Unit + e2e (мок клиента): authorize redirect; callback → cookies + Identity `yandex`; повторный вход; link по e-mail; `503` без конфига.
+- Playwright: на login есть ссылка на `/api/v1/auth/yandex/authorize`.
+
+### Вне scope
+- SDK/виджет Яндекса на клиенте (только server-side redirect flow).
+- Привязка Яндекса из экрана «Аккаунт» для уже залогиненного password-user.
+- Одновременный merge двух существующих аккаунтов (password-user + другой OAuth-user) сверх правила «link by email».
+- Выход из всех устройств Яндекса / revoke токена у провайдера.
+- Apple / Google / Mail.ru и прочие IdP.
+- Смена схемы БД (новая таблица не нужна).
+- Password recovery / magic link.
+
+### Технический план (черновик)
+1. Клиент Яндекс ID по официальному OAuth 2.0 (authorize → token → `login.yandex.ru/info`).
+2. Скоупы минимум для id + (желательно) email и имени — зафиксировать в setup-доке после проверки кабинета приложения.
+3. Параллельный путь к `startVkidAuth` / `handleVkidCallback` без ломки VK.
+4. UI: вторая secondary-кнопка; нейтральные oauth error messages (не только «VK»).
+5. Prod: завести приложение в кабинете Яндекса, trusted redirect, секреты в `.env.production`, recreate/deploy api (+ web из‑за кнопок).
+
+### Acceptance criteria
+- [ ] На `/login` и `/register` есть «Войти через Яндекс ID».
+- [ ] При настроенных секретах authorize уводит на oauth.yandex.ru; callback создаёт сессию и Identity `yandex`.
+- [ ] Повторный вход тем же Яндекс-аккаунтом → тот же User.
+- [ ] Совпадение e-mail с существующим User → Identity линкуется, карточки сохраняются.
+- [ ] Без `YANDEX_ID_CLIENT_ID` → `OAUTH_NOT_CONFIGURED` / понятный error на login (VK при этом не ломается).
+- [ ] VK ID и e-mail/пароль без регрессий.
+- [ ] Yandex-only аккаунт: в «Аккаунт» нет смены пароля (`hasPassword=false`).
+- [ ] Секреты не в git; в логах нет PII/токенов.
+- [ ] Тесты (unit/e2e) + ручной smoke на staging/prod после выдачи ключей.
+
+### Definition of Done
+- [ ] Спека согласована (этот раздел)
+- [ ] Интеграция + тесты
+- [ ] lint / typecheck / tests / build
+- [ ] Setup-док + секреты на VPS (когда ключи есть)
+- [ ] Deploy + отчёт
