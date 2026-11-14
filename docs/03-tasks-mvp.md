@@ -2201,3 +2201,75 @@ T-017 не меняет решения T-016 без отдельного сог�
 - [x] lint / typecheck / tests / build
 - [x] Отчёт
 
+T-018
+## Создание визитки в UI edit-v2 (запись на первый Save)
+
+### Статус
+Stage 1 — задача зафиксирована; реализация не начата.
+
+### Цель
+Режим создания визитки максимально совпадает с текущим edit-v2:
+тот же WYSIWYG, sheets, фото/cover, контакты, Save/Cancel.
+Отличие только в персистентности: до первого успешного «Сохранить»
+строки карточки в БД нет.
+
+### Согласованное решение (вход)
+| Тема | Решение |
+|---|---|
+| Номер | T-018 |
+| Вариант | **2** — тот же UI без записи; первый Save = `POST`, дальше как edit |
+| Не выбран | 1 (сразу POST черновика) и 3 (отдельный restyle `/cards/new`) |
+
+### Текущее состояние (до T-018)
+- `/cards/new` — плоская форма → `POST /api/v1/cards` → redirect `/cards/{id}/edit-v2`.
+- Edit-v2 — полный редактор с `cardId`, `GET` + `PATCH` + media + lifecycle.
+- Legacy `/edit` не primary.
+
+### Целевой UX
+1. Dashboard «Создать визитку» открывает create-mode edit-v2 (без `cardId` в URL или с явным `/cards/new` на том же компоненте).
+2. Пользователь правит draft локально (как в edit): профиль, контакты, фото/cover.
+3. «Отменить» / уход без Save — без `POST`; confirm при dirty (как в edit).
+4. Первый «Сохранить»:
+   - `POST /api/v1/cards` с полями draft (имя обязательно; пустое имя → ошибка UI/API);
+   - при наличии новых photo/cover — upload после получения `id` (порядок: create → media);
+   - затем navigate на `/cards/{id}/edit-v2` (replace) и baseline = сохранённое;
+   - дальнейшие Save = существующий PATCH-путь.
+5. Lifecycle (publish / unpublish / archive / delete) **недоступен** до первого успешного create (нет id / нет Управление-действий, меняющих сервер).
+6. Slug: до create — только локальный draft или «назначится при сохранении» (случайный на сервере, если пусто); после create — как в edit Управление.
+
+### Вне scope
+- Новые поля/фичи, которых нет в edit-v2.
+- Сразу создавать orphan-черновики в БД (вариант 1).
+- Переписывать публичную страницу или T-016 security.
+- Авто-cleanup «пустых» карточек (не нужны при варианте 2).
+- Блокировать параллельную работу MYQ-21 (ФИО), но интеграция должна не ломать name fields edit-v2 / учитывать её, если уже в main.
+
+### Технический план (черновик)
+- Расширить `EditCardV2` режимом `mode: 'create' | 'edit'` (или обёртка `/cards/new` → тот же компонент без id).
+- Create: initial `emptyDraft()` / разумные defaults; без `GET`.
+- `save-card-v2`: ветка create → POST body из draft + media after id.
+- URL: после POST — `router.replace(/cards/{id}/edit-v2)`.
+- Убрать или свести `/cards/new` старую форму к thin route на create-mode.
+- API: существующий `POST /api/v1/cards` достаточен; не расширять схему без нужды. `displayName` остаётся required на POST.
+- Тесты: unit save-plan create; e2e/playwright — create → edit fields → first save → reload edit; cancel without POST; publish blocked pre-save.
+
+### Acceptance criteria
+- [ ] Создание открывает тот же UI, что edit-v2 (не плоская форма).
+- [ ] До первого Save нет новой строки `cards` у пользователя (проверяемо API/БД).
+- [ ] Первый Save создаёт draft-карточку и сохраняет введённые поля/медиа.
+- [ ] После Save поведение идентично edit-v2 (dirty, Cancel, PATCH, lifecycle).
+- [ ] Publish/delete до create недоступны или no-op с понятным UX.
+- [ ] Уход без Save не оставляет карточку в кабинете.
+- [ ] Регрессии: edit существующей карточки, dashboard, T-016/T-017.
+
+### Definition of Done
+- [ ] Спека согласована (этот раздел)
+- [ ] Stage 2 прототип/превью при необходимости UI-approve
+- [ ] Интеграция + тесты
+- [ ] lint / typecheck / tests / build
+- [ ] Deploy + отчёт
+
+### Связанные артефакты
+- Сравнение create vs edit: store `internal/create-vs-edit-v2-comparison.md`
+- Edit-v2 primary: PR #30 / `internal/edit-v2-primary-integration.md`
+
