@@ -16,17 +16,20 @@ import { photoFilePath } from '../cards/card-photo.storage';
 import { SessionService } from './session/session.service';
 import { VkidClient } from './vkid/vkid.client';
 import { normalizeVkidCallbackQuery } from './vkid/vkid-callback.query';
+import { YandexIdClient } from './yandex/yandex-id.client';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 
-const OAUTH_STATE_PREFIX = 'oauth:vkid:';
+const VK_OAUTH_STATE_PREFIX = 'oauth:vkid:';
+const YANDEX_OAUTH_STATE_PREFIX = 'oauth:yandex:';
 const VK_PROVIDER = 'vkid';
+const YANDEX_PROVIDER = 'yandex';
 
 type OAuthStateRecord = {
-  codeVerifier: string;
+  codeVerifier?: string;
   redirectUri: string;
 };
 
@@ -39,6 +42,7 @@ export class AuthService {
     private readonly redis: RedisService,
     private readonly sessions: SessionService,
     private readonly vkid: VkidClient,
+    private readonly yandex: YandexIdClient,
     private readonly config: ConfigService,
   ) {}
 
@@ -292,7 +296,7 @@ export class AuthService {
     const codeChallenge = pkceChallengeS256(codeVerifier);
 
     await this.redis.setJson(
-      `${OAUTH_STATE_PREFIX}${state}`,
+      `${VK_OAUTH_STATE_PREFIX}${state}`,
       { codeVerifier, redirectUri } satisfies OAuthStateRecord,
       600,
     );
@@ -304,6 +308,31 @@ export class AuthService {
     });
 
     return { url };
+  }
+
+  async startYandexAuth(): Promise<{ url: string }> {
+    if (!this.yandex.isConfigured()) {
+      throw new AppError(
+        'OAUTH_NOT_CONFIGURED',
+        'Yandex ID is not configured',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+    const redirectUri = this.config.get<string>(
+      'YANDEX_ID_REDIRECT_URI',
+      'http://localhost:3000/api/v1/auth/yandex/callback',
+    );
+    const state = generateOpaqueToken(32);
+
+    await this.redis.setJson(
+      `${YANDEX_OAUTH_STATE_PREFIX}${state}`,
+      { redirectUri } satisfies OAuthStateRecord,
+      600,
+    );
+
+    return {
+      url: this.yandex.authorizeUrl({ state, redirectUri }),
+    };
   }
 
   async handleVkidCallback(
@@ -337,9 +366,9 @@ export class AuthService {
     }
 
     const record = await this.redis.getJson<OAuthStateRecord>(
-      `${OAUTH_STATE_PREFIX}${normalized.state}`,
+      `${VK_OAUTH_STATE_PREFIX}${normalized.state}`,
     );
-    if (!record) {
+    if (!record?.codeVerifier) {
       throw new AppError(
         'OAUTH_INVALID_STATE',
         'OAuth state is invalid or expired',
@@ -347,7 +376,7 @@ export class AuthService {
       );
     }
 
-    await this.redis.del(`${OAUTH_STATE_PREFIX}${normalized.state}`);
+    await this.redis.del(`${VK_OAUTH_STATE_PREFIX}${normalized.state}`);
 
     const tokens = await this.vkid.exchangeCode({
       code: normalized.code,
@@ -428,6 +457,121 @@ export class AuthService {
 
     await this.sessions.issueSession(res, user);
     this.logger.log('User authenticated via VK ID');
+    return `${webOrigin}/dashboard`;
+  }
+
+  async handleYandexCallback(
+    query: {
+      code?: string;
+      state?: string;
+      error?: string;
+    },
+    res: Response,
+  ): Promise<string> {
+    const webOrigin = this.config.get<string>(
+      'WEB_ORIGIN',
+      'http://localhost:3000',
+    );
+
+    if (query.error || !query.code || !query.state) {
+      throw new AppError(
+        'OAUTH_INVALID_CODE',
+        'OAuth callback is missing required parameters',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const record = await this.redis.getJson<OAuthStateRecord>(
+      `${YANDEX_OAUTH_STATE_PREFIX}${query.state}`,
+    );
+    if (!record) {
+      throw new AppError(
+        'OAUTH_INVALID_STATE',
+        'OAuth state is invalid or expired',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    await this.redis.del(`${YANDEX_OAUTH_STATE_PREFIX}${query.state}`);
+
+    const tokens = await this.yandex.exchangeCode({
+      code: query.code,
+      redirectUri: record.redirectUri,
+    });
+
+    if (!tokens.access_token) {
+      throw new AppError(
+        'OAUTH_PROVIDER_ERROR',
+        'Yandex ID did not return an access token',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+
+    const info = await this.yandex.fetchUserInfo(tokens.access_token);
+    const providerUserId = String(info.id ?? '');
+    if (!providerUserId) {
+      throw new AppError(
+        'OAUTH_PROVIDER_ERROR',
+        'Yandex ID did not return a user id',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+
+    const email =
+      info.default_email?.trim().toLowerCase() ||
+      info.emails?.find((value) => value?.trim())?.trim().toLowerCase() ||
+      null;
+    const displayName =
+      info.display_name?.trim() ||
+      info.real_name?.trim() ||
+      [info.first_name, info.last_name].filter(Boolean).join(' ').trim() ||
+      null;
+
+    const user = await this.prisma.$transaction(async (tx) => {
+      const existingIdentity = await tx.identity.findUnique({
+        where: {
+          provider_providerUserId: {
+            provider: YANDEX_PROVIDER,
+            providerUserId,
+          },
+        },
+        include: { user: true },
+      });
+
+      if (existingIdentity) {
+        return existingIdentity.user;
+      }
+
+      if (email) {
+        const existingByEmail = await tx.user.findUnique({ where: { email } });
+        if (existingByEmail) {
+          await tx.identity.create({
+            data: {
+              userId: existingByEmail.id,
+              provider: YANDEX_PROVIDER,
+              providerUserId,
+            },
+          });
+          return existingByEmail;
+        }
+      }
+
+      return tx.user.create({
+        data: {
+          email,
+          displayName,
+          identities: {
+            create: {
+              provider: YANDEX_PROVIDER,
+              providerUserId,
+            },
+          },
+        },
+      });
+    });
+
+    await this.sessions.issueSession(res, user);
+    this.logger.log('User authenticated via Yandex ID');
     return `${webOrigin}/dashboard`;
   }
 }

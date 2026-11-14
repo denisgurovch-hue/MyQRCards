@@ -8,9 +8,9 @@ import { apiFetch } from '../../lib/api';
 function oauthErrorMessage(code: string | null): string | null {
   if (!code) return null;
   if (code === 'OAUTH_NOT_CONFIGURED') {
-    return 'Вход через VK ID пока не настроен. Используйте e-mail и пароль.';
+    return 'Вход через соцсеть пока не настроен. Используйте e-mail и пароль.';
   }
-  return 'Не удалось войти через VK ID. Попробуйте ещё раз или войдите по e-mail.';
+  return 'Не удалось войти через соцсеть. Попробуйте ещё раз или войдите по e-mail.';
 }
 
 function LoginForm() {
@@ -50,7 +50,7 @@ function LoginForm() {
       <div className="panel-head">
         <p className="eyebrow">Кабинет</p>
         <h1 className="section-title">Вход</h1>
-        <p className="muted">E-mail и пароль или VK ID</p>
+        <p className="muted">E-mail и пароль, VK ID или Яндекс ID</p>
       </div>
       {oauthError ? <p className="error">{oauthError}</p> : null}
       {error ? <p className="error">{error}</p> : null}
@@ -76,6 +76,9 @@ function LoginForm() {
       <div className="stack" style={{ marginTop: '1rem' }}>
         <a className="button secondary" href="/api/v1/auth/vkid/authorize">
           Войти через VK ID
+        </a>
+        <a className="button secondary" href="/api/v1/auth/yandex/authorize">
+          Войти через Яндекс ID
         </a>
         <p className="muted">
           Нет аккаунта? <Link href="/register">Зарегистрироваться</Link>

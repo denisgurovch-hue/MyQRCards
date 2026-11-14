@@ -136,4 +136,44 @@ export class AuthController {
       res.redirect(302, `${webOrigin}/login?error=OAUTH_PROVIDER_ERROR`);
     }
   }
+
+  @Get('yandex/authorize')
+  @RateLimit({ key: 'auth:yandex:authorize', limit: 30, windowSeconds: 60 })
+  async yandexAuthorize(@Res() res: Response): Promise<void> {
+    try {
+      const { url } = await this.auth.startYandexAuth();
+      res.redirect(302, url);
+    } catch (error) {
+      const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
+      const body =
+        error instanceof AppError
+          ? (error.getResponse() as { error?: { code?: string } })
+          : null;
+      const code = body?.error?.code ?? 'OAUTH_PROVIDER_ERROR';
+      res.redirect(
+        302,
+        `${webOrigin}/login?error=${encodeURIComponent(code)}`,
+      );
+    }
+  }
+
+  @Get('yandex/callback')
+  @RateLimit({ key: 'auth:yandex:callback', limit: 30, windowSeconds: 60 })
+  async yandexCallback(
+    @Query()
+    query: {
+      code?: string;
+      state?: string;
+      error?: string;
+    },
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      const redirectTo = await this.auth.handleYandexCallback(query, res);
+      res.redirect(302, redirectTo);
+    } catch {
+      const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
+      res.redirect(302, `${webOrigin}/login?error=OAUTH_PROVIDER_ERROR`);
+    }
+  }
 }

@@ -31,10 +31,13 @@ test.describe('auth pages', () => {
     await expect(page).toHaveURL(/\/dashboard/);
   });
 
-  test('login page shows VK ID entry point', async ({ page }) => {
+  test('login page shows VK ID and Yandex ID entry points', async ({ page }) => {
     await page.goto('/login');
     await expect(
       page.getByRole('link', { name: 'Войти через VK ID' }),
     ).toHaveAttribute('href', '/api/v1/auth/vkid/authorize');
+    await expect(
+      page.getByRole('link', { name: 'Войти через Яндекс ID' }),
+    ).toHaveAttribute('href', '/api/v1/auth/yandex/authorize');
   });
 });
