@@ -29,10 +29,13 @@ test.describe('public card page', () => {
     await ownerPage.getByLabel('Slug (необязательно)').fill(slug);
     await ownerPage.getByLabel('Телефон').fill('+79991112233');
     await ownerPage.getByRole('button', { name: 'Создать' }).click();
-    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit`));
+    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
 
-    await ownerPage.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(ownerPage.getByText('статус')).toContainText('published');
+    await ownerPage.getByRole('button', { name: 'Управление' }).click();
+    const manage = ownerPage.getByRole('dialog', { name: 'Управление визиткой' });
+    await manage.getByRole('button', { name: 'Опубликовать' }).click();
+    await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
+    await manage.getByRole('button', { name: 'Закрыть', exact: true }).click();
 
     const guest = await browser.newContext();
     const guestPage = await guest.newPage();
@@ -54,7 +57,12 @@ test.describe('public card page', () => {
     expect(body.card.email).toBe('visible@example.com');
     expect(body.card).not.toHaveProperty('userId');
 
-    await ownerPage.getByLabel('Показывать e-mail публично').uncheck();
+    await ownerPage
+      .getByRole('button', { name: 'visible@example.com', exact: true })
+      .click();
+    const emailSheet = ownerPage.getByRole('dialog', { name: 'E-mail' });
+    await emailSheet.getByRole('checkbox', { name: /Показывать e-mail/i }).uncheck();
+    await emailSheet.getByRole('button', { name: 'Применить' }).click();
     await Promise.all([
       ownerPage.waitForResponse(
         (response) =>
@@ -62,7 +70,7 @@ test.describe('public card page', () => {
           response.request().method() === 'PATCH' &&
           response.ok(),
       ),
-      ownerPage.getByRole('button', { name: 'Сохранить' }).click(),
+      ownerPage.getByRole('button', { name: 'Сохранить', exact: true }).click(),
     ]);
 
     const hiddenJson = await guestPage.request.get(
@@ -83,8 +91,9 @@ test.describe('public card page', () => {
       guestPage.getByRole('link', { name: 'Позвонить · +79991112233' }),
     ).toBeVisible();
 
-    await ownerPage.getByRole('button', { name: 'Снять с публикации' }).click();
-    await expect(ownerPage.getByText('статус')).toContainText('draft');
+    await ownerPage.getByRole('button', { name: 'Управление' }).click();
+    await manage.getByRole('button', { name: 'Снять с публикации' }).click();
+    await expect(manage.getByText(/Статус сейчас:\s*draft/i)).toBeVisible();
 
     await guestPage.reload();
     await expect(guestPage.getByRole('heading', { name: 'Визитка не найдена' })).toBeVisible();

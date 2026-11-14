@@ -29,9 +29,11 @@ test.describe('public vCard download', () => {
     await ownerPage.getByLabel('E-mail на карточке').fill('card@example.com');
     await ownerPage.getByLabel('Показывать e-mail публично').check();
     await ownerPage.getByRole('button', { name: 'Создать' }).click();
-    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit`));
-    await ownerPage.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(ownerPage.getByText('статус')).toContainText('published');
+    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
+    await ownerPage.getByRole('button', { name: 'Управление' }).click();
+    const manage = ownerPage.getByRole('dialog', { name: 'Управление визиткой' });
+    await manage.getByRole('button', { name: 'Опубликовать' }).click();
+    await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
 
     const guest = await browser.newContext();
     const guestPage = await guest.newPage();
