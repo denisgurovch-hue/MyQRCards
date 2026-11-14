@@ -55,6 +55,10 @@ test.describe('present card (T-013)', () => {
     await page.getByRole('button', { name: 'Управление' }).click();
     const manage = page.getByRole('dialog', { name: 'Управление визиткой' });
     await manage.getByRole('button', { name: 'Опубликовать' }).click();
+    const publishConfirm = page.getByRole('dialog', {
+      name: 'Опубликовать визитку?',
+    });
+    await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
     await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
 
     await page.goto(`/cards/${cardId}/present`);

@@ -8,6 +8,12 @@ import { HttpStatus } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Trust a single hop (host nginx → container). Do not trust arbitrary client XFF.
+  const expressApp = app.getHttpAdapter().getInstance() as {
+    set: (key: string, value: unknown) => void;
+  };
+  expressApp.set('trust proxy', 1);
+
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({

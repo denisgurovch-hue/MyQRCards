@@ -9,6 +9,7 @@ import {
   Query,
   Res,
   StreamableFile,
+  UseGuards,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { AnalyticsService } from './analytics.service';
@@ -18,8 +19,11 @@ import { PublicCardsService } from './public-cards.service';
 import { QrCodeService } from './qr-code.service';
 import { resolveVcardDisposition } from './vcard-disposition';
 import { VcardService } from './vcard.service';
+import { RateLimit } from '../common/rate-limit/rate-limit.decorator';
+import { RateLimitGuard } from '../common/rate-limit/rate-limit.guard';
 
 @Controller('public/cards')
+@UseGuards(RateLimitGuard)
 export class PublicCardsController {
   constructor(
     private readonly publicCards: PublicCardsService,
@@ -31,6 +35,13 @@ export class PublicCardsController {
   @Post(':slug/clicks')
   @HttpCode(204)
   @Header('Cache-Control', 'no-store')
+  @RateLimit({
+    key: 'pub:click',
+    limit: 60,
+    limitEnv: 'RL_PUB_CLICK_LIMIT',
+    windowSeconds: 60,
+    onStorageError: 'open',
+  })
   async recordClick(
     @Param('slug') slug: string,
     @Body() dto: RecordContactClickDto,
@@ -41,6 +52,13 @@ export class PublicCardsController {
   @Get(':slug/vcard')
   @Header('Cache-Control', 'no-store')
   @Header('X-Content-Type-Options', 'nosniff')
+  @RateLimit({
+    key: 'pub:vcard',
+    limit: 30,
+    limitEnv: 'RL_PUB_VCARD_LIMIT',
+    windowSeconds: 60,
+    onStorageError: 'open',
+  })
   async getVcard(
     @Param('slug') slug: string,
     @Query('download') download: string | string[] | undefined,
@@ -62,6 +80,13 @@ export class PublicCardsController {
   @Get(':slug/qr.png')
   @Header('Cache-Control', 'no-store')
   @Header('X-Content-Type-Options', 'nosniff')
+  @RateLimit({
+    key: 'pub:qr',
+    limit: 30,
+    limitEnv: 'RL_PUB_QR_LIMIT',
+    windowSeconds: 60,
+    onStorageError: 'open',
+  })
   async getQrPng(
     @Param('slug') slug: string,
     @Res({ passthrough: true }) res: Response,
@@ -80,6 +105,13 @@ export class PublicCardsController {
   @Get(':slug/qr.svg')
   @Header('Cache-Control', 'no-store')
   @Header('X-Content-Type-Options', 'nosniff')
+  @RateLimit({
+    key: 'pub:qr',
+    limit: 30,
+    limitEnv: 'RL_PUB_QR_LIMIT',
+    windowSeconds: 60,
+    onStorageError: 'open',
+  })
   async getQrSvg(
     @Param('slug') slug: string,
     @Res({ passthrough: true }) res: Response,
@@ -97,6 +129,13 @@ export class PublicCardsController {
 
   @Get(':slug')
   @Header('Cache-Control', 'no-store')
+  @RateLimit({
+    key: 'pub:card',
+    limit: 120,
+    limitEnv: 'RL_PUB_CARD_LIMIT',
+    windowSeconds: 60,
+    onStorageError: 'open',
+  })
   async getBySlug(
     @Param('slug') slug: string,
     @Res({ passthrough: true }) res: Response,

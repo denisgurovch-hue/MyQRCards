@@ -1,5 +1,6 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { CardStatus } from '@prisma/client';
 import { promises as fs } from 'node:fs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AppError } from '../common/errors/app-error';
@@ -213,9 +214,18 @@ export class CardPhotoService {
 
     const photo = await this.prisma.cardPhoto.findUnique({
       where: { storageKey },
-      select: { mimeType: true, storageKey: true },
+      select: {
+        mimeType: true,
+        storageKey: true,
+        card: { select: { status: true, deletedAt: true } },
+      },
     });
-    if (!photo) {
+    // Same unavailability signal as missing file: only published, non-deleted cards.
+    if (
+      !photo ||
+      photo.card.deletedAt !== null ||
+      photo.card.status !== CardStatus.published
+    ) {
       return null;
     }
 

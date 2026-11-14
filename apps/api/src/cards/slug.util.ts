@@ -1,6 +1,10 @@
 import { randomBytes } from 'crypto';
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/** Crockford Base32 alphabet (lowercase), 5 bits per character. */
+const CROCKFORD = '0123456789abcdefghjkmnpqrstuvwxyz';
+
 const CYR_MAP: Record<string, string> = {
   а: 'a',
   б: 'b',
@@ -37,6 +41,10 @@ const CYR_MAP: Record<string, string> = {
   я: 'ya',
 };
 
+/** Random public slug: 128 bits → 26 Crockford chars. */
+export const RANDOM_SLUG_LENGTH = 26;
+export const RANDOM_SLUG_BYTES = 16;
+
 export function normalizeSlug(input: string): string {
   return input.trim().toLowerCase();
 }
@@ -45,6 +53,50 @@ export function isValidSlug(slug: string): boolean {
   return slug.length >= 6 && slug.length <= 32 && SLUG_RE.test(slug);
 }
 
+/**
+ * Encode raw bytes as Crockford Base32 (lowercase, no padding).
+ * Does not alter case after encoding (alphabet is already lowercase).
+ */
+export function encodeCrockfordBase32(bytes: Buffer): string {
+  let bits = 0;
+  let value = 0;
+  let out = '';
+
+  for (const byte of bytes) {
+    value = (value << 8) | byte;
+    bits += 8;
+    while (bits >= 5) {
+      bits -= 5;
+      out += CROCKFORD[(value >>> bits) & 31];
+    }
+  }
+
+  if (bits > 0) {
+    out += CROCKFORD[(value << (5 - bits)) & 31];
+  }
+
+  return out;
+}
+
+/**
+ * Cryptographically random slug independent of name/company/email.
+ * 16 bytes (128 bits) → 26 URL-safe Crockford characters.
+ */
+export function generateRandomSlug(): string {
+  const encoded = encodeCrockfordBase32(randomBytes(RANDOM_SLUG_BYTES));
+  // 128 bits always encode to 26 chars; assert length without truncating entropy.
+  if (encoded.length !== RANDOM_SLUG_LENGTH) {
+    throw new Error(
+      `Unexpected random slug length ${encoded.length}, expected ${RANDOM_SLUG_LENGTH}`,
+    );
+  }
+  return encoded;
+}
+
+/**
+ * Legacy name-based slug (low entropy). Kept for tests/compat only —
+ * new cards must use {@link generateRandomSlug}.
+ */
 export function slugifyFromName(displayName: string): string {
   const lowered = displayName.trim().toLowerCase();
   let out = '';

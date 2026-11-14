@@ -230,4 +230,54 @@ describe('Public Cards API (e2e)', () => {
       .get(`/api/v1/public/cards/${card.slug}`)
       .expect(404);
   });
+
+  it('auto-generates random slug independent of display name', async () => {
+    const { cookies } = await register(`rand-${Date.now()}@example.com`);
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/cards')
+      .set('Cookie', cookies)
+      .send({ displayName: 'Иван Иванов' })
+      .expect(201);
+
+    const slug = created.body.card.slug as string;
+    expect(slug).toMatch(/^[0-9a-z]{26}$/);
+    expect(slug.startsWith('ivan')).toBe(false);
+  });
+
+  it('rate limits public card GETs by IP with Retry-After', async () => {
+    const previous = process.env.RL_PUB_CARD_LIMIT;
+    process.env.RL_PUB_CARD_LIMIT = '3';
+    try {
+      const { cookies } = await register(`rl-pub-${Date.now()}@example.com`);
+      const card = await createPublishedCard(cookies, { slug: 'rl-pub-card-1' });
+
+      await request(app.getHttpServer())
+        .get(`/api/v1/public/cards/${card.slug}`)
+        .expect(200);
+      await request(app.getHttpServer())
+        .get(`/api/v1/public/cards/${card.slug}`)
+        .expect(200);
+      await request(app.getHttpServer())
+        .get(`/api/v1/public/cards/${card.slug}`)
+        .expect(200);
+
+      const limited = await request(app.getHttpServer())
+        .get(`/api/v1/public/cards/${card.slug}`)
+        .expect(429);
+      expect(limited.body.error.code).toBe('RATE_LIMITED');
+      expect(String(limited.headers['retry-after'])).toBe('60');
+
+      // Changing slug must not bypass the same IP bucket.
+      const limitedOther = await request(app.getHttpServer())
+        .get('/api/v1/public/cards/other-slug-zzzz')
+        .expect(429);
+      expect(limitedOther.body.error.code).toBe('RATE_LIMITED');
+    } finally {
+      if (previous === undefined) {
+        delete process.env.RL_PUB_CARD_LIMIT;
+      } else {
+        process.env.RL_PUB_CARD_LIMIT = previous;
+      }
+    }
+  });
 });

@@ -4,12 +4,25 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import {
   RATE_LIMIT_KEY,
   type RateLimitOptions,
 } from './rate-limit.decorator';
 import { RateLimitService } from './rate-limit.service';
+import { AppError } from '../errors/app-error';
+
+function resolveLimit(options: RateLimitOptions): number {
+  if (!options.limitEnv) {
+    return options.limit;
+  }
+  const raw = process.env[options.limitEnv];
+  if (!raw) {
+    return options.limit;
+  }
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : options.limit;
+}
 
 @Injectable()
 export class RateLimitGuard implements CanActivate {
@@ -28,12 +41,24 @@ export class RateLimitGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest<Request>();
+    const response = context.switchToHttp().getResponse<Response>();
     const ip = request.ip || request.socket.remoteAddress || 'unknown';
-    await this.rateLimit.consume(
-      `${options.key}:${ip}`,
-      options.limit,
-      options.windowSeconds,
-    );
+    const limit = resolveLimit(options);
+
+    try {
+      await this.rateLimit.consume(
+        `${options.key}:${ip}`,
+        limit,
+        options.windowSeconds,
+        options.onStorageError ?? 'closed',
+      );
+    } catch (error) {
+      if (error instanceof AppError && error.getStatus() === 429) {
+        response.setHeader('Retry-After', String(options.windowSeconds));
+      }
+      throw error;
+    }
+
     return true;
   }
 }
