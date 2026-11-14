@@ -2,7 +2,7 @@ export type PrototypeLink = {
   id: string;
   label: string;
   url: string;
-  type: 'telegram' | 'whatsapp' | 'link';
+  type: 'telegram' | 'whatsapp' | 'max' | 'vk' | 'linkedin' | 'link';
 };
 
 /** Slot keys or link id — visual order of contact rows in the editor. */
@@ -153,7 +153,7 @@ export function createFullDraft(): PrototypeDraft {
         id: 'link-site-extra',
         label: 'LinkedIn',
         url: 'https://linkedin.com/in/example',
-        type: 'link',
+        type: 'linkedin',
       },
     ],
     contactOrder: defaultContactOrder([
@@ -167,7 +167,7 @@ export function createFullDraft(): PrototypeDraft {
         id: 'link-site-extra',
         label: 'LinkedIn',
         url: 'https://linkedin.com/in/example',
-        type: 'link',
+        type: 'linkedin',
       },
     ]),
     photoUrl: MOCK_PHOTO_DATA_URL,

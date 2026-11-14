@@ -111,32 +111,16 @@ function ImageGlyph() {
   );
 }
 
-function WhatsAppGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M12 3.6A8.4 8.4 0 0 0 5.1 16.3L4 20l3.8-1a8.4 8.4 0 1 0 4.2-15.4Z"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9.2 9.4c.3-.3.7-.4 1-.2l1 .5c.3.1.4.5.3.8l-.3.8c1.2 2 2.7 3.1 4.4 3.8l.8-.4c.3-.2.7-.1.9.2l.6 1c.2.3.1.7-.2 1-.7.6-1.7.9-2.8.5-2.6-.8-4.9-2.9-6.5-5.8-.7-1.3-.6-2.5.1-3.2Z"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 const LINK_TYPE_OPTIONS: {
   type: PrototypeLink['type'];
   label: string;
-  icon: 'telegram' | 'whatsapp' | 'link';
+  icon: Parameters<typeof ContactIcon>[0]['kind'];
 }[] = [
   { type: 'telegram', label: 'Telegram', icon: 'telegram' },
   { type: 'whatsapp', label: 'WhatsApp', icon: 'whatsapp' },
+  { type: 'max', label: 'Max', icon: 'max' },
+  { type: 'vk', label: 'VK', icon: 'vk' },
+  { type: 'linkedin', label: 'LinkedIn', icon: 'linkedin' },
   { type: 'link', label: 'Ссылка', icon: 'link' },
 ];
 
@@ -1313,11 +1297,7 @@ export function EditV2Prototype() {
                   }
                 >
                   <span className="edit-v2-type-option-icon" aria-hidden="true">
-                    {icon === 'whatsapp' ? (
-                      <WhatsAppGlyph />
-                    ) : (
-                      <ContactIcon kind={icon} />
-                    )}
+                    <ContactIcon kind={icon} />
                   </span>
                   <span>{label}</span>
                 </button>
@@ -1351,6 +1331,20 @@ export function EditV2Prototype() {
             }
           />
         </label>
+        {contactForm.url.trim() ? (
+          <p className="edit-v2-link-detect muted">
+            <span className="edit-v2-link-detect-icon" aria-hidden="true">
+              <ContactIcon
+                kind={resolveContactKind({
+                  type: contactForm.type,
+                  url: contactForm.url,
+                })}
+              />
+            </span>
+            Иконка на визитке подставится по адресу
+            {contactForm.type === 'link' ? ' (YouTube, GitHub, Дзен…)' : ''}.
+          </p>
+        ) : null}
       </NestedSheet>
 
       <NestedSheet

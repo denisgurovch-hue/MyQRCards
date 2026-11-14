@@ -2178,13 +2178,13 @@ a.phone-contact-value:focus-visible {
   justify-items: center;
   gap: 0.3rem;
   margin: 0;
-  padding: 0.7rem 0.45rem;
+  padding: 0.65rem 0.35rem;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--panel) 92%, var(--mist));
   color: var(--ink-soft);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   font-weight: 650;
   line-height: 1.15;
   text-align: center;
@@ -2221,6 +2221,28 @@ a.phone-contact-value:focus-visible {
 .edit-v2-type-option-icon svg {
   width: 1.2rem;
   height: 1.2rem;
+}
+
+.edit-v2-link-detect {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.edit-v2-link-detect-icon {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  color: var(--ink-soft);
+}
+
+.edit-v2-link-detect-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
 }
 
 .edit-v2-sheet-body .check-row {
