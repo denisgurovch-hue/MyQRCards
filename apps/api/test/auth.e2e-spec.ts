@@ -7,6 +7,7 @@ import { AppError } from '../src/common/errors/app-error';
 import { HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { VkidClient } from '../src/auth/vkid/vkid.client';
+import { YandexIdClient } from '../src/auth/yandex/yandex-id.client';
 import { AuthService } from '../src/auth/auth.service';
 import { RedisService } from '../src/redis/redis.service';
 import { ACCESS_COOKIE, REFRESH_COOKIE } from '../src/auth/session/session.service';
@@ -24,12 +25,21 @@ describe('Auth API (e2e)', () => {
     fetchUserInfo: jest.fn(),
   };
 
+  const yandex = {
+    isConfigured: jest.fn(() => true),
+    authorizeUrl: jest.fn(),
+    exchangeCode: jest.fn(),
+    fetchUserInfo: jest.fn(),
+  };
+
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
       .overrideProvider(VkidClient)
       .useValue(vkid)
+      .overrideProvider(YandexIdClient)
+      .useValue(yandex)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -76,6 +86,7 @@ describe('Auth API (e2e)', () => {
     await prisma.user.deleteMany();
     await redis.deleteByPrefix('rl:');
     await redis.deleteByPrefix('oauth:vkid:');
+    await redis.deleteByPrefix('oauth:yandex:');
   });
 
 
@@ -400,6 +411,122 @@ describe('Auth API (e2e)', () => {
     expect(await prisma.user.count()).toBe(1);
     expect(await prisma.identity.count()).toBe(1);
     expect(await redis.isReady()).toBe(true);
+  });
+
+  it('creates user on first Yandex ID login and reuses on next login', async () => {
+    yandex.authorizeUrl.mockImplementation(
+      (params: { state: string; redirectUri: string }) => {
+        const url = new URL('https://oauth.yandex.ru/authorize');
+        url.searchParams.set('response_type', 'code');
+        url.searchParams.set('state', params.state);
+        url.searchParams.set('redirect_uri', params.redirectUri);
+        return url.toString();
+      },
+    );
+    yandex.exchangeCode.mockResolvedValue({
+      access_token: 'ya-access',
+    });
+    yandex.fetchUserInfo.mockResolvedValue({
+      id: 'ya-user-1',
+      display_name: 'Ya User',
+      default_email: uniqueEmail('ya'),
+    });
+
+    const authorize = await request(app.getHttpServer())
+      .get('/api/v1/auth/yandex/authorize')
+      .expect(302);
+
+    const location = new URL(authorize.headers.location as string);
+    expect(location.origin + location.pathname).toBe(
+      'https://oauth.yandex.ru/authorize',
+    );
+    const state = location.searchParams.get('state');
+    expect(state).toBeTruthy();
+
+    const first = await request(app.getHttpServer())
+      .get('/api/v1/auth/yandex/callback')
+      .query({ code: 'ya-code', state })
+      .expect(302);
+
+    expect(first.headers.location).toContain('/dashboard');
+    expect(first.headers['set-cookie']).toBeDefined();
+    expect(await prisma.user.count()).toBe(1);
+    expect(
+      await prisma.identity.count({ where: { provider: 'yandex' } }),
+    ).toBe(1);
+
+    yandex.exchangeCode.mockResolvedValue({ access_token: 'ya-access-2' });
+    yandex.fetchUserInfo.mockResolvedValue({
+      id: 'ya-user-1',
+      display_name: 'Ya User',
+    });
+
+    const authorize2 = await request(app.getHttpServer())
+      .get('/api/v1/auth/yandex/authorize')
+      .expect(302);
+    const state2 = new URL(
+      authorize2.headers.location as string,
+    ).searchParams.get('state');
+
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/yandex/callback')
+      .query({ code: 'ya-code-2', state: state2 })
+      .expect(302);
+
+    expect(await prisma.user.count()).toBe(1);
+    expect(
+      await prisma.identity.count({ where: { provider: 'yandex' } }),
+    ).toBe(1);
+  });
+
+  it('links Yandex identity to existing email account', async () => {
+    const email = uniqueEmail('link-ya');
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email, password: 'StrongPassphrase123!', displayName: 'Existing' })
+      .expect(201);
+
+    yandex.authorizeUrl.mockImplementation(
+      (params: { state: string; redirectUri: string }) => {
+        const url = new URL('https://oauth.yandex.ru/authorize');
+        url.searchParams.set('state', params.state);
+        url.searchParams.set('redirect_uri', params.redirectUri);
+        return url.toString();
+      },
+    );
+    yandex.exchangeCode.mockResolvedValue({ access_token: 'ya-link' });
+    yandex.fetchUserInfo.mockResolvedValue({
+      id: 'ya-link-1',
+      default_email: email,
+      display_name: 'Linked Ya',
+    });
+
+    const authorize = await request(app.getHttpServer())
+      .get('/api/v1/auth/yandex/authorize')
+      .expect(302);
+    const state = new URL(
+      authorize.headers.location as string,
+    ).searchParams.get('state');
+
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/yandex/callback')
+      .query({ code: 'link-code', state })
+      .expect(302);
+
+    expect(await prisma.user.count()).toBe(1);
+    expect(
+      await prisma.identity.count({ where: { provider: 'yandex' } }),
+    ).toBe(1);
+  });
+
+  it('redirects to login when Yandex ID is not configured', async () => {
+    yandex.isConfigured.mockReturnValue(false);
+    const res = await request(app.getHttpServer())
+      .get('/api/v1/auth/yandex/authorize')
+      .expect(302);
+    expect(String(res.headers.location)).toContain(
+      'error=OAUTH_NOT_CONFIGURED',
+    );
   });
 
   it('rate limits repeated registration attempts', async () => {

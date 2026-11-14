@@ -78,6 +78,9 @@ export default function RegisterPage() {
             <a className="button secondary" href="/api/v1/auth/vkid/authorize">
               Войти через VK ID
             </a>
+            <a className="button secondary" href="/api/v1/auth/yandex/authorize">
+              Войти через Яндекс ID
+            </a>
             <p className="muted">
               Уже есть аккаунт? <Link href="/login">Войти</Link>
             </p>

@@ -2357,7 +2357,7 @@ T-020
 ## Вход через Яндекс ID
 
 ### Статус
-Stage 1 — задача зафиксирована; реализация не начата.
+Stage 2 — реализация в коде; секреты на VPS и deploy — отдельно.
 
 ### Цель
 Дать владельцу визиток вход и регистрацию через **Яндекс ID**
@@ -2424,19 +2424,19 @@ Stage 1 — задача зафиксирована; реализация не �
 5. Prod: завести приложение в кабинете Яндекса, trusted redirect, секреты в `.env.production`, recreate/deploy api (+ web из‑за кнопок).
 
 ### Acceptance criteria
-- [ ] На `/login` и `/register` есть «Войти через Яндекс ID».
-- [ ] При настроенных секретах authorize уводит на oauth.yandex.ru; callback создаёт сессию и Identity `yandex`.
-- [ ] Повторный вход тем же Яндекс-аккаунтом → тот же User.
-- [ ] Совпадение e-mail с существующим User → Identity линкуется, карточки сохраняются.
-- [ ] Без `YANDEX_ID_CLIENT_ID` → `OAUTH_NOT_CONFIGURED` / понятный error на login (VK при этом не ломается).
-- [ ] VK ID и e-mail/пароль без регрессий.
-- [ ] Yandex-only аккаунт: в «Аккаунт» нет смены пароля (`hasPassword=false`).
-- [ ] Секреты не в git; в логах нет PII/токенов.
-- [ ] Тесты (unit/e2e) + ручной smoke на staging/prod после выдачи ключей.
+- [x] На `/login` и `/register` есть «Войти через Яндекс ID».
+- [x] При настроенных секретах authorize уводит на oauth.yandex.ru; callback создаёт сессию и Identity `yandex`.
+- [x] Повторный вход тем же Яндекс-аккаунтом → тот же User.
+- [x] Совпадение e-mail с существующим User → Identity линкуется, карточки сохраняются.
+- [x] Без `YANDEX_ID_CLIENT_ID` → `OAUTH_NOT_CONFIGURED` / понятный error на login (VK при этом не ломается).
+- [x] VK ID и e-mail/пароль без регрессий.
+- [x] Yandex-only аккаунт: в «Аккаунт» нет смены пароля (`hasPassword=false`).
+- [x] Секреты не в git; в логах нет PII/токенов.
+- [x] Тесты (unit/e2e); ручной smoke на staging/prod после выдачи ключей.
 
 ### Definition of Done
-- [ ] Спека согласована (этот раздел)
-- [ ] Интеграция + тесты
-- [ ] lint / typecheck / tests / build
-- [ ] Setup-док + секреты на VPS (когда ключи есть)
+- [x] Спека согласована (этот раздел)
+- [x] Интеграция + тесты
+- [x] lint / typecheck / tests / build
+- [ ] Setup-док + секреты на VPS (док готов; секреты на VPS — у владельца)
 - [ ] Deploy + отчёт

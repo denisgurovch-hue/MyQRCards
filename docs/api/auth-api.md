@@ -217,3 +217,40 @@ On failure redirects to `/login?error=...`.
 - `429 RATE_LIMITED`
 - `502 OAUTH_PROVIDER_ERROR`
 - `503 OAUTH_NOT_CONFIGURED` (missing `VK_ID_CLIENT_ID`)
+
+## GET /auth/yandex/authorize
+
+Starts Yandex ID OAuth Authorization Code flow.
+
+### Response `302`
+
+Redirect to Yandex OAuth authorize URL with:
+
+- `response_type=code`
+- `client_id`
+- `redirect_uri`
+- `state`
+- `scope=login:info login:email`
+
+## GET /auth/yandex/callback
+
+Handles Yandex ID redirect.
+
+### Query
+
+- `code`
+- `state`
+- `error` (optional)
+
+### Response `302`
+
+Redirect to `/dashboard` after successful login. Sets session cookies.
+On failure redirects to `/login?error=...`.
+
+### Errors
+
+- `400 OAUTH_INVALID_STATE`
+- `400 OAUTH_INVALID_CODE`
+- `429 RATE_LIMITED`
+- `502 OAUTH_PROVIDER_ERROR`
+- `503 OAUTH_NOT_CONFIGURED` (missing `YANDEX_ID_CLIENT_ID` / `YANDEX_ID_CLIENT_SECRET`)
