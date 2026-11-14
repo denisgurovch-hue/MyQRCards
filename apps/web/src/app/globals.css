@@ -2154,6 +2154,75 @@ a.phone-contact-value:focus-visible {
   font-weight: 500;
 }
 
+.edit-v2-type-field {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.edit-v2-type-field legend {
+  padding: 0;
+  margin: 0 0 0.45rem;
+  font-weight: 650;
+}
+
+.edit-v2-type-seg {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.edit-v2-type-option {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.7rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--panel) 92%, var(--mist));
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease),
+    box-shadow 160ms var(--ease);
+}
+
+.edit-v2-type-option:hover {
+  background: var(--panel);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  transform: none;
+}
+
+.edit-v2-type-option.is-selected {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  color: var(--accent-deep);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+  transform: none;
+}
+
+.edit-v2-type-option-icon {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  color: currentColor;
+}
+
+.edit-v2-type-option-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
 .edit-v2-sheet-body .check-row {
   display: flex !important;
   align-items: center;

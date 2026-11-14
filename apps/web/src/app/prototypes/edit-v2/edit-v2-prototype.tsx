@@ -111,6 +111,35 @@ function ImageGlyph() {
   );
 }
 
+function WhatsAppGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 3.6A8.4 8.4 0 0 0 5.1 16.3L4 20l3.8-1a8.4 8.4 0 1 0 4.2-15.4Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.2 9.4c.3-.3.7-.4 1-.2l1 .5c.3.1.4.5.3.8l-.3.8c1.2 2 2.7 3.1 4.4 3.8l.8-.4c.3-.2.7-.1.9.2l.6 1c.2.3.1.7-.2 1-.7.6-1.7.9-2.8.5-2.6-.8-4.9-2.9-6.5-5.8-.7-1.3-.6-2.5.1-3.2Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const LINK_TYPE_OPTIONS: {
+  type: PrototypeLink['type'];
+  label: string;
+  icon: 'telegram' | 'whatsapp' | 'link';
+}[] = [
+  { type: 'telegram', label: 'Telegram', icon: 'telegram' },
+  { type: 'whatsapp', label: 'WhatsApp', icon: 'whatsapp' },
+  { type: 'link', label: 'Ссылка', icon: 'link' },
+];
+
 export function EditV2Prototype() {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
@@ -1259,22 +1288,43 @@ export function EditV2Prototype() {
           </>
         }
       >
-        <label>
-          Тип
-          <select
-            value={contactForm.type}
-            onChange={(event) =>
-              setContactForm((current) => ({
-                ...current,
-                type: event.target.value as PrototypeLink['type'],
-              }))
-            }
+        <fieldset className="edit-v2-type-field">
+          <legend>Тип</legend>
+          <div
+            className="edit-v2-type-seg"
+            role="radiogroup"
+            aria-label="Тип контакта"
           >
-            <option value="telegram">Telegram</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="link">Другая ссылка</option>
-          </select>
-        </label>
+            {LINK_TYPE_OPTIONS.map(({ type, label, icon }) => {
+              const selected = contactForm.type === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  className={
+                    selected
+                      ? 'edit-v2-type-option is-selected'
+                      : 'edit-v2-type-option'
+                  }
+                  onClick={() =>
+                    setContactForm((current) => ({ ...current, type }))
+                  }
+                >
+                  <span className="edit-v2-type-option-icon" aria-hidden="true">
+                    {icon === 'whatsapp' ? (
+                      <WhatsAppGlyph />
+                    ) : (
+                      <ContactIcon kind={icon} />
+                    )}
+                  </span>
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
         <label>
           Подпись
           <input
