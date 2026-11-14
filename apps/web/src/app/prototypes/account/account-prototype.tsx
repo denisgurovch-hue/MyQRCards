@@ -400,13 +400,7 @@ export function AccountPrototype() {
           <h2 id="account-delete-title" className="section-title">
             Удаление аккаунта
           </h2>
-          <p>
-            Удаление необратимо. Аккаунт станет недоступен. Все визитки и
-            публичные ссылки `/u/…` перестанут открываться. Файлы фото будут
-            удалены по возможности. Уже скачанные vCard, QR и скриншоты не
-            отзываются. Копии в резервных копиях базы могут храниться
-            ограниченное время.
-          </p>
+          <p>Удаление необратимо. Аккаунт станет недоступен.</p>
 
           {deletePhase === 'idle' ? (
             <button type="button" className="button danger" onClick={openDelete}>
