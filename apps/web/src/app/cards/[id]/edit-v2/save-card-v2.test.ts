@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CardDraft } from './card-draft';
-import { buildSavePlan } from './save-card-v2';
+import { buildCreateBody, buildSavePlan } from './save-card-v2';
 
 function draft(partial: Partial<CardDraft> = {}): CardDraft {
   return {
@@ -83,5 +83,56 @@ describe('buildSavePlan', () => {
     expect(withDelete.photo).toBe('delete');
     expect(withDelete.coverImage).toBe('delete');
     expect(withDelete.patch.coverColor).toBe('#0B1520');
+  });
+});
+
+describe('buildCreateBody', () => {
+  it('builds POST body and omits empty slug', () => {
+    const plan = buildSavePlan({
+      draft: draft({
+        displayName: 'New Person',
+        phone: '+7000',
+        slug: '',
+        coverColor: '#112233',
+        links: [
+          {
+            id: 'a',
+            label: 'TG',
+            url: 'https://t.me/a',
+            type: 'telegram',
+          },
+        ],
+        contactOrder: ['phone', 'a', 'email', 'website'],
+      }),
+      baseline: draft({ displayName: '' }),
+      pendingPhotoBlob: null,
+      pendingCoverBlob: null,
+    });
+    const body = buildCreateBody(plan);
+    expect(body).toEqual({
+      displayName: 'New Person',
+      phone: '+7000',
+      showEmail: false,
+      coverColor: '#112233',
+      links: [
+        {
+          url: 'https://t.me/a',
+          label: 'TG',
+          type: 'telegram',
+          position: 0,
+        },
+      ],
+    });
+    expect(body).not.toHaveProperty('slug');
+  });
+
+  it('includes slug when provided', () => {
+    const plan = buildSavePlan({
+      draft: draft({ displayName: 'Named', slug: 'my-slug-01' }),
+      baseline: draft({ displayName: '' }),
+      pendingPhotoBlob: null,
+      pendingCoverBlob: null,
+    });
+    expect(buildCreateBody(plan).slug).toBe('my-slug-01');
   });
 });

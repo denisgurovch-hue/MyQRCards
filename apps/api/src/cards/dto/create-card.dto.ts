@@ -9,6 +9,7 @@ import {
   Matches,
   MaxLength,
   MinLength,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -55,6 +56,14 @@ export class CreateCardDto {
   @IsOptional()
   @IsUrl({ require_protocol: true })
   photoUrl?: string;
+
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'coverColor must be a hex color like #0B1520',
+  })
+  coverColor?: string | null;
 
   @IsOptional()
   @IsString()

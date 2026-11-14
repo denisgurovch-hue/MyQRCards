@@ -76,6 +76,45 @@ export function buildSavePlan(input: {
   return { patch, photo, coverImage };
 }
 
+/** Body for POST /api/v1/cards from an edit-v2 save plan (create mode). */
+export function buildCreateBody(plan: SavePlan): Record<string, unknown> {
+  const displayName = String(plan.patch.displayName ?? '').trim();
+  const body: Record<string, unknown> = {
+    displayName,
+  };
+
+  const copyIfPresent = (key: string) => {
+    const value = plan.patch[key];
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+    body[key] = value;
+  };
+
+  copyIfPresent('jobTitle');
+  copyIfPresent('companyName');
+  copyIfPresent('summary');
+  copyIfPresent('phone');
+  copyIfPresent('email');
+  if (typeof plan.patch.showEmail === 'boolean') {
+    body.showEmail = plan.patch.showEmail;
+  }
+  copyIfPresent('websiteUrl');
+  copyIfPresent('coverColor');
+
+  const slug = String(plan.patch.slug ?? '').trim();
+  if (slug) {
+    body.slug = slug;
+  }
+
+  const links = plan.patch.links;
+  if (Array.isArray(links) && links.length > 0) {
+    body.links = links;
+  }
+
+  return body;
+}
+
 export async function uploadCardMedia(
   cardId: string,
   kind: 'photo' | 'cover',

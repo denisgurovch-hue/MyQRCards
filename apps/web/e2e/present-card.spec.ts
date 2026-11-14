@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { createCardViaEditor } from './helpers/create-card';
 
 const password = 'StrongPassphrase123!';
 
@@ -24,14 +25,10 @@ test.describe('present card (T-013)', () => {
 
     await register(page, 'Present Owner', ownerEmail);
 
-    await page.goto('/cards/new');
-    await page.getByLabel('Имя *').fill('Present Name');
-    await page.getByLabel('Slug (необязательно)').fill(slug);
-    await page.getByRole('button', { name: 'Создать' }).click();
-    await expect(page).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
-    const editUrl = page.url();
-    const cardId = editUrl.match(/\/cards\/([^/]+)\/edit-v2/)?.[1];
-    expect(cardId).toBeTruthy();
+    const cardId = await createCardViaEditor(page, {
+      name: 'Present Name',
+      slug,
+    });
 
     await page.goto('/dashboard');
     await expect(page.getByRole('link', { name: 'Показать визитку' })).toBeVisible();
@@ -76,13 +73,10 @@ test.describe('present card (T-013)', () => {
     const slug = `foreign-${Date.now().toString(36)}`;
 
     await register(page, 'Owner A', ownerEmail);
-    await page.goto('/cards/new');
-    await page.getByLabel('Имя *').fill('Owner Card');
-    await page.getByLabel('Slug (необязательно)').fill(slug);
-    await page.getByRole('button', { name: 'Создать' }).click();
-    await expect(page).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
-    const cardId = page.url().match(/\/cards\/([^/]+)\/edit-v2/)?.[1];
-    expect(cardId).toBeTruthy();
+    const cardId = await createCardViaEditor(page, {
+      name: 'Owner Card',
+      slug,
+    });
 
     const otherContext = await browser.newContext();
     const otherPage = await otherContext.newPage();

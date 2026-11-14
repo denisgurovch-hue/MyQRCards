@@ -40,6 +40,7 @@ import {
 } from './card-draft';
 import { NestedSheet } from './nested-sheet';
 import {
+  buildCreateBody,
   buildSavePlan,
   deleteCardMedia,
   uploadCardMedia,
@@ -73,7 +74,8 @@ type NestedKind =
   | 'cover'
   | 'card-actions'
   | 'publish-confirm'
-  | 'cancel-confirm';
+  | 'cancel-confirm'
+  | 'leave-confirm';
 
 type UiFlash = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -150,13 +152,14 @@ const LINK_TYPE_OPTIONS: {
   { type: 'link', label: 'Ссылка', icon: 'link' },
 ];
 
-export function EditCardV2({ cardId }: { cardId: string }) {
+export function EditCardV2({ cardId }: { cardId?: string }) {
   const router = useRouter();
+  const isCreate = !cardId;
   const photoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const pendingPhotoBlobRef = useRef<Blob | null>(null);
   const pendingCoverBlobRef = useRef<Blob | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isCreate);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [baseline, setBaseline] = useState<CardDraft>(() => emptyDraft());
   const [draft, setDraft] = useState<CardDraft>(() => emptyDraft());
@@ -193,6 +196,11 @@ export function EditCardV2({ cardId }: { cardId: string }) {
   const dirty = useMemo(() => !draftsEqual(baseline, draft), [baseline, draft]);
 
   useEffect(() => {
+    if (isCreate || !cardId) {
+      setLoading(false);
+      setLoadError(null);
+      return;
+    }
     let cancelled = false;
     (async () => {
       setLoading(true);
@@ -226,7 +234,7 @@ export function EditCardV2({ cardId }: { cardId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [cardId]);
+  }, [cardId, isCreate]);
 
   function openProfile(source: CardDraft = draft) {
     setProfileForm({
@@ -701,6 +709,12 @@ export function EditCardV2({ cardId }: { cardId: string }) {
     if (!dirty || flash === 'saving') {
       return;
     }
+    if (!draft.displayName.trim()) {
+      setSaveError('Укажите ФИО перед сохранением');
+      setFlash('error');
+      openProfile();
+      return;
+    }
     setFlash('saving');
     setSaveError(null);
     try {
@@ -710,6 +724,28 @@ export function EditCardV2({ cardId }: { cardId: string }) {
         pendingPhotoBlob: pendingPhotoBlobRef.current,
         pendingCoverBlob: pendingCoverBlobRef.current,
       });
+
+      if (isCreate || !cardId) {
+        const created = await apiFetch<{ card: OwnerCard }>('/api/v1/cards', {
+          method: 'POST',
+          body: JSON.stringify(buildCreateBody(plan)),
+        });
+        const newId = created.card.id;
+        if (plan.photo === 'upload' && pendingPhotoBlobRef.current) {
+          await uploadCardMedia(newId, 'photo', pendingPhotoBlobRef.current);
+        }
+        if (plan.coverImage === 'upload' && pendingCoverBlobRef.current) {
+          await uploadCardMedia(newId, 'cover', pendingCoverBlobRef.current);
+        }
+        revokeBlobUrl(draft.photoUrl);
+        revokeBlobUrl(draft.coverImageUrl);
+        pendingPhotoBlobRef.current = null;
+        pendingCoverBlobRef.current = null;
+        router.replace(`/cards/${newId}/edit-v2`);
+        router.refresh();
+        return;
+      }
+
       await apiFetch<{ card: OwnerCard }>(
         `/api/v1/cards/${encodeURIComponent(cardId)}`,
         {
@@ -782,6 +818,11 @@ export function EditCardV2({ cardId }: { cardId: string }) {
   }
 
   function requestPublish() {
+    if (isCreate || !cardId) {
+      setSaveError('Сначала сохраните визитку');
+      setFlash('error');
+      return;
+    }
     if (draft.status === 'published') {
       return;
     }
@@ -789,6 +830,11 @@ export function EditCardV2({ cardId }: { cardId: string }) {
   }
 
   async function runStatus(path: 'publish' | 'unpublish' | 'archive') {
+    if (isCreate || !cardId) {
+      setSaveError('Сначала сохраните визитку');
+      setFlash('error');
+      return;
+    }
     setSaveError(null);
     try {
       const updated = await apiFetch<{ card: OwnerCard }>(
@@ -810,6 +856,11 @@ export function EditCardV2({ cardId }: { cardId: string }) {
   }
 
   async function onDeleteCard() {
+    if (isCreate || !cardId) {
+      setSaveError('Сначала сохраните визитку');
+      setFlash('error');
+      return;
+    }
     setSaveError(null);
     try {
       await apiFetch(`/api/v1/cards/${encodeURIComponent(cardId)}`, {
@@ -821,6 +872,22 @@ export function EditCardV2({ cardId }: { cardId: string }) {
       setSaveError(err instanceof Error ? err.message : 'Не удалось удалить');
       setFlash('error');
     }
+  }
+
+  function requestLeave() {
+    if (!dirty) {
+      router.push('/dashboard');
+      return;
+    }
+    setNested('leave-confirm');
+  }
+
+  function confirmLeave() {
+    revokeBlobUrl(draft.photoUrl);
+    revokeBlobUrl(draft.coverImageUrl);
+    pendingPhotoBlobRef.current = null;
+    pendingCoverBlobRef.current = null;
+    router.push('/dashboard');
   }
 
   const coverMode = resolvePublicCoverMode(draft);
@@ -865,7 +932,15 @@ export function EditCardV2({ cardId }: { cardId: string }) {
     <div className="edit-v2-root is-chrome-off">
       <div className="edit-v2-stage">
         <header className="edit-v2-top">
-          <Link href="/dashboard" className="brand brand-mark">
+          <Link
+            href="/dashboard"
+            className="brand brand-mark"
+            onClick={(event) => {
+              if (!dirty) return;
+              event.preventDefault();
+              requestLeave();
+            }}
+          >
             Sign<span>et</span>
           </Link>
           <button
@@ -987,7 +1062,13 @@ export function EditCardV2({ cardId }: { cardId: string }) {
               className="edit-v2-block"
               onClick={() => openProfile()}
             >
-              <span className="public-name">{draft.displayName}</span>
+              {draft.displayName ? (
+                <span className="public-name">{draft.displayName}</span>
+              ) : (
+                <span className="public-name edit-v2-placeholder">
+                  Добавить ФИО
+                </span>
+              )}
               {draft.jobTitle ? (
                 <span className="public-meta">{draft.jobTitle}</span>
               ) : (
@@ -1564,13 +1645,15 @@ export function EditCardV2({ cardId }: { cardId: string }) {
             }
           />
         </label>
-        <p className="muted">Статус сейчас: {draft.status}</p>
+        <p className="muted">
+          Статус сейчас: {isCreate ? 'не создана' : draft.status}
+        </p>
         <div className="edit-v2-sheet-actions">
           <button
             type="button"
             className="button secondary"
             onClick={requestPublish}
-            disabled={draft.status === 'published'}
+            disabled={isCreate || draft.status === 'published'}
           >
             Опубликовать
           </button>
@@ -1578,6 +1661,7 @@ export function EditCardV2({ cardId }: { cardId: string }) {
             type="button"
             className="button secondary"
             onClick={() => void runStatus('unpublish')}
+            disabled={isCreate}
           >
             Снять с публикации
           </button>
@@ -1585,6 +1669,7 @@ export function EditCardV2({ cardId }: { cardId: string }) {
             type="button"
             className="button secondary"
             onClick={() => void runStatus('archive')}
+            disabled={isCreate}
           >
             В архив
           </button>
@@ -1592,13 +1677,15 @@ export function EditCardV2({ cardId }: { cardId: string }) {
             type="button"
             className="button secondary"
             onClick={() => void onDeleteCard()}
+            disabled={isCreate}
           >
             Удалить визитку
           </button>
         </div>
         <p className="muted">
-          Slug сохранится вместе с остальными полями по кнопке «Сохранить».
-          Статус и удаление применяются сразу.
+          {isCreate
+            ? 'Сначала нажмите «Сохранить», чтобы создать визитку. Пустой slug — случайный безопасный идентификатор.'
+            : 'Slug сохранится вместе с остальными полями по кнопке «Сохранить». Статус и удаление применяются сразу.'}
         </p>
       </NestedSheet>
 
@@ -1646,6 +1733,28 @@ export function EditCardV2({ cardId }: { cardId: string }) {
         <p>
           Несохранённые правки текста, контактов, фото и фона этой сессии будут
           сброшены без записи на сервер.
+        </p>
+      </NestedSheet>
+
+      <NestedSheet
+        open={nested === 'leave-confirm'}
+        title="Данные не сохранены. Закрыть?"
+        onClose={closeNested}
+        footer={
+          <>
+            <button type="button" className="button secondary" onClick={closeNested}>
+              Остаться
+            </button>
+            <button type="button" className="button accent" onClick={confirmLeave}>
+              Закрыть
+            </button>
+          </>
+        }
+      >
+        <p>
+          {isCreate
+            ? 'Визитка ещё не создана. Уход без сохранения не оставит карточку в кабинете.'
+            : 'Несохранённые изменения будут потеряны.'}
         </p>
       </NestedSheet>
     </div>

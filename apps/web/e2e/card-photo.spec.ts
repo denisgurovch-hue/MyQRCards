@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { createCardViaEditor } from './helpers/create-card';
 
 const password = 'StrongPassphrase123!';
 
@@ -26,10 +27,7 @@ test.describe('card photo editor (T-015)', () => {
     await page.getByRole('button', { name: 'Зарегистрироваться' }).click();
     await expect(page).toHaveURL(/\/dashboard/);
 
-    await page.goto('/cards/new');
-    await page.getByLabel('Имя *').fill('Photo Person');
-    await page.getByRole('button', { name: 'Создать' }).click();
-    await expect(page).toHaveURL(/\/cards\/.+\/edit-v2/);
+    await createCardViaEditor(page, { name: 'Photo Person' });
 
     await expect(
       page.getByRole('button', { name: 'Добавить фото' }),

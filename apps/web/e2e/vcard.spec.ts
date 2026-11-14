@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { createCardViaEditor } from './helpers/create-card';
 
 const password = 'StrongPassphrase123!';
 
@@ -22,14 +23,13 @@ test.describe('public vCard download', () => {
     await ownerPage.getByRole('button', { name: 'Зарегистрироваться' }).click();
     await expect(ownerPage).toHaveURL(/\/dashboard/);
 
-    await ownerPage.goto('/cards/new');
-    await ownerPage.getByLabel('Имя *').fill('VCard Person');
-    await ownerPage.getByLabel('Slug (необязательно)').fill(slug);
-    await ownerPage.getByLabel('Телефон').fill('+79991112233');
-    await ownerPage.getByLabel('E-mail на карточке').fill('card@example.com');
-    await ownerPage.getByLabel('Показывать e-mail публично').check();
-    await ownerPage.getByRole('button', { name: 'Создать' }).click();
-    await expect(ownerPage).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
+    await createCardViaEditor(ownerPage, {
+      name: 'VCard Person',
+      slug,
+      phone: '+79991112233',
+      email: 'card@example.com',
+      showEmail: true,
+    });
     await ownerPage.getByRole('button', { name: 'Управление' }).click();
     const manage = ownerPage.getByRole('dialog', { name: 'Управление визиткой' });
     await manage.getByRole('button', { name: 'Опубликовать' }).click();

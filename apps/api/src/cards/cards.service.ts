@@ -35,6 +35,7 @@ export class CardsService {
             showEmail: dto.showEmail ?? false,
             websiteUrl: dto.websiteUrl || null,
             photoUrl: dto.photoUrl || null,
+            coverColor: dto.coverColor?.trim() || null,
             slug,
             status: CardStatus.draft,
             links: {
