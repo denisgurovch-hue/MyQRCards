@@ -2480,6 +2480,87 @@ a.phone-contact-value:focus-visible {
   }
 }
 
+/* T-017 account prototype */
+.account-proto-scenes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+}
+
+.account-proto-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.35rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.account-proto-panel.is-danger {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+  background: color-mix(in srgb, var(--danger) 4%, white);
+}
+
+.account-proto-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.account-proto-form input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  background: #fff;
+}
+
+.account-proto-form input[readonly] {
+  background: var(--mist);
+  color: var(--ink-soft);
+}
+
+.account-proto-hint {
+  margin: -0.35rem 0 0.35rem;
+  font-size: 0.92rem;
+}
+
+.account-proto-ok {
+  color: var(--ok);
+  margin: 0;
+}
+
+.button.danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
+}
+
+.button.danger:disabled {
+  opacity: 0.45;
+}
+
+.account-proto-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(11 21 32 / 45%);
+}
+
+.account-proto-modal-card {
+  width: min(100%, 420px);
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Patch,
   Post,
   Query,
   Req,
@@ -13,6 +14,9 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 import { RateLimit } from '../common/rate-limit/rate-limit.decorator';
 import { RateLimitGuard } from '../common/rate-limit/rate-limit.guard';
 import { AuthGuard, type AuthenticatedRequest } from './guards/auth.guard';
@@ -58,6 +62,37 @@ export class AuthController {
   @UseGuards(AuthGuard)
   me(@Req() req: AuthenticatedRequest) {
     return this.auth.me(req.user!.id);
+  }
+
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  updateMe(@Req() req: AuthenticatedRequest, @Body() dto: UpdateMeDto) {
+    return this.auth.updateMe(req.user!.id, dto);
+  }
+
+  @Post('password')
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  @RateLimit({ key: 'auth:password', limit: 10, windowSeconds: 60 })
+  changePassword(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: ChangePasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.auth.changePasswordAuthenticated(req.user!.id, dto, res);
+  }
+
+  @Post('account/delete')
+  @UseGuards(AuthGuard)
+  @HttpCode(204)
+  @RateLimit({ key: 'auth:account-delete', limit: 5, windowSeconds: 60 })
+  async deleteAccount(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: DeleteAccountDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.auth.deleteAccount(req.user!.id, dto, res);
   }
 
   @Get('vkid/authorize')

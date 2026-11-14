@@ -88,6 +88,7 @@ Revokes the current refresh token and clears session cookies.
 ## GET /auth/me
 
 Returns the current authenticated user. Requires valid access cookie.
+If the user row no longer exists, returns `401` (deleted account).
 
 ### Response `200`
 
@@ -96,7 +97,8 @@ Returns the current authenticated user. Requires valid access cookie.
   "user": {
     "id": "uuid",
     "email": "user@example.com",
-    "displayName": "Иван Иванов"
+    "displayName": "Иван Иванов",
+    "hasPassword": true
   }
 }
 ```
@@ -104,6 +106,73 @@ Returns the current authenticated user. Requires valid access cookie.
 ### Errors
 
 - `401 UNAUTHORIZED`
+
+## PATCH /auth/me
+
+Updates account `displayName` only. Does not change card fields.
+
+### Request
+
+```json
+{
+  "displayName": "Новое имя"
+}
+```
+
+### Response `200`
+
+Same shape as `GET /auth/me`.
+
+### Errors
+
+- `400 VALIDATION_ERROR`
+- `401 UNAUTHORIZED`
+
+## POST /auth/password
+
+Changes password for accounts that already have `passwordHash`.
+Verifies `currentPassword`, revokes all refresh tokens, and reissues session cookies.
+
+### Request
+
+```json
+{
+  "currentPassword": "StrongPassphrase123!",
+  "newPassword": "AnotherStrongPass123!"
+}
+```
+
+### Response `200`
+
+Same shape as `GET /auth/me` (`hasPassword: true`). Sets new session cookies.
+
+### Errors
+
+- `400 VALIDATION_ERROR`
+- `400 PASSWORD_NOT_SET`
+- `401 INVALID_CREDENTIALS` / `UNAUTHORIZED`
+- `429 RATE_LIMITED`
+
+## POST /auth/account/delete
+
+Hard-deletes the authenticated account after exact confirmation `Удалить`.
+Cascades identities, refresh tokens, cards and related rows; best-effort unlinks card photo files; clears session cookies.
+
+### Request
+
+```json
+{
+  "confirmation": "Удалить"
+}
+```
+
+### Response `204`
+
+### Errors
+
+- `400 VALIDATION_ERROR`
+- `401 UNAUTHORIZED`
+- `429 RATE_LIMITED`
 
 ## GET /auth/vkid/authorize
 

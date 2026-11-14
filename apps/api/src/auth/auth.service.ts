@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Response } from 'express';
+import { promises as fs } from 'node:fs';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
@@ -11,11 +12,15 @@ import {
   generatePkceVerifier,
   pkceChallengeS256,
 } from '../common/crypto/tokens';
+import { photoFilePath } from '../cards/card-photo.storage';
 import { SessionService } from './session/session.service';
 import { VkidClient } from './vkid/vkid.client';
 import { normalizeVkidCallbackQuery } from './vkid/vkid-callback.query';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { DeleteAccountDto } from './dto/delete-account.dto';
 
 const OAUTH_STATE_PREFIX = 'oauth:vkid:';
 const VK_PROVIDER = 'vkid';
@@ -128,8 +133,47 @@ export class AuthService {
         id: user.id,
         email: user.email,
         displayName: user.displayName,
+        hasPassword: Boolean(user.passwordHash),
       },
     };
+  }
+
+  async updateMe(userId: string, dto: UpdateMeDto) {
+    const displayName = dto.displayName.trim();
+    if (!displayName) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Display name is required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    try {
+      const user = await this.prisma.user.update({
+        where: { id: userId },
+        data: { displayName },
+      });
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          hasPassword: Boolean(user.passwordHash),
+        },
+      };
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        throw new AppError(
+          'UNAUTHORIZED',
+          'Authentication required',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+      throw error;
+    }
   }
 
   /**
@@ -149,6 +193,85 @@ export class AuthService {
       });
     });
     this.logger.log('Password changed; refresh tokens revoked');
+  }
+
+  async changePasswordAuthenticated(
+    userId: string,
+    dto: ChangePasswordDto,
+    res: Response,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user?.passwordHash) {
+      throw new AppError(
+        'PASSWORD_NOT_SET',
+        'Password change is not available for this account',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const valid = await verifyPassword(dto.currentPassword, user.passwordHash);
+    if (!valid) {
+      throw new AppError(
+        'INVALID_CREDENTIALS',
+        'Invalid current password',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    await this.changePassword(userId, dto.newPassword);
+    const refreshed = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
+    await this.sessions.issueSession(res, refreshed);
+    this.logger.log('Password changed with session reissue');
+    return {
+      user: {
+        id: refreshed.id,
+        email: refreshed.email,
+        displayName: refreshed.displayName,
+        hasPassword: true,
+      },
+    };
+  }
+
+  async deleteAccount(
+    userId: string,
+    dto: DeleteAccountDto,
+    res: Response,
+  ): Promise<void> {
+    if (dto.confirmation !== 'Удалить') {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Confirmation must exactly match Удалить',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const photos = await this.prisma.cardPhoto.findMany({
+      where: { card: { userId } },
+      select: { storageKey: true },
+    });
+    const storageKeys = photos.map((photo) => photo.storageKey);
+
+    try {
+      await this.prisma.user.delete({ where: { id: userId } });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
+        this.sessions.clearSessionCookies(res);
+        return;
+      }
+      throw error;
+    }
+
+    for (const storageKey of storageKeys) {
+      await fs.unlink(photoFilePath(storageKey)).catch(() => undefined);
+    }
+
+    this.sessions.clearSessionCookies(res);
+    this.logger.log('Account deleted');
   }
 
   async startVkidAuth(): Promise<{ url: string }> {
