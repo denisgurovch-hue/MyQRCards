@@ -35,7 +35,7 @@ test.describe('public card page', () => {
     const manage = ownerPage.getByRole('dialog', { name: 'Управление визиткой' });
     await manage.getByRole('button', { name: 'Опубликовать' }).click();
     await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
-    await manage.getByRole('button', { name: 'Закрыть' }).click();
+    await manage.getByRole('button', { name: 'Закрыть', exact: true }).click();
 
     const guest = await browser.newContext();
     const guestPage = await guest.newPage();

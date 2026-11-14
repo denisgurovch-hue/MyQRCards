@@ -1540,11 +1540,6 @@ export function EditCardV2({ cardId }: { cardId: string }) {
         open={nested === 'card-actions'}
         title="Управление визиткой"
         onClose={closeNested}
-        footer={
-          <button type="button" className="button secondary" onClick={closeNested}>
-            Закрыть
-          </button>
-        }
       >
         <label>
           Slug
