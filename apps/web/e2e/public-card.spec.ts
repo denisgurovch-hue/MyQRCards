@@ -58,7 +58,7 @@ test.describe('public card page', () => {
     expect(body.card).not.toHaveProperty('userId');
 
     await ownerPage
-      .getByRole('button', { name: /visible@example\.com/i })
+      .getByRole('button', { name: 'visible@example.com', exact: true })
       .click();
     const emailSheet = ownerPage.getByRole('dialog', { name: 'E-mail' });
     await emailSheet.getByRole('checkbox', { name: /Показывать e-mail/i }).uncheck();
