@@ -1607,6 +1607,879 @@ a.phone-contact-value:focus-visible {
   }
 }
 
+/* ——— Edit v2 prototype (mocks only) ——— */
+.edit-v2-root {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
+}
+
+.edit-v2-root.is-chrome-off {
+  grid-template-columns: 1fr;
+}
+
+.edit-v2-root.is-chrome-off .edit-v2-bar {
+  left: 0;
+}
+
+.edit-v2-lab {
+  padding: 1.25rem 1rem 2rem;
+  border-right: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 88%, var(--mist));
+}
+
+.edit-v2-lab-kicker {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.edit-v2-lab-title {
+  margin: 0.35rem 0 0.5rem;
+  font-family: var(--font);
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+}
+
+.edit-v2-lab-note,
+.edit-v2-lab-meta {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
+.edit-v2-lab-select {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 1rem;
+  font-weight: 650;
+}
+
+.edit-v2-lab-select select {
+  width: 100%;
+}
+
+.edit-v2-stage {
+  position: relative;
+  min-width: 0;
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.edit-v2-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem 0;
+}
+
+.edit-v2-manage {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.edit-v2-banner {
+  margin: 0.75rem 1rem 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 10%, #fff);
+}
+
+.edit-v2-banner.is-ok {
+  background: color-mix(in srgb, var(--ok) 12%, #fff);
+  color: var(--ok);
+}
+
+.edit-v2-shell {
+  position: relative;
+  /* Keep enough height so the public 42% cover band is a real surface. */
+  min-height: min(100vh, 52rem);
+  padding-bottom: 1.5rem;
+}
+
+.edit-v2-card {
+  position: relative;
+  z-index: 3;
+  padding-top: 0.85rem;
+}
+
+.edit-v2-media-hit {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  transform: none;
+}
+
+.edit-v2-media-hit:hover,
+.edit-v2-media-hit:focus-visible {
+  transform: none;
+  outline: none;
+}
+
+/* Pinned above the card — always visible top-right. */
+.edit-v2-cover-badge {
+  position: absolute;
+  top: 0.85rem;
+  right: 1rem;
+  z-index: 6;
+  width: 2.35rem;
+  height: 2.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgb(11 21 32 / 72%);
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgb(11 21 32 / 22%);
+  transform: none;
+}
+
+.edit-v2-cover-badge svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  display: block;
+}
+
+.edit-v2-cover-badge:hover,
+.edit-v2-cover-badge:focus-visible {
+  background: rgb(11 21 32 / 86%);
+  transform: none;
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, white);
+  outline-offset: 2px;
+}
+
+/* Full public cover band (top 42%) — hit target under the card. */
+.edit-v2-cover-hit {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 42%;
+  border-radius: 0;
+}
+
+.edit-v2-cover-tint {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 42%;
+  pointer-events: none;
+  background: rgb(11 21 32 / 0%);
+  transition: background 160ms var(--ease);
+}
+
+.edit-v2-shell.is-cover-hot .edit-v2-cover-tint {
+  background: rgb(11 21 32 / 34%);
+}
+
+.edit-v2-cover-hit .edit-v2-cover-scrim {
+  display: block;
+  place-items: unset;
+  padding: 0;
+  background: transparent !important;
+}
+
+.edit-v2-cover-hit .edit-v2-media-label {
+  position: absolute;
+  top: 0.95rem;
+  right: calc(1rem + 2.5rem + 0.45rem);
+  z-index: 1;
+}
+
+.edit-v2-photo-wrap {
+  position: relative;
+  width: fit-content;
+  margin-inline: auto;
+}
+
+.edit-v2-photo-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+.edit-v2-media-scrim {
+  display: grid;
+  place-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: rgb(11 21 32 / 0%);
+  transition:
+    background 160ms var(--ease),
+    opacity 160ms var(--ease);
+}
+
+.edit-v2-media-badge {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgb(11 21 32 / 62%);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgb(11 21 32 / 18%);
+}
+
+.edit-v2-media-badge svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: block;
+}
+
+.edit-v2-media-label {
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  background: rgb(11 21 32 / 62%);
+  backdrop-filter: blur(6px);
+}
+
+.edit-v2-media-remove {
+  position: absolute;
+  top: -0.2rem;
+  right: -0.2rem;
+  z-index: 3;
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(11 21 32 / 72%);
+  color: #fff;
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transform: none;
+}
+
+.edit-v2-media-remove:hover,
+.edit-v2-media-remove:focus-visible {
+  background: var(--danger);
+  transform: none;
+}
+
+/* Mobile / narrow: always-visible quiet icon (no hover dependency). */
+@media (max-width: 860px) {
+  .edit-v2-media-label {
+    display: none;
+  }
+
+  .edit-v2-cover-badge {
+    top: 0.65rem;
+    right: 0.85rem;
+  }
+
+  .edit-v2-photo-hit .edit-v2-media-scrim {
+    place-items: end center;
+    padding-bottom: 0.45rem;
+  }
+}
+
+/* Wide desktop with fine pointer: photo reveal on hover; cover label on band hover. */
+@media (hover: hover) and (pointer: fine) and (min-width: 861px) {
+  .edit-v2-photo-hit .edit-v2-media-badge,
+  .edit-v2-photo-hit .edit-v2-media-label,
+  .edit-v2-cover-hit .edit-v2-media-label {
+    opacity: 0;
+    transition: opacity 160ms var(--ease);
+  }
+
+  .edit-v2-photo-hit:hover .edit-v2-media-scrim,
+  .edit-v2-photo-hit:focus-visible .edit-v2-media-scrim {
+    background: rgb(11 21 32 / 42%);
+  }
+
+  .edit-v2-photo-hit:hover .edit-v2-media-badge,
+  .edit-v2-photo-hit:hover .edit-v2-media-label,
+  .edit-v2-photo-hit:focus-visible .edit-v2-media-badge,
+  .edit-v2-photo-hit:focus-visible .edit-v2-media-label {
+    opacity: 1;
+  }
+
+  .edit-v2-shell.is-cover-hot .edit-v2-cover-hit .edit-v2-media-label {
+    opacity: 1;
+  }
+
+  .edit-v2-media-remove {
+    opacity: 0;
+  }
+
+  .edit-v2-photo-wrap:hover .edit-v2-media-remove,
+  .edit-v2-photo-wrap:focus-within .edit-v2-media-remove {
+    opacity: 1;
+  }
+}
+
+.edit-v2-block {
+  appearance: none;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+  text-align: center;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  transform: none;
+}
+
+.edit-v2-block:hover,
+.edit-v2-block:focus-visible {
+  transform: none;
+}
+
+.edit-v2-block-hint {
+  margin-top: 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--accent-deep);
+}
+
+.edit-v2-placeholder {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.edit-v2-contacts {
+  touch-action: pan-y;
+}
+
+.edit-v2-contact {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.15rem;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  font: inherit;
+  padding: 0.2rem 0.15rem 0.2rem 0.25rem;
+}
+
+.edit-v2-contact.is-empty {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.edit-v2-contact.is-dragging {
+  opacity: 0.55;
+}
+
+.edit-v2-contact.is-drop-target {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  background: color-mix(in srgb, var(--accent) 12%, #fff);
+}
+
+.edit-v2-contact-handle {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0.45rem 0.35rem;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  cursor: grab;
+  touch-action: none;
+  display: grid;
+  place-items: center;
+  align-self: center;
+  transform: none;
+}
+
+.edit-v2-contact-handle:hover,
+.edit-v2-contact-handle:focus-visible {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 6%, #fff);
+  transform: none;
+  outline: none;
+}
+
+.edit-v2-contact-handle:active {
+  cursor: grabbing;
+}
+
+.edit-v2-contact-handle svg {
+  width: 1rem;
+  height: 1rem;
+  display: block;
+}
+
+.edit-v2-contact-main {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0.35rem 0.45rem 0.35rem 0.2rem;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: center;
+  min-width: 0;
+  text-align: left;
+  cursor: pointer;
+  transform: none;
+}
+
+.edit-v2-contact-main:hover,
+.edit-v2-contact-main:focus-visible {
+  transform: none;
+  outline: none;
+}
+
+.edit-v2-contact-copy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.edit-v2-privacy {
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+.edit-v2-add-contact {
+  width: 100%;
+  margin-top: 0.85rem;
+}
+
+.edit-v2-bar {
+  position: fixed;
+  left: max(18rem, 15rem);
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+
+.edit-v2-bar.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.edit-v2-bar .button {
+  width: 100%;
+}
+
+.edit-v2-sheet {
+  width: min(440px, 100%);
+  max-width: 100%;
+  margin: auto auto 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.edit-v2-sheet::backdrop {
+  background: rgb(11 21 32 / 45%);
+}
+
+.edit-v2-sheet-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  max-height: min(88vh, 720px);
+  background: var(--panel);
+  border-radius: 22px 22px 0 0;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.edit-v2-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.edit-v2-sheet-title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.edit-v2-sheet-body {
+  overflow: auto;
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.edit-v2-sheet-body label:not(.check-row) {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 650;
+}
+
+.edit-v2-sheet-body input:not([type='radio']):not([type='checkbox']),
+.edit-v2-sheet-body select,
+.edit-v2-sheet-body textarea {
+  width: 100%;
+  font: inherit;
+  font-weight: 500;
+}
+
+.edit-v2-type-field {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
+.edit-v2-type-field legend {
+  padding: 0;
+  margin: 0 0 0.45rem;
+  font-weight: 650;
+}
+
+.edit-v2-type-seg {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.edit-v2-type-option {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0.65rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--panel) 92%, var(--mist));
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 650;
+  line-height: 1.15;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease),
+    box-shadow 160ms var(--ease);
+}
+
+.edit-v2-type-option:hover {
+  background: var(--panel);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  transform: none;
+}
+
+.edit-v2-type-option.is-selected {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--line));
+  color: var(--accent-deep);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+  transform: none;
+}
+
+.edit-v2-type-option-icon {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  color: currentColor;
+}
+
+.edit-v2-type-option-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.edit-v2-link-detect {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.edit-v2-link-detect-icon {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  color: var(--ink-soft);
+}
+
+.edit-v2-link-detect-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.edit-v2-sheet-body .check-row {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.65rem;
+  width: max-content;
+  max-width: 100%;
+  margin: 0;
+  font-weight: 650;
+}
+
+.edit-v2-sheet-body .check-row input[type='radio'],
+.edit-v2-sheet-body .check-row input[type='checkbox'] {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0;
+  flex: 0 0 auto;
+  accent-color: var(--accent);
+}
+
+.edit-v2-sheet-foot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+}
+
+.edit-v2-sheet-foot .button {
+  width: 100%;
+}
+
+.edit-v2-sheet-actions {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.edit-v2-cover-modes {
+  display: grid;
+  gap: 0.7rem;
+  justify-items: start;
+}
+
+.edit-v2-color-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.edit-v2-color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.edit-v2-sheet-body input.edit-v2-color-input[type='color'],
+.edit-v2-color-input[type='color'] {
+  width: 3.25rem;
+  height: 2.6rem;
+  min-width: 3.25rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.edit-v2-color-input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.edit-v2-color-input[type='color']::-webkit-color-swatch {
+  border: 0;
+  border-radius: 8px;
+}
+
+.edit-v2-color-input[type='color']::-moz-color-swatch {
+  border: 0;
+  border-radius: 8px;
+}
+
+.edit-v2-color-hex {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+}
+
+/* Cover align (prototype) — wide frame like public cover band */
+.edit-v2-cover-align {
+  width: min(520px, 100%);
+  max-width: 100%;
+  margin: auto;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.edit-v2-cover-align::backdrop {
+  background: rgb(11 21 32 / 52%);
+}
+
+.edit-v2-cover-align-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  max-height: min(92vh, 760px);
+  background: var(--panel);
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.edit-v2-cover-align-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.edit-v2-cover-align-title {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.edit-v2-cover-align-body {
+  overflow: auto;
+  padding: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  justify-items: center;
+}
+
+.edit-v2-cover-align-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #0b1520;
+  touch-action: none;
+  cursor: grab;
+  max-width: 100%;
+}
+
+.edit-v2-cover-align-frame:active {
+  cursor: grabbing;
+}
+
+.edit-v2-cover-align-image {
+  display: block;
+  max-width: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+.edit-v2-cover-align-zoom {
+  display: grid;
+  gap: 0.35rem;
+  width: min(360px, 100%);
+  font-weight: 650;
+}
+
+.edit-v2-cover-align-zoom input[type='range'] {
+  width: 100%;
+}
+
+.edit-v2-cover-align-foot {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem 1rem calc(0.85rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+}
+
+.edit-v2-cover-align-foot .button {
+  width: 100%;
+}
+
+.edit-v2-avatar-align-frame {
+  border-radius: 36px;
+}
+
+.edit-v2-avatar-align-guide {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 55%);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .edit-v2-cover-align {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+  }
+
+  .edit-v2-cover-align-inner {
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+}
+
+@media (min-width: 900px) {
+  .edit-v2-sheet {
+    margin: auto;
+  }
+
+  .edit-v2-sheet-inner {
+    border-radius: 18px;
+    max-height: min(82vh, 680px);
+  }
+}
+
+@media (max-width: 860px) {
+  .edit-v2-root {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-v2-lab {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .edit-v2-bar {
+    left: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
