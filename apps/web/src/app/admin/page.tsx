@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { CabinetChrome } from '../../components/cabinet-chrome';
 import { serverApiFetch } from '../../lib/server-api';
-import { LogoutButton } from '../dashboard/logout-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,21 +83,16 @@ export default async function AdminPage({
   return (
     <main className="app-shell">
       <div className="workspace">
-        <header className="workspace-top">
-          <div>
-            <p className="brand brand-mark">
-              Sign<span>et</span>
-            </p>
-            <h1 className="section-title">Админ-панель</h1>
-            <p className="muted">Платформенные метрики MyQRCards</p>
-          </div>
-          <div className="workspace-actions">
-            <Link className="button secondary" href="/dashboard">
-              Кабинет
-            </Link>
-            <LogoutButton />
-          </div>
-        </header>
+        <CabinetChrome
+          context="admin"
+          isAdmin
+          title={
+            <>
+              <h1 className="section-title">Админ-панель</h1>
+              <p className="muted">Платформенные метрики MyQRCards</p>
+            </>
+          }
+        />
 
         <div className="card-analytics-periods" role="tablist" aria-label="Период">
           {PERIODS.map((item) => (

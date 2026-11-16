@@ -1675,9 +1675,28 @@ a.phone-contact-value:focus-visible {
   padding: 0.85rem 1rem 0;
 }
 
+.cabinet-chrome-edit-leading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.edit-v2-back-cards {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+}
+
 .edit-v2-manage {
   padding: 0.55rem 0.85rem;
   font-size: 0.9rem;
+}
+
+.workspace-top .brand.brand-mark,
+.edit-v2-top .brand.brand-mark,
+.present-top .brand.brand-mark {
+  text-decoration: none;
 }
 
 .edit-v2-banner {
