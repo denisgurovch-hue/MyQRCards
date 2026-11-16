@@ -23,14 +23,19 @@ export async function createCardViaEditor(
   await profile.getByRole('button', { name: 'Применить' }).click();
 
   if (input.phone) {
-    await page.getByRole('button', { name: 'Добавить телефон' }).click();
+    // exact: avoid drag-handle «Перетащить: Добавить телефон»
+    await page
+      .getByRole('button', { name: 'Добавить телефон', exact: true })
+      .click();
     const phoneSheet = page.getByRole('dialog', { name: 'Телефон' });
     await phoneSheet.getByLabel('Номер').fill(input.phone);
     await phoneSheet.getByRole('button', { name: 'Применить' }).click();
   }
 
   if (input.email) {
-    await page.getByRole('button', { name: 'Добавить e-mail' }).click();
+    await page
+      .getByRole('button', { name: 'Добавить e-mail', exact: true })
+      .click();
     const emailSheet = page.getByRole('dialog', { name: 'E-mail' });
     await emailSheet.getByLabel('E-mail карточки').fill(input.email);
     if (input.showEmail) {
