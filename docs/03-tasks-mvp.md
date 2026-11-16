@@ -2549,7 +2549,7 @@ T-022
 ## Навигация кабинета и пользовательский путь
 
 ### Статус
-Stage 2 done — chrome + wiring + tests; await merge/deploy command
+Stage 3 — задеплоено на prod (`main` @ `3acb279`); ручной smoke кабинета на сайте.
 
 ### Цель
 Сделать единую модель навигации личного кабинета Signet / MyQRCards:
@@ -2620,5 +2620,5 @@ hub = список визиток, явный возврат в список и�
 - [x] Brief + implementation report в Project store
 - [x] Chrome + wiring + тесты
 - [x] lint / typecheck / tests
-- [ ] Commit + push ветки; PR в `main` при возможности
-- [ ] Merge + deploy — только по команде владельца
+- [x] Commit + push ветки; PR в `main` при возможности
+- [x] Merge + deploy — только по команде владельца
