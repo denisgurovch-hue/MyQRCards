@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { ContactIcon, resolveContactKind } from '../../../../lib/contact-icon';
@@ -24,6 +25,7 @@ import { AvatarAlignDialog } from './avatar-align-dialog';
 import { CoverAlignDialog } from './cover-align-dialog';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { CabinetChrome } from '../../../../components/cabinet-chrome';
 import { apiFetch } from '../../../../lib/api';
 import {
   cloneDraft,
@@ -874,11 +876,9 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
     }
   }
 
-  function requestLeave() {
-    if (!dirty) {
-      router.push('/dashboard');
-      return;
-    }
+  function onHubNavigate(event: ReactMouseEvent<HTMLAnchorElement>) {
+    if (!dirty) return;
+    event.preventDefault();
     setNested('leave-confirm');
   }
 
@@ -931,26 +931,11 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   return (
     <div className="edit-v2-root is-chrome-off">
       <div className="edit-v2-stage">
-        <header className="edit-v2-top">
-          <Link
-            href="/dashboard"
-            className="brand brand-mark"
-            onClick={(event) => {
-              if (!dirty) return;
-              event.preventDefault();
-              requestLeave();
-            }}
-          >
-            Sign<span>et</span>
-          </Link>
-          <button
-            type="button"
-            className="button secondary edit-v2-manage"
-            onClick={() => setNested('card-actions')}
-          >
-            Управление
-          </button>
-        </header>
+        <CabinetChrome
+          context="edit"
+          onHubNavigate={onHubNavigate}
+          onManage={() => setNested('card-actions')}
+        />
 
         {flash === 'error' ? (
           <p className="error edit-v2-banner" role="alert">

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { CabinetChrome } from '../../components/cabinet-chrome';
 import { CardAnalytics } from './card-analytics';
-import { LogoutButton } from './logout-button';
 import { PublicLinkActions } from './public-link-actions';
 import { serverApiFetch } from '../../lib/server-api';
 
@@ -39,33 +39,20 @@ export default async function DashboardPage() {
   return (
     <main className="app-shell">
       <div className="workspace">
-        <header className="workspace-top">
-          <div>
-            <p className="brand brand-mark">
-              Sign<span>et</span>
-            </p>
-            <p className="lede">
-              {me.user.displayName
-                ? `Здравствуйте, ${me.user.displayName}`
-                : 'Личный кабинет'}
-            </p>
-            {me.user.email ? <p className="muted">{me.user.email}</p> : null}
-          </div>
-          <div className="workspace-actions">
-            <Link className="button accent" href="/cards/new">
-              Создать визитку
-            </Link>
-            {me.user.isAdmin ? (
-              <Link className="button secondary" href="/admin">
-                Админ
-              </Link>
-            ) : null}
-            <Link className="button secondary" href="/account">
-              Аккаунт
-            </Link>
-            <LogoutButton />
-          </div>
-        </header>
+        <CabinetChrome
+          context="dashboard"
+          isAdmin={Boolean(me.user.isAdmin)}
+          title={
+            <>
+              <p className="lede">
+                {me.user.displayName
+                  ? `Здравствуйте, ${me.user.displayName}`
+                  : 'Личный кабинет'}
+              </p>
+              {me.user.email ? <p className="muted">{me.user.email}</p> : null}
+            </>
+          }
+        />
 
         <h2 className="section-title">Мои визитки</h2>
         {!cards || cards.items.length === 0 ? (

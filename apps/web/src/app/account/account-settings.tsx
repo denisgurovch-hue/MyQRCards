@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import { CabinetChrome } from '../../components/cabinet-chrome';
 import { apiFetch } from '../../lib/api';
 
 export type AccountUser = {
@@ -123,27 +123,15 @@ export function AccountSettings({ user }: { user: AccountUser }) {
   return (
     <main className="app-shell account-proto">
       <div className="workspace">
-        <header className="workspace-top">
-          <div>
-            <p className="brand brand-mark">
-              Sign<span>et</span>
-            </p>
-            <p className="lede">Аккаунт</p>
-          </div>
-          <div className="workspace-actions">
-            <Link
-              className="button secondary"
-              href="/dashboard"
-              onClick={(event) => {
-                if (!dirty) return;
-                event.preventDefault();
-                setLeaveOpen(true);
-              }}
-            >
-              Кабинет
-            </Link>
-          </div>
-        </header>
+        <CabinetChrome
+          context="account"
+          title={<p className="lede">Аккаунт</p>}
+          onHubNavigate={(event) => {
+            if (!dirty) return;
+            event.preventDefault();
+            setLeaveOpen(true);
+          }}
+        />
 
         <section
           className="account-proto-panel"

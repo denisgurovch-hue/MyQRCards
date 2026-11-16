@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
+import { CabinetChrome } from '../../../../components/cabinet-chrome';
+import { CABINET_HUB_HREF } from '../../../../components/cabinet-nav';
 import {
   PRESENT_PREVIEW_NOTICE,
   presentShareActions,
@@ -82,16 +84,12 @@ export function PresentView({ card }: Props) {
 
   return (
     <main className="present-shell">
-      <header className="present-top">
-        <p className="brand brand-mark present-brand">
-          Sign<span>et</span>
-        </p>
-      </header>
+      <CabinetChrome context="present" />
 
       <div className="present-stage phone-stage" aria-label="Визитка">
         <Link
           className="present-close"
-          href="/dashboard"
+          href={CABINET_HUB_HREF}
           aria-label="Закрыть и вернуться к списку визиток"
         >
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

@@ -2544,3 +2544,81 @@ admin-панель для обзора платформенных метрик: 
 - [x] lint / typecheck / tests / build
 - [x] `ADMIN_USER_EMAILS` на VPS + deploy
 - [x] Deploy + отчёт
+
+T-022
+## Навигация кабинета и пользовательский путь
+
+### Статус
+Stage 2 done — chrome + wiring + tests; await merge/deploy command
+
+### Цель
+Сделать единую модель навигации личного кабинета Signet / MyQRCards:
+hub = список визиток, явный возврат в список из create/edit-v2,
+общий chrome (Signet → dashboard) на приватных экранах кабинета,
+без путаницы «Отменить ≠ уйти» и без «мёртвого» бренда.
+
+### Предусловия
+- T-003 — dashboard / cards CRUD.
+- T-013 — present.
+- T-017 — account.
+- T-018 — create = EditCardV2; после первого Save → `replace` на edit-v2.
+- T-021 — admin allowlist (`isAdmin`).
+
+### Текущее состояние (до T-022)
+- Hub `/dashboard`: Signet **не** ссылка; меню Создать / Аккаунт / Админ? / Logout.
+- Create/edit-v2: Signet → dashboard (dirty → leave-confirm); **Управление**; нет явной «К визиткам».
+- После первого Save create: остаёмся в edit-v2 — единственный выход через brand или delete.
+- **Отменить** = сброс dirty, не навигация (это корректно, но без escape путает).
+- Present: brand мёртвый текст; X → dashboard.
+- Account / Admin: «Кабинет» → dashboard; chrome не общий.
+
+### Согласованные решения
+| Тема | Решение |
+|---|---|
+| Номер | T-022 |
+| Hub | `/dashboard` (список визиток) |
+| Escape create/edit | Всегда видимая primary **«К визиткам»** → `/dashboard`; при dirty — существующий leave-confirm |
+| После первого Save create | Остаёмся на edit-v2 через `router.replace` (T-018); escape в список обязателен |
+| Present | Close/X → dashboard; brand = ссылка на dashboard (не мёртвый) |
+| Account / Admin | «Кабинет» → dashboard |
+| Chrome | Общий компонент: Signet → dashboard; контекстные действия (Создать только на list; Управление только на edit; Админ если allowlist) |
+| Отменить на edit | Только reset dirty; не навигация |
+| Карта IA | store `internal/cabinet-navigation-map.md` |
+
+### Scope
+- Спека T-022 + brief в Project store.
+- Shared cabinet chrome в `apps/web` и wiring:
+  - `/dashboard`
+  - create `/cards/new` + edit-v2 (`edit-card-v2.tsx`)
+  - `/cards/[id]/present`
+  - `/account`
+  - `/admin`
+- Явная кнопка/ссылка **«К визиткам»** на create и edit-v2 (dirty → leave-confirm).
+- Unit-тесты правил chrome (какие действия видны в каком контексте).
+- Smoke: create → Save → «К визиткам» → list; dirty leave confirm; present close; account/admin back.
+
+### Вне scope
+- Публичные `/u/[slug]`.
+- Login / register.
+- Смена метрик / API admin.
+- Name fields / split displayName (отдельная задача).
+- Merge / deploy без явной команды владельца.
+
+### Acceptance criteria
+- [x] На create и edit-v2 всегда видна **«К визиткам»** → `/dashboard`.
+- [x] Dirty leave с edit: confirm; clean leave — сразу на dashboard.
+- [x] После первого Save create: URL = `/cards/{id}/edit-v2`; «К визиткам» ведёт в список.
+- [x] **Отменить** на edit сбрасывает dirty и **не** навигирует.
+- [x] Present: X → dashboard; Signet кликабелен → dashboard.
+- [x] Account и Admin: «Кабинет» → dashboard.
+- [x] Dashboard: Signet → dashboard (self/hub); «Создать» только на list; «Админ» только при `isAdmin`.
+- [x] Edit: «Управление» только на edit (не на list/present/account/admin).
+- [x] Публичные страницы, login/register, admin metrics API без регрессий по scope.
+
+### Definition of Done
+- [x] Спека в `docs/03-tasks-mvp.md` (§ T-022)
+- [x] Brief + implementation report в Project store
+- [x] Chrome + wiring + тесты
+- [x] lint / typecheck / tests
+- [ ] Commit + push ветки; PR в `main` при возможности
+- [ ] Merge + deploy — только по команде владельца
