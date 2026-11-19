@@ -5,24 +5,22 @@ import {
 } from './card-name.util';
 
 describe('card-name.util', () => {
-  it('composes visible name without patronymic by default', () => {
+  it('composes visible name without empty patronymic', () => {
     expect(
       composeDisplayName({
         lastName: 'Иванов',
         firstName: 'Иван',
-        patronymic: 'Иванович',
-        showPatronymic: false,
+        patronymic: '',
       }),
     ).toBe('Иванов Иван');
   });
 
-  it('includes patronymic when showPatronymic is true', () => {
+  it('includes patronymic when present', () => {
     expect(
       composeDisplayName({
         lastName: 'Иванов',
         firstName: 'Иван',
         patronymic: 'Иванович',
-        showPatronymic: true,
       }),
     ).toBe('Иванов Иван Иванович');
   });
@@ -33,7 +31,6 @@ describe('card-name.util', () => {
         lastName: 'Иванов',
         firstName: 'Иван',
         patronymic: 'Иванович',
-        showPatronymic: true,
       }),
     ).toEqual({
       family: 'Иванов',
@@ -44,8 +41,7 @@ describe('card-name.util', () => {
       vcardNameComponents({
         lastName: 'Иванов',
         firstName: 'Иван',
-        patronymic: 'Иванович',
-        showPatronymic: false,
+        patronymic: null,
       }).additional,
     ).toBe('');
   });
@@ -55,11 +51,22 @@ describe('card-name.util', () => {
       resolveCardNameInput({
         lastName: 'Петров',
         firstName: 'Пётр',
-        showPatronymic: false,
+        patronymic: 'Петрович',
       }),
     ).toMatchObject({
       lastName: 'Петров',
       firstName: 'Пётр',
+      patronymic: 'Петрович',
+      showPatronymic: true,
+      displayName: 'Петров Пётр Петрович',
+    });
+    expect(
+      resolveCardNameInput({
+        lastName: 'Петров',
+        firstName: 'Пётр',
+      }),
+    ).toMatchObject({
+      showPatronymic: false,
       displayName: 'Петров Пётр',
     });
     expect(() =>

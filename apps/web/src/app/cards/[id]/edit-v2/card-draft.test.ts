@@ -52,7 +52,6 @@ describe('ownerCardToDraft', () => {
       lastName: 'Иванов',
       firstName: 'Иван',
       patronymic: 'Иванович',
-      showPatronymic: false,
       jobTitle: null,
       companyName: null,
       summary: null,
@@ -70,7 +69,7 @@ describe('ownerCardToDraft', () => {
     expect(draft.lastName).toBe('Иванов');
     expect(draft.firstName).toBe('Иван');
     expect(draft.patronymic).toBe('Иванович');
-    expect(draft.showPatronymic).toBe(false);
+    expect(draft.showPatronymic).toBe(true);
   });
 });
 

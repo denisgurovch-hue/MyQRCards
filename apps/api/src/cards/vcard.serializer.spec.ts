@@ -129,7 +129,6 @@ describe('vcard.serializer', () => {
       lastName: 'Иванов',
       firstName: 'Иван',
       patronymic: 'Иванович',
-      showPatronymic: true,
       jobTitle: null,
       companyName: null,
       summary: null,
@@ -139,12 +138,11 @@ describe('vcard.serializer', () => {
       canonicalUrl: 'https://cards.example/u/ivanov',
     });
     expect(raw).toContain('N:Иванов;Иван;Иванович;;');
-    const hidden = buildVCard30({
+    const without = buildVCard30({
       displayName: 'Иванов Иван',
       lastName: 'Иванов',
       firstName: 'Иван',
-      patronymic: 'Иванович',
-      showPatronymic: false,
+      patronymic: null,
       jobTitle: null,
       companyName: null,
       summary: null,
@@ -153,8 +151,8 @@ describe('vcard.serializer', () => {
       websiteUrl: null,
       canonicalUrl: 'https://cards.example/u/ivanov',
     });
-    expect(hidden).toContain('N:Иванов;Иван;;;');
-    expect(hidden).toContain('FN:Иванов Иван');
+    expect(without).toContain('N:Иванов;Иван;;;');
+    expect(without).toContain('FN:Иванов Иван');
   });
 
   it('embeds PHOTO;ENCODING=b;TYPE=JPEG when base64 is provided', () => {

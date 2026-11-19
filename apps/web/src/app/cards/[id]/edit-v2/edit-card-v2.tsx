@@ -178,7 +178,6 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
     lastName: '',
     firstName: '',
     patronymic: '',
-    showPatronymic: false,
     jobTitle: '',
     companyName: '',
     summary: '',
@@ -251,7 +250,6 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
       lastName: source.lastName,
       firstName: source.firstName,
       patronymic: source.patronymic,
-      showPatronymic: source.showPatronymic,
       jobTitle: source.jobTitle,
       companyName: source.companyName,
       summary: source.summary,
@@ -324,19 +322,17 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
       return;
     }
     const patronymic = profileForm.patronymic.trim();
-    const showPatronymic = profileForm.showPatronymic;
     const displayName = composeDisplayName({
       lastName,
       firstName,
       patronymic,
-      showPatronymic,
     });
     setDraft((current) => ({
       ...current,
       lastName,
       firstName,
       patronymic,
-      showPatronymic,
+      showPatronymic: Boolean(patronymic),
       displayName,
       jobTitle: profileForm.jobTitle.trim(),
       companyName: profileForm.companyName.trim(),
@@ -1270,35 +1266,20 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
             }
           />
         </label>
-        <label className="checkbox-row">
+        <label>
+          Отчество
           <input
-            type="checkbox"
-            checked={profileForm.showPatronymic}
+            value={profileForm.patronymic}
+            maxLength={60}
+            autoComplete="additional-name"
             onChange={(event) =>
               setProfileForm((current) => ({
                 ...current,
-                showPatronymic: event.target.checked,
+                patronymic: event.target.value,
               }))
             }
           />
-          <span>Показывать отчество</span>
         </label>
-        {profileForm.showPatronymic ? (
-          <label>
-            Отчество
-            <input
-              value={profileForm.patronymic}
-              maxLength={60}
-              autoComplete="additional-name"
-              onChange={(event) =>
-                setProfileForm((current) => ({
-                  ...current,
-                  patronymic: event.target.value,
-                }))
-              }
-            />
-          </label>
-        ) : null}
         <label>
           Должность
           <input

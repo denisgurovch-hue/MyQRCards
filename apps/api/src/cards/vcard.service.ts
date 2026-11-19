@@ -66,7 +66,6 @@ export class VcardService {
         lastName: entity.lastName,
         firstName: entity.firstName,
         patronymic: entity.patronymic,
-        showPatronymic: entity.showPatronymic,
         jobTitle: card.jobTitle,
         companyName: card.companyName,
         summary: card.summary,

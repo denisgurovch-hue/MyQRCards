@@ -42,7 +42,7 @@ export function buildSavePlan(input: {
     lastName: draft.lastName.trim(),
     firstName: draft.firstName.trim(),
     patronymic: draft.patronymic.trim() || null,
-    showPatronymic: draft.showPatronymic,
+    showPatronymic: Boolean(draft.patronymic.trim()),
     displayName: draft.displayName.trim(),
     jobTitle: draft.jobTitle.trim() || null,
     companyName: draft.companyName.trim() || null,

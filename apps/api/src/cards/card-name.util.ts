@@ -2,38 +2,37 @@ export type CardNameParts = {
   lastName: string | null;
   firstName: string | null;
   patronymic: string | null;
+  /** Derived: true when patronymic is non-empty (kept for DB/API compatibility). */
   showPatronymic: boolean;
 };
 
-/** Visible public name: Last First [Patronymic if shown]. */
+/** Visible public name: Last First [Patronymic if present]. */
 export function composeDisplayName(parts: {
   lastName?: string | null;
   firstName?: string | null;
   patronymic?: string | null;
-  showPatronymic?: boolean;
 }): string {
   const last = parts.lastName?.trim() || '';
   const first = parts.firstName?.trim() || '';
-  const patronymic =
-    parts.showPatronymic && parts.patronymic?.trim()
-      ? parts.patronymic.trim()
-      : '';
+  const patronymic = parts.patronymic?.trim() || '';
   return [last, first, patronymic].filter(Boolean).join(' ').trim();
 }
 
 /** Structured vCard N components (family;given;additional). */
-export function vcardNameComponents(parts: CardNameParts): {
+export function vcardNameComponents(parts: {
+  lastName?: string | null;
+  firstName?: string | null;
+  patronymic?: string | null;
+}): {
   family: string;
   given: string;
   additional: string;
 } {
-  const family = parts.lastName?.trim() || '';
-  const given = parts.firstName?.trim() || '';
-  const additional =
-    parts.showPatronymic && parts.patronymic?.trim()
-      ? parts.patronymic.trim()
-      : '';
-  return { family, given, additional };
+  return {
+    family: parts.lastName?.trim() || '',
+    given: parts.firstName?.trim() || '',
+    additional: parts.patronymic?.trim() || '',
+  };
 }
 
 export function resolveCardNameInput(input: {
@@ -52,7 +51,6 @@ export function resolveCardNameInput(input: {
   const lastName = input.lastName?.trim() || '';
   const firstName = input.firstName?.trim() || '';
   const patronymic = input.patronymic?.trim() || null;
-  const showPatronymic = Boolean(input.showPatronymic);
   const hasParts = Boolean(lastName || firstName || patronymic);
 
   if (hasParts) {
@@ -63,12 +61,12 @@ export function resolveCardNameInput(input: {
       lastName,
       firstName,
       patronymic,
-      showPatronymic,
+      // Kept in sync: show when patronymic is filled (no UI toggle).
+      showPatronymic: Boolean(patronymic),
       displayName: composeDisplayName({
         lastName,
         firstName,
         patronymic,
-        showPatronymic,
       }),
     };
   }

@@ -160,7 +160,7 @@ export function ownerCardToDraft(card: OwnerCard): CardDraft {
     lastName: hasParts ? (card.lastName ?? '') : card.displayName,
     firstName: hasParts ? (card.firstName ?? '') : '',
     patronymic: card.patronymic ?? '',
-    showPatronymic: Boolean(card.showPatronymic),
+    showPatronymic: Boolean((card.patronymic ?? '').trim()),
     jobTitle: card.jobTitle ?? '',
     companyName: card.companyName ?? '',
     summary: card.summary ?? '',

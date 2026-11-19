@@ -2642,11 +2642,11 @@ Stage 2 — реализация вместе со спекой.
 | Тема | Решение |
 |---|---|
 | Номер | T-023 (трекер MYQ-21) |
-| Поля БД | `last_name`, `first_name`, `patronymic` (nullable text), `show_patronymic` bool default false |
+| Поля БД | `last_name`, `first_name`, `patronymic` (nullable text); `show_patronymic` derived (true если patronymic заполнен) |
 | `displayName` | Сохраняется как composed строка для совместимости: `Фамилия Имя[ Отчество]` |
 | Порядок | Русский: фамилия → имя → отчество |
 | Обязательные | `lastName` и `firstName` (min 1) при сохранении через новый UI |
-| Отчество | Опционально; на публичке/vCard только если `showPatronymic=true` |
+| Отчество | Опциональное поле всегда в форме; если заполнено — видно на публичке/vCard (без чекбокса) |
 | Legacy cards | Пока parts null — в редакторе `displayName` попадает в поле фамилии; публичка показывает `displayName` как раньше |
 | vCard | `FN` = composed visible name; `N` = `Last;First;PatronymicOrEmpty;;` (patronymic в N только если show) |
 | API | Create/Update принимают `lastName`/`firstName`/`patronymic`/`showPatronymic`; `displayName` ещё принимается (legacy) |
@@ -2655,7 +2655,7 @@ Stage 2 — реализация вместе со спекой.
 ### Scope
 - Миграция Prisma + util compose/visible name.
 - DTO/service/mappers/public/vCard.
-- edit-v2: три поля + чекбокс «Показывать отчество».
+- edit-v2: три поля (фамилия, имя, опциональное отчество без чекбокса).
 - Тесты API/serializer/save-card-v2; e2e smoke при возможности.
 
 ### Вне scope
@@ -2664,9 +2664,9 @@ Stage 2 — реализация вместе со спекой.
 - Смена slug из ФИО.
 
 ### Acceptance criteria
-- [x] Create/edit сохраняют фамилию и имя; отчество опционально.
-- [x] `showPatronymic=false` (default): отчество не на публичке и не в FN/N middle.
-- [x] `showPatronymic=true`: отчество видно в displayName / public / vCard.
+- [x] Create/edit сохраняют фамилию и имя; отчество опционально и всегда в форме.
+- [x] Пустое отчество не попадает в displayName / public / vCard N.
+- [x] Заполненное отчество видно в displayName / public / vCard.
 - [x] Legacy карточки с одним displayName продолжают открываться.
 - [x] Регрессии: create-mode, publish, vCard PHOTO.
 
