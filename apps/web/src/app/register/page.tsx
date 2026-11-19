@@ -15,13 +15,23 @@ export default function RegisterPage() {
     setError(null);
     setPending(true);
     const form = new FormData(event.currentTarget);
+    const lastName = String(form.get('lastName') ?? '').trim();
+    const firstName = String(form.get('firstName') ?? '').trim();
+    const patronymic = String(form.get('patronymic') ?? '').trim();
+    if (!lastName || !firstName) {
+      setError('Укажите фамилию и имя');
+      setPending(false);
+      return;
+    }
     try {
       await apiFetch('/api/v1/auth/register', {
         method: 'POST',
         body: JSON.stringify({
           email: String(form.get('email') ?? ''),
           password: String(form.get('password') ?? ''),
-          displayName: String(form.get('displayName') ?? '') || undefined,
+          lastName,
+          firstName,
+          ...(patronymic ? { patronymic } : {}),
         }),
       });
       router.push('/dashboard');
@@ -48,13 +58,38 @@ export default function RegisterPage() {
           <div className="panel-head">
             <p className="eyebrow">Старт</p>
             <h1 className="section-title">Регистрация</h1>
-            <p className="muted">Имя, e-mail и пароль — этого достаточно</p>
+            <p className="muted">ФИО, e-mail и пароль — этого достаточно</p>
           </div>
           {error ? <p className="error">{error}</p> : null}
           <form onSubmit={onSubmit} className="stack">
             <label>
-              Имя
-              <input name="displayName" type="text" autoComplete="name" />
+              Фамилия *
+              <input
+                name="lastName"
+                type="text"
+                autoComplete="family-name"
+                required
+                maxLength={60}
+              />
+            </label>
+            <label>
+              Имя *
+              <input
+                name="firstName"
+                type="text"
+                autoComplete="given-name"
+                required
+                maxLength={60}
+              />
+            </label>
+            <label>
+              Отчество
+              <input
+                name="patronymic"
+                type="text"
+                autoComplete="additional-name"
+                maxLength={60}
+              />
             </label>
             <label>
               E-mail

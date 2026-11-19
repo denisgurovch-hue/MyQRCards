@@ -6,7 +6,9 @@ const prisma = new PrismaClient();
 /** Local demo only — login uses email (auth API), displayName is Test_user. */
 const DEMO = {
   email: 'test_user@example.com',
-  displayName: 'Test_user',
+  displayName: 'Test User',
+  lastName: 'Test',
+  firstName: 'User',
   password: '12345678',
   cardSlug: 'test-user',
   cardDisplayName: 'Test User',
@@ -26,6 +28,8 @@ async function main() {
       data: {
         email: DEMO.email,
         displayName: DEMO.displayName,
+        lastName: DEMO.lastName,
+        firstName: DEMO.firstName,
         passwordHash: await hashPassword(DEMO.password),
       },
     });

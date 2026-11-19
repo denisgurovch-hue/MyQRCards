@@ -77,8 +77,7 @@ describe('Cards API (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         email,
-        password: 'StrongPassphrase123!',
-        displayName: 'Owner',
+        password: 'StrongPassphrase123!', lastName: 'Owner', firstName: 'User',
       })
       .expect(201);
     return {

@@ -23,6 +23,7 @@ import { UpdateMeDto } from './dto/update-me.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
 import { isAdminEmail } from '../admin/admin-emails';
+import { composeDisplayName } from '../cards/card-name.util';
 
 const VK_OAUTH_STATE_PREFIX = 'oauth:vkid:';
 const YANDEX_OAUTH_STATE_PREFIX = 'oauth:yandex:';
@@ -47,27 +48,63 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
+  private toPublicUser(user: {
+    id: string;
+    email: string | null;
+    displayName: string | null;
+    lastName?: string | null;
+    firstName?: string | null;
+    patronymic?: string | null;
+    passwordHash?: string | null;
+  }, opts?: { includeAdmin?: boolean }) {
+    const base = {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      lastName: user.lastName ?? null,
+      firstName: user.firstName ?? null,
+      patronymic: user.patronymic ?? null,
+      hasPassword: Boolean(user.passwordHash),
+    };
+    if (opts?.includeAdmin) {
+      return {
+        ...base,
+        isAdmin: isAdminEmail(
+          user.email,
+          this.config.get<string>('ADMIN_USER_EMAILS'),
+        ),
+      };
+    }
+    return base;
+  }
+
   async register(dto: RegisterDto, res: Response) {
     const email = dto.email.trim().toLowerCase();
     const passwordHash = await hashPassword(dto.password);
+    const lastName = dto.lastName.trim();
+    const firstName = dto.firstName.trim();
+    const patronymic = dto.patronymic?.trim() || null;
+    const displayName =
+      composeDisplayName({ lastName, firstName, patronymic }) ||
+      dto.displayName?.trim() ||
+      null;
 
     try {
       const user = await this.prisma.user.create({
         data: {
           email,
           passwordHash,
-          displayName: dto.displayName?.trim() || null,
+          lastName,
+          firstName,
+          patronymic,
+          displayName,
         },
       });
 
       await this.sessions.issueSession(res, user);
       this.logger.log('User registered');
       return {
-        user: {
-          id: user.id,
-          email: user.email,
-          displayName: user.displayName,
-        },
+        user: this.toPublicUser(user),
       };
     } catch (error) {
       if (
@@ -134,16 +171,7 @@ export class AuthService {
     }
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        displayName: user.displayName,
-        hasPassword: Boolean(user.passwordHash),
-        isAdmin: isAdminEmail(
-          user.email,
-          this.config.get<string>('ADMIN_USER_EMAILS'),
-        ),
-      },
+      user: this.toPublicUser(user, { includeAdmin: true }),
     };
   }
 
@@ -163,12 +191,7 @@ export class AuthService {
         data: { displayName },
       });
       return {
-        user: {
-          id: user.id,
-          email: user.email,
-          displayName: user.displayName,
-          hasPassword: Boolean(user.passwordHash),
-        },
+        user: this.toPublicUser(user),
       };
     } catch (error) {
       if (
@@ -412,10 +435,12 @@ export class AuthService {
     }
 
     const email = info.user?.email?.trim().toLowerCase() || null;
-    const displayName = [info.user?.first_name, info.user?.last_name]
-      .filter(Boolean)
-      .join(' ')
-      .trim() || null;
+    const firstName = info.user?.first_name?.trim() || null;
+    const lastName = info.user?.last_name?.trim() || null;
+    const displayName =
+      composeDisplayName({ lastName, firstName }) ||
+      [firstName, lastName].filter(Boolean).join(' ').trim() ||
+      null;
 
     const user = await this.prisma.$transaction(async (tx) => {
       const existingIdentity = await tx.identity.findUnique({
@@ -449,6 +474,8 @@ export class AuthService {
       return tx.user.create({
         data: {
           email,
+          lastName,
+          firstName,
           displayName,
           identities: {
             create: {
@@ -526,10 +553,12 @@ export class AuthService {
       info.default_email?.trim().toLowerCase() ||
       info.emails?.find((value) => value?.trim())?.trim().toLowerCase() ||
       null;
+    const firstName = info.first_name?.trim() || null;
+    const lastName = info.last_name?.trim() || null;
     const displayName =
+      composeDisplayName({ lastName, firstName }) ||
       info.display_name?.trim() ||
       info.real_name?.trim() ||
-      [info.first_name, info.last_name].filter(Boolean).join(' ').trim() ||
       null;
 
     const user = await this.prisma.$transaction(async (tx) => {
@@ -564,6 +593,8 @@ export class AuthService {
       return tx.user.create({
         data: {
           email,
+          lastName,
+          firstName,
           displayName,
           identities: {
             create: {

@@ -88,8 +88,7 @@ describe('Card photos (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         email,
-        password: 'StrongPassphrase123!',
-        displayName: 'Photo Owner',
+        password: 'StrongPassphrase123!', lastName: 'Photo', firstName: 'Owner',
       })
       .expect(201);
     return {
