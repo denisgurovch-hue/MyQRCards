@@ -6,6 +6,10 @@ export function toCardResponse(card: CardWithLinks) {
   return {
     id: card.id,
     displayName: card.displayName,
+    lastName: card.lastName,
+    firstName: card.firstName,
+    patronymic: card.patronymic,
+    showPatronymic: card.showPatronymic,
     jobTitle: card.jobTitle,
     companyName: card.companyName,
     summary: card.summary,

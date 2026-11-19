@@ -15,15 +15,18 @@ export async function createCardViaEditor(
   input: CreateCardInput,
 ): Promise<string> {
   await page.goto('/cards/new');
-  await expect(page.getByText('Добавить ФИО')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Изменить основное/i })).toBeVisible();
 
   await page.getByRole('button', { name: /Изменить основное/i }).click();
   const profile = page.getByRole('dialog', { name: 'Основное' });
-  await profile.getByLabel('ФИО *').fill(input.name);
+  const parts = input.name.trim().split(/\s+/);
+  const lastName = parts[0] ?? input.name;
+  const firstName = parts.slice(1).join(' ') || 'User';
+  await profile.getByLabel('Фамилия *').fill(lastName);
+  await profile.getByLabel('Имя *').fill(firstName);
   await profile.getByRole('button', { name: 'Применить' }).click();
 
   if (input.phone) {
-    // exact: avoid drag-handle «Перетащить: Добавить телефон»
     await page
       .getByRole('button', { name: 'Добавить телефон', exact: true })
       .click();
@@ -33,9 +36,18 @@ export async function createCardViaEditor(
   }
 
   if (input.email) {
-    await page
-      .getByRole('button', { name: 'Добавить e-mail', exact: true })
-      .click();
+    const addEmail = page.getByRole('button', {
+      name: 'Добавить e-mail',
+      exact: true,
+    });
+    if (await addEmail.count()) {
+      await addEmail.click();
+    } else {
+      // Prefill from registration may already show the email row.
+      await page.getByRole('button', { name: input.email, exact: false }).first().click().catch(async () => {
+        await page.locator('button').filter({ hasText: /@/ }).first().click();
+      });
+    }
     const emailSheet = page.getByRole('dialog', { name: 'E-mail' });
     await emailSheet.getByLabel('E-mail карточки').fill(input.email);
     if (input.showEmail) {

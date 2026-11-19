@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { registerUser } from './helpers/register';
 import { createCardViaEditor } from './helpers/create-card';
 
 const password = 'StrongPassphrase123!';
@@ -16,12 +17,11 @@ test.describe('public vCard download', () => {
     const ownerEmail = email('vcard-owner');
     const slug = `vcf-${Date.now().toString(36)}`;
 
-    await ownerPage.goto('/register');
-    await ownerPage.getByLabel('Имя').fill('Owner');
-    await ownerPage.getByLabel('E-mail').fill(ownerEmail);
-    await ownerPage.getByLabel('Пароль').fill(password);
-    await ownerPage.getByRole('button', { name: 'Зарегистрироваться' }).click();
-    await expect(ownerPage).toHaveURL(/\/dashboard/);
+    await registerUser(ownerPage, {
+      email: ownerEmail,
+      name: 'Owner Test',
+      password,
+    });
 
     await createCardViaEditor(ownerPage, {
       name: 'VCard Person',

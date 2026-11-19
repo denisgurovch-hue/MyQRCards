@@ -2622,3 +2622,62 @@ hub = список визиток, явный возврат в список и�
 - [x] lint / typecheck / tests
 - [x] Commit + push ветки; PR в `main` при возможности
 - [x] Merge + deploy — только по команде владельца
+
+T-023
+## ФИО визитки: фамилия, имя, отчество (MYQ-21)
+
+### Статус
+Stage 2 — реализация вместе со спекой.
+
+### Цель
+Разделить единое поле `displayName` на **фамилию**, **имя** и опциональное
+**отчество** с чекбоксом показа отчества (по умолчанию скрыто) в edit-v2,
+на публичной странице и в vCard.
+
+### Предусловия
+- T-003 / edit-v2 / T-018 create-mode.
+- T-004 публичная страница; T-006/T-019 vCard.
+
+### Согласованные решения
+| Тема | Решение |
+|---|---|
+| Номер | T-023 (трекер MYQ-21) |
+| Поля БД | `last_name`, `first_name`, `patronymic` (nullable text); `show_patronymic` derived (true если patronymic заполнен) |
+| `displayName` | Сохраняется как composed строка для совместимости: `Фамилия Имя[ Отчество]` |
+| Порядок | Русский: фамилия → имя → отчество |
+| Обязательные | `lastName` и `firstName` (min 1) при сохранении через новый UI |
+| Отчество | Опциональное поле всегда в форме; если заполнено — видно на публичке/vCard (без чекбокса) |
+| Legacy cards | Пока parts null — в редакторе `displayName` попадает в поле фамилии; публичка показывает `displayName` как раньше |
+| vCard | `FN` = composed visible name; `N` = `Last;First;PatronymicOrEmpty;;` (patronymic в N только если show) |
+| API | Create/Update принимают `lastName`/`firstName`/`patronymic`/`showPatronymic`; `displayName` ещё принимается (legacy) |
+| Owner response | Возвращает parts + `displayName` |
+
+### Scope
+- Миграция Prisma + util compose/visible name.
+- DTO/service/mappers/public/vCard.
+- edit-v2: три поля (фамилия, имя, опциональное отчество без чекбокса).
+- Тесты API/serializer/save-card-v2; e2e smoke при возможности.
+
+### Связанное: регистрация → визитка
+- Регистрация запрашивает фамилию/имя/отчество (отчество опционально).
+- `/auth/me` отдаёт name parts + email.
+- Create-mode edit-v2 префиллит draft из профиля; поля остаются редактируемыми.
+
+### Вне scope
+- Авторазбор старых ФИО на части эвристикой.
+- Отдельные поля в аккаунте пользователя (T-017).
+- Смена slug из ФИО.
+
+### Acceptance criteria
+- [x] Create/edit сохраняют фамилию и имя; отчество опционально и всегда в форме.
+- [x] Пустое отчество не попадает в displayName / public / vCard N.
+- [x] Заполненное отчество видно в displayName / public / vCard.
+- [x] Legacy карточки с одним displayName продолжают открываться.
+- [x] Регрессии: create-mode, publish, vCard PHOTO.
+
+### Definition of Done
+- [x] Спека
+- [x] Миграция + код + тесты
+- [x] lint / typecheck / tests
+- [x] Commit + push
+- [ ] Merge/deploy по команде

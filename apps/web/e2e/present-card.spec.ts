@@ -1,19 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { registerUser } from './helpers/register';
 import { createCardViaEditor } from './helpers/create-card';
 
 const password = 'StrongPassphrase123!';
 
 function email(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}@example.com`;
-}
-
-async function register(page: import('@playwright/test').Page, name: string, mail: string) {
-  await page.goto('/register');
-  await page.getByLabel('Имя').fill(name);
-  await page.getByLabel('E-mail').fill(mail);
-  await page.getByLabel('Пароль').fill(password);
-  await page.getByRole('button', { name: 'Зарегистрироваться' }).click();
-  await expect(page).toHaveURL(/\/dashboard/);
 }
 
 test.describe('present card (T-013)', () => {
@@ -23,7 +15,11 @@ test.describe('present card (T-013)', () => {
     const ownerEmail = email('present-owner');
     const slug = `present-${Date.now().toString(36)}`;
 
-    await register(page, 'Present Owner', ownerEmail);
+    await registerUser(page, {
+      email: ownerEmail,
+      name: 'Present Owner',
+      password,
+    });
 
     const cardId = await createCardViaEditor(page, {
       name: 'Present Name',
@@ -72,7 +68,7 @@ test.describe('present card (T-013)', () => {
     const otherEmail = email('present-b');
     const slug = `foreign-${Date.now().toString(36)}`;
 
-    await register(page, 'Owner A', ownerEmail);
+    await registerUser(page, { email: ownerEmail, name: 'Owner A', password });
     const cardId = await createCardViaEditor(page, {
       name: 'Owner Card',
       slug,
@@ -80,7 +76,11 @@ test.describe('present card (T-013)', () => {
 
     const otherContext = await browser.newContext();
     const otherPage = await otherContext.newPage();
-    await register(otherPage, 'Owner B', otherEmail);
+    await registerUser(otherPage, {
+      email: otherEmail,
+      name: 'Owner B',
+      password,
+    });
     await otherPage.goto(`/cards/${cardId}/present`);
     await expect(otherPage.getByText(/404|not found|не найден/i)).toBeVisible();
     await otherContext.close();

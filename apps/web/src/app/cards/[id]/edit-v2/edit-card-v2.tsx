@@ -41,6 +41,8 @@ import {
   type OwnerCard,
 } from './card-draft';
 import { NestedSheet } from './nested-sheet';
+import { composeDisplayName } from './card-name';
+import { draftFromMeProfile } from './draft-from-me';
 import {
   buildCreateBody,
   buildSavePlan,
@@ -86,6 +88,10 @@ const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';
 function emptyDraft(): CardDraft {
   return {
     displayName: '',
+    lastName: '',
+    firstName: '',
+    patronymic: '',
+    showPatronymic: false,
     jobTitle: '',
     companyName: '',
     summary: '',
@@ -170,7 +176,9 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   const [flash, setFlash] = useState<UiFlash>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState({
-    displayName: '',
+    lastName: '',
+    firstName: '',
+    patronymic: '',
     jobTitle: '',
     companyName: '',
     summary: '',
@@ -198,13 +206,39 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   const dirty = useMemo(() => !draftsEqual(baseline, draft), [baseline, draft]);
 
   useEffect(() => {
-    if (isCreate || !cardId) {
-      setLoading(false);
-      setLoadError(null);
-      return;
-    }
     let cancelled = false;
     (async () => {
+      if (isCreate || !cardId) {
+        setLoading(true);
+        setLoadError(null);
+        try {
+          const me = await apiFetch<{
+            user: {
+              email: string | null;
+              lastName?: string | null;
+              firstName?: string | null;
+              patronymic?: string | null;
+              displayName?: string | null;
+            };
+          }>('/api/v1/auth/me');
+          if (cancelled) return;
+          const blank = emptyDraft();
+          const prefilled = draftFromMeProfile(me.user, blank);
+          setBaseline(cloneDraft(blank));
+          setDraft(prefilled);
+        } catch (err) {
+          if (!cancelled) {
+            setLoadError(
+              err instanceof Error
+                ? err.message
+                : 'Не удалось загрузить профиль',
+            );
+          }
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+        return;
+      }
       setLoading(true);
       setLoadError(null);
       try {
@@ -240,7 +274,9 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
 
   function openProfile(source: CardDraft = draft) {
     setProfileForm({
-      displayName: source.displayName,
+      lastName: source.lastName,
+      firstName: source.firstName,
+      patronymic: source.patronymic,
       jobTitle: source.jobTitle,
       companyName: source.companyName,
       summary: source.summary,
@@ -307,13 +343,24 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   }
 
   function applyProfile() {
-    const name = profileForm.displayName.trim();
-    if (!name) {
+    const lastName = profileForm.lastName.trim();
+    const firstName = profileForm.firstName.trim();
+    if (!lastName || !firstName) {
       return;
     }
+    const patronymic = profileForm.patronymic.trim();
+    const displayName = composeDisplayName({
+      lastName,
+      firstName,
+      patronymic,
+    });
     setDraft((current) => ({
       ...current,
-      displayName: name,
+      lastName,
+      firstName,
+      patronymic,
+      showPatronymic: Boolean(patronymic),
+      displayName,
       jobTitle: profileForm.jobTitle.trim(),
       companyName: profileForm.companyName.trim(),
       summary: profileForm.summary.trim(),
@@ -711,8 +758,8 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
     if (!dirty || flash === 'saving') {
       return;
     }
-    if (!draft.displayName.trim()) {
-      setSaveError('Укажите ФИО перед сохранением');
+    if (!draft.lastName.trim() || !draft.firstName.trim()) {
+      setSaveError('Укажите фамилию и имя перед сохранением');
       setFlash('error');
       openProfile();
       return;
@@ -1051,7 +1098,7 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
                 <span className="public-name">{draft.displayName}</span>
               ) : (
                 <span className="public-name edit-v2-placeholder">
-                  Добавить ФИО
+                  Добавить фамилию и имя
                 </span>
               )}
               {draft.jobTitle ? (
@@ -1219,14 +1266,43 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
         }
       >
         <label>
-          ФИО *
+          Фамилия *
           <input
-            value={profileForm.displayName}
-            maxLength={120}
+            value={profileForm.lastName}
+            maxLength={60}
+            autoComplete="family-name"
             onChange={(event) =>
               setProfileForm((current) => ({
                 ...current,
-                displayName: event.target.value,
+                lastName: event.target.value,
+              }))
+            }
+          />
+        </label>
+        <label>
+          Имя *
+          <input
+            value={profileForm.firstName}
+            maxLength={60}
+            autoComplete="given-name"
+            onChange={(event) =>
+              setProfileForm((current) => ({
+                ...current,
+                firstName: event.target.value,
+              }))
+            }
+          />
+        </label>
+        <label>
+          Отчество
+          <input
+            value={profileForm.patronymic}
+            maxLength={60}
+            autoComplete="additional-name"
+            onChange={(event) =>
+              setProfileForm((current) => ({
+                ...current,
+                patronymic: event.target.value,
               }))
             }
           />

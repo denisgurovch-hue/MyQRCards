@@ -75,8 +75,7 @@ describe('Public Cards API (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         email,
-        password: 'StrongPassphrase123!',
-        displayName: 'Owner Account',
+        password: 'StrongPassphrase123!', lastName: 'Owner', firstName: 'Account',
       })
       .expect(201);
     return {

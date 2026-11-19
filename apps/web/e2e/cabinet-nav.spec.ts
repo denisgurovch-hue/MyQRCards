@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { registerUser } from './helpers/register';
 import { createCardViaEditor } from './helpers/create-card';
 
 const password = 'StrongPassphrase123!';
@@ -16,12 +17,11 @@ test.describe('cabinet navigation (T-022)', () => {
     page,
   }) => {
     const ownerEmail = email('nav');
-    await page.goto('/register');
-    await page.getByLabel('Имя').fill('Nav Owner');
-    await page.getByLabel('E-mail').fill(ownerEmail);
-    await page.getByLabel('Пароль').fill(password);
-    await page.getByRole('button', { name: 'Зарегистрироваться' }).click();
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
+    await registerUser(page, {
+      email: ownerEmail,
+      name: 'Nav Owner',
+      password,
+    });
 
     await expect(
       page.getByRole('link', { name: 'Signet — к списку визиток' }),
@@ -46,7 +46,8 @@ test.describe('cabinet navigation (T-022)', () => {
     // Dirty leave confirm, then stay.
     await page.getByRole('button', { name: /Изменить основное/i }).click();
     const profile = page.getByRole('dialog', { name: 'Основное' });
-    await profile.getByLabel('ФИО *').fill('Nav Card Changed');
+    await profile.getByLabel('Фамилия *').fill('Nav');
+    await profile.getByLabel('Имя *').fill('Changed');
     await profile.getByRole('button', { name: 'Применить' }).click();
 
     await page.getByRole('link', { name: 'К визиткам' }).click();

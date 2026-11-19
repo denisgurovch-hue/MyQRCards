@@ -11,6 +11,7 @@ import {
   isValidSlug,
   normalizeSlug,
 } from './slug.util';
+import { resolveCardNameInput } from './card-name.util';
 
 @Injectable()
 export class CardsService {
@@ -18,15 +19,46 @@ export class CardsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  private resolveNameOrThrow(input: {
+    lastName?: string | null;
+    firstName?: string | null;
+    patronymic?: string | null;
+    showPatronymic?: boolean;
+    displayName?: string | null;
+  }) {
+    try {
+      return resolveCardNameInput(input);
+    } catch (error) {
+      const code = error instanceof Error ? error.message : '';
+      if (code === 'LAST_FIRST_REQUIRED') {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          'lastName and firstName are both required when name parts are sent',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'displayName or lastName+firstName is required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
   async create(userId: string, dto: CreateCardDto) {
     const slug = await this.resolveSlug(dto.slug);
+    const name = this.resolveNameOrThrow(dto);
 
     try {
       const card = await this.prisma.$transaction(async (tx) => {
         const created = await tx.card.create({
           data: {
             userId,
-            displayName: dto.displayName.trim(),
+            displayName: name.displayName,
+            lastName: name.lastName,
+            firstName: name.firstName,
+            patronymic: name.patronymic,
+            showPatronymic: name.showPatronymic,
             jobTitle: dto.jobTitle?.trim() || null,
             companyName: dto.companyName?.trim() || null,
             summary: dto.summary?.trim() || null,
@@ -85,10 +117,33 @@ export class CardsService {
   }
 
   async update(userId: string, cardId: string, dto: UpdateCardDto) {
-    await this.findOwnedOrThrow(userId, cardId);
+    const existing = await this.findOwnedOrThrow(userId, cardId);
 
     const data: Prisma.CardUpdateInput = {};
-    if (dto.displayName !== undefined) {
+    const touchesParts =
+      dto.lastName !== undefined ||
+      dto.firstName !== undefined ||
+      dto.patronymic !== undefined ||
+      dto.showPatronymic !== undefined;
+    if (touchesParts) {
+      const fromParts = this.resolveNameOrThrow({
+        lastName:
+          dto.lastName !== undefined ? dto.lastName : existing.lastName,
+        firstName:
+          dto.firstName !== undefined ? dto.firstName : existing.firstName,
+        patronymic:
+          dto.patronymic !== undefined ? dto.patronymic : existing.patronymic,
+        showPatronymic:
+          dto.showPatronymic !== undefined
+            ? dto.showPatronymic
+            : existing.showPatronymic,
+      });
+      data.displayName = fromParts.displayName;
+      data.lastName = fromParts.lastName;
+      data.firstName = fromParts.firstName;
+      data.patronymic = fromParts.patronymic;
+      data.showPatronymic = fromParts.showPatronymic;
+    } else if (dto.displayName !== undefined) {
       data.displayName = dto.displayName.trim();
     }
     if (dto.jobTitle !== undefined) {

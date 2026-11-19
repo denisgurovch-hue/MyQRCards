@@ -123,6 +123,38 @@ describe('vcard.serializer', () => {
     expect(String(card.get('note').valueOf())).toContain('Привет');
   });
 
+  it('uses structured N when name parts are provided', () => {
+    const raw = buildVCard30({
+      displayName: 'Иванов Иван Иванович',
+      lastName: 'Иванов',
+      firstName: 'Иван',
+      patronymic: 'Иванович',
+      jobTitle: null,
+      companyName: null,
+      summary: null,
+      phone: null,
+      email: null,
+      websiteUrl: null,
+      canonicalUrl: 'https://cards.example/u/ivanov',
+    });
+    expect(raw).toContain('N:Иванов;Иван;Иванович;;');
+    const without = buildVCard30({
+      displayName: 'Иванов Иван',
+      lastName: 'Иванов',
+      firstName: 'Иван',
+      patronymic: null,
+      jobTitle: null,
+      companyName: null,
+      summary: null,
+      phone: null,
+      email: null,
+      websiteUrl: null,
+      canonicalUrl: 'https://cards.example/u/ivanov',
+    });
+    expect(without).toContain('N:Иванов;Иван;;;');
+    expect(without).toContain('FN:Иванов Иван');
+  });
+
   it('embeds PHOTO;ENCODING=b;TYPE=JPEG when base64 is provided', () => {
     const jpegB64 = Buffer.from([0xff, 0xd8, 0xff, 0xd9]).toString('base64');
     const raw = buildVCard30({

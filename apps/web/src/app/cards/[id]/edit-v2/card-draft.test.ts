@@ -38,8 +38,38 @@ describe('ownerCardToDraft', () => {
     expect(draft.jobTitle).toBe('');
     expect(draft.showEmail).toBe(true);
     expect(draft.coverColor).toBe('#ABC');
+    expect(draft.lastName).toBe('A');
+    expect(draft.firstName).toBe('');
+    expect(draft.showPatronymic).toBe(false);
     expect(draft.links.map((l) => l.id)).toEqual(['l1', 'l2']);
     expect(draft.contactOrder).toEqual(['phone', 'email', 'website', 'l1', 'l2']);
+  });
+
+  it('hydrates explicit name parts', () => {
+    const draft = ownerCardToDraft({
+      id: '2',
+      displayName: 'Иванов Иван',
+      lastName: 'Иванов',
+      firstName: 'Иван',
+      patronymic: 'Иванович',
+      jobTitle: null,
+      companyName: null,
+      summary: null,
+      phone: null,
+      email: null,
+      showEmail: false,
+      websiteUrl: null,
+      photoUrl: null,
+      coverColor: null,
+      coverImageUrl: null,
+      slug: 'ivanov',
+      status: 'draft',
+      links: [],
+    });
+    expect(draft.lastName).toBe('Иванов');
+    expect(draft.firstName).toBe('Иван');
+    expect(draft.patronymic).toBe('Иванович');
+    expect(draft.showPatronymic).toBe(true);
   });
 });
 

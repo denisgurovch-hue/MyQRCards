@@ -16,10 +16,33 @@ import { Type } from 'class-transformer';
 import { CardLinkDto } from './card-link.dto';
 
 export class CreateCardDto {
+  /** Legacy single-line name; prefer lastName + firstName. */
+  @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(120)
-  displayName!: string;
+  displayName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  lastName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  firstName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  patronymic?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  showPatronymic?: boolean;
 
   @IsOptional()
   @IsString()

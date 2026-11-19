@@ -1,13 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { BrandMark } from '../components/brand-mark';
 
 export default function HomePage() {
   return (
     <main className="landing">
       <section className="landing-copy">
-        <p className="brand brand-mark">
-          Sign<span>et</span>
-        </p>
+        <BrandMark />
         <h1 className="landing-headline">Визитка, которая открывается с телефона</h1>
         <p className="landing-support">
           Одна ссылка, QR и контакт в записной книжке — без приложений и бумаг.

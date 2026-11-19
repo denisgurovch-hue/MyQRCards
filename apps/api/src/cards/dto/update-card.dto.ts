@@ -23,6 +23,27 @@ export class UpdateCardDto {
 
   @IsOptional()
   @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  lastName?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(60)
+  firstName?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  patronymic?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
+  showPatronymic?: boolean;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(120)
   jobTitle?: string | null;
 

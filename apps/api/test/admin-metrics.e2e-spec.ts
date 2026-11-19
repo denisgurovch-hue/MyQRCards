@@ -100,8 +100,7 @@ describe('Admin metrics API (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         email,
-        password: 'StrongPassphrase123!',
-        displayName: 'Test User',
+        password: 'StrongPassphrase123!', lastName: 'Test', firstName: 'User',
       })
       .expect(201);
     return {

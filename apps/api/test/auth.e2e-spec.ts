@@ -100,8 +100,7 @@ describe('Auth API (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         email,
-        password: 'StrongPassphrase123!',
-        displayName: 'Иван',
+        password: 'StrongPassphrase123!', lastName: 'Иван', firstName: 'User',
       })
       .expect(201);
 
@@ -123,12 +122,12 @@ describe('Auth API (e2e)', () => {
     const email = uniqueEmail('dup');
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User' })
       .expect(201);
 
     const response = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User' })
       .expect(409);
 
     expect(response.body.error.code).toBe('EMAIL_ALREADY_EXISTS');
@@ -138,7 +137,7 @@ describe('Auth API (e2e)', () => {
     const email = uniqueEmail('login');
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User' })
       .expect(201);
 
     await request(app.getHttpServer())
@@ -159,7 +158,7 @@ describe('Auth API (e2e)', () => {
     const email = uniqueEmail('me');
     const register = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User' })
       .expect(201);
 
     const cookies = register.headers['set-cookie'];
@@ -191,7 +190,7 @@ describe('Auth API (e2e)', () => {
     const email = uniqueEmail('pwd');
     const register = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User' })
       .expect(201);
 
     const userId = register.body.user.id as string;
@@ -209,8 +208,7 @@ describe('Auth API (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         email,
-        password: 'StrongPassphrase123!',
-        displayName: 'Was Name',
+        password: 'StrongPassphrase123!', lastName: 'Was', firstName: 'Name',
       })
       .expect(201);
 
@@ -251,7 +249,7 @@ describe('Auth API (e2e)', () => {
     const email = uniqueEmail('pwd-api');
     const register = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User' })
       .expect(201);
     const cookies = register.headers['set-cookie'];
 
@@ -287,7 +285,7 @@ describe('Auth API (e2e)', () => {
     const email = uniqueEmail('del');
     const register = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User' })
       .expect(201);
     const cookies = register.headers['set-cookie'];
     const userId = register.body.user.id as string;
@@ -325,7 +323,7 @@ describe('Auth API (e2e)', () => {
 
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User' })
       .expect(201);
   });
 
@@ -483,7 +481,7 @@ describe('Auth API (e2e)', () => {
     const email = uniqueEmail('link-ya');
     await request(app.getHttpServer())
       .post('/api/v1/auth/register')
-      .send({ email, password: 'StrongPassphrase123!', displayName: 'Existing' })
+      .send({ email, password: 'StrongPassphrase123!', lastName: 'Existing', firstName: 'User' })
       .expect(201);
 
     yandex.authorizeUrl.mockImplementation(
@@ -537,7 +535,7 @@ describe('Auth API (e2e)', () => {
         .post('/api/v1/auth/register')
         .send({
           email: uniqueEmail(`rl-${i}`),
-          password: 'StrongPassphrase123!',
+          password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User',
         })
         .expect(201);
     }
@@ -546,7 +544,7 @@ describe('Auth API (e2e)', () => {
       .post('/api/v1/auth/register')
       .send({
         email: uniqueEmail('rl-overflow'),
-        password: 'StrongPassphrase123!',
+        password: 'StrongPassphrase123!', lastName: 'User', firstName: 'User',
       })
       .expect(429);
 

@@ -4,7 +4,11 @@ import { buildCreateBody, buildSavePlan } from './save-card-v2';
 
 function draft(partial: Partial<CardDraft> = {}): CardDraft {
   return {
-    displayName: 'Name',
+    displayName: 'Name Name',
+    lastName: 'Name',
+    firstName: 'Name',
+    patronymic: '',
+    showPatronymic: false,
     jobTitle: '',
     companyName: '',
     summary: '',
@@ -27,7 +31,9 @@ describe('buildSavePlan', () => {
   it('maps text fields and ordered links into PATCH body', () => {
     const baseline = draft();
     const current = draft({
-      displayName: 'Denis',
+      lastName: 'Gurov',
+      firstName: 'Denis',
+      displayName: 'Gurov Denis',
       phone: '+7999',
       links: [
         {
@@ -51,7 +57,9 @@ describe('buildSavePlan', () => {
       pendingPhotoBlob: null,
       pendingCoverBlob: null,
     });
-    expect(plan.patch.displayName).toBe('Denis');
+    expect(plan.patch.lastName).toBe('Gurov');
+    expect(plan.patch.firstName).toBe('Denis');
+    expect(plan.patch.displayName).toBe('Gurov Denis');
     expect(plan.patch.phone).toBe('+7999');
     expect(plan.patch.links).toEqual([
       { url: 'https://vk.com/b', label: 'VK', type: 'vk', position: 0 },
@@ -90,7 +98,9 @@ describe('buildCreateBody', () => {
   it('builds POST body and omits empty slug', () => {
     const plan = buildSavePlan({
       draft: draft({
-        displayName: 'New Person',
+        lastName: 'Person',
+        firstName: 'New',
+        displayName: 'Person New',
         phone: '+7000',
         slug: '',
         coverColor: '#112233',
@@ -104,13 +114,15 @@ describe('buildCreateBody', () => {
         ],
         contactOrder: ['phone', 'a', 'email', 'website'],
       }),
-      baseline: draft({ displayName: '' }),
+      baseline: draft({ lastName: '', firstName: '', displayName: '' }),
       pendingPhotoBlob: null,
       pendingCoverBlob: null,
     });
     const body = buildCreateBody(plan);
     expect(body).toEqual({
-      displayName: 'New Person',
+      lastName: 'Person',
+      firstName: 'New',
+      showPatronymic: false,
       phone: '+7000',
       showEmail: false,
       coverColor: '#112233',
@@ -128,8 +140,13 @@ describe('buildCreateBody', () => {
 
   it('includes slug when provided', () => {
     const plan = buildSavePlan({
-      draft: draft({ displayName: 'Named', slug: 'my-slug-01' }),
-      baseline: draft({ displayName: '' }),
+      draft: draft({
+        lastName: 'Named',
+        firstName: 'Person',
+        displayName: 'Named Person',
+        slug: 'my-slug-01',
+      }),
+      baseline: draft({ lastName: '', firstName: '', displayName: '' }),
       pendingPhotoBlob: null,
       pendingCoverBlob: null,
     });

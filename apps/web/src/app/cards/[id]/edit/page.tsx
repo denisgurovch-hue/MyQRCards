@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { BrandMark } from '../../../../components/brand-mark';
 import { apiFetch } from '../../../../lib/api';
 import { CardCoverEditor } from './card-cover-editor';
 import { CardPhotoEditor } from './card-photo-editor';
@@ -154,9 +155,7 @@ export default function EditCardPage() {
     <main className="auth-shell">
       <section className="panel panel-wide">
         <div className="panel-head">
-          <p className="brand brand-mark">
-            Sign<span>et</span>
-          </p>
+          <BrandMark />
           <h1 className="section-title">Редактирование</h1>
           <p className="muted">
             Статус:{' '}
