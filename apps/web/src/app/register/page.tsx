@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BrandMark } from '../../components/brand-mark';
 import { apiFetch } from '../../lib/api';
 
 export default function RegisterPage() {
@@ -49,9 +50,7 @@ export default function RegisterPage() {
     <main className="auth-shell">
       <div className="auth-layout">
         <aside className="auth-aside">
-          <p className="brand brand-mark">
-            Sign<span>et</span>
-          </p>
+          <BrandMark />
           <p>Создайте аккаунт и опубликуйте первую цифровую визитку за пару минут.</p>
         </aside>
         <section className="panel">

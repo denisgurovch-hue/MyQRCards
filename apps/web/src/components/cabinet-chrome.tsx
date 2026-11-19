@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { MouseEvent, ReactNode } from 'react';
 import { LogoutButton } from '../app/dashboard/logout-button';
+import { BrandMark } from './brand-mark';
 import {
   CABINET_HUB_HREF,
   cabinetChromeActions,
@@ -24,25 +25,6 @@ export type CabinetChromeProps = {
   brandClassName?: string;
 };
 
-function BrandMark({
-  className,
-  onClick,
-}: {
-  className?: string;
-  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
-}) {
-  return (
-    <Link
-      href={CABINET_HUB_HREF}
-      className={className ?? 'brand brand-mark'}
-      aria-label="Signet — к списку визиток"
-      onClick={onClick}
-    >
-      Sign<span>et</span>
-    </Link>
-  );
-}
-
 /**
  * Shared cabinet header chrome (T-022).
  * Signet always → `/dashboard`; actions are context-scoped.
@@ -63,10 +45,12 @@ export function CabinetChrome({
 
   const brand = (
     <BrandMark
+      href={CABINET_HUB_HREF}
       className={
         brandClassName ??
         (isPresent ? 'brand brand-mark present-brand' : 'brand brand-mark')
       }
+      aria-label="Signet — к списку визиток"
       onClick={onHubNavigate}
     />
   );

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, Suspense, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { BrandMark } from '../../components/brand-mark';
 import { apiFetch } from '../../lib/api';
 
 function oauthErrorMessage(code: string | null): string | null {
@@ -93,9 +94,7 @@ export default function LoginPage() {
     <main className="auth-shell">
       <div className="auth-layout">
         <aside className="auth-aside">
-          <p className="brand brand-mark">
-            Sign<span>et</span>
-          </p>
+          <BrandMark />
           <p>Войдите, чтобы управлять визитками, QR и аналитикой просмотров.</p>
         </aside>
         <section className="panel">

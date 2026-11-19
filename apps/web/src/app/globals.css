@@ -101,8 +101,21 @@ a:hover {
   gap: 0.12em;
 }
 
-.brand-mark span {
+.brand-mark > span:first-of-type {
   color: var(--accent);
+}
+
+.app-version {
+  margin-left: 0.4em;
+  font-size: 0.28em;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  color: var(--muted);
+  opacity: 0.62;
+  align-self: center;
+  white-space: nowrap;
+  user-select: none;
 }
 
 .lede {
