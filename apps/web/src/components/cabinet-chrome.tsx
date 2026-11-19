@@ -66,8 +66,8 @@ export function CabinetChrome({
   if (isEdit) {
     return (
       <header className={className ?? 'edit-v2-top'}>
-        <div className="cabinet-chrome-edit-leading">
-          {brand}
+        <div className="edit-v2-top-brand">{brand}</div>
+        <div className="edit-v2-top-actions">
           {actions.showBackToCards ? (
             <Link
               href={CABINET_HUB_HREF}
@@ -76,19 +76,21 @@ export function CabinetChrome({
             >
               К визиткам
             </Link>
-          ) : null}
-        </div>
-        <div className="workspace-actions">
-          {actions.showManage && onManage ? (
-            <button
-              type="button"
-              className="button secondary edit-v2-manage"
-              onClick={onManage}
-            >
-              Управление
-            </button>
-          ) : null}
-          {extraActions}
+          ) : (
+            <span className="edit-v2-top-actions-spacer" aria-hidden="true" />
+          )}
+          <div className="workspace-actions">
+            {actions.showManage && onManage ? (
+              <button
+                type="button"
+                className="button secondary edit-v2-manage"
+                onClick={onManage}
+              >
+                Управление
+              </button>
+            ) : null}
+            {extraActions}
+          </div>
         </div>
       </header>
     );
