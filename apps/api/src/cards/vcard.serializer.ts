@@ -5,6 +5,12 @@
 
 export type VCardSource = {
   displayName: string;
+  /** Structured name parts for N; when absent, FN fills family slot. */
+  lastName?: string | null;
+  firstName?: string | null;
+  /** Included in N additional only when showPatronymic is true. */
+  patronymic?: string | null;
+  showPatronymic?: boolean;
   jobTitle: string | null;
   companyName: string | null;
   summary: string | null;
@@ -97,12 +103,22 @@ export function buildVCard30(source: VCardSource): string {
     throw new Error('displayName is required for vCard');
   }
 
+  const family = source.lastName?.trim() || '';
+  const given = source.firstName?.trim() || '';
+  const additional =
+    source.showPatronymic && source.patronymic?.trim()
+      ? source.patronymic.trim()
+      : '';
+  const structuredN =
+    family || given || additional
+      ? `N:${escapeVCardText(family)};${escapeVCardText(given)};${escapeVCardText(additional)};;`
+      : `N:${escapeVCardText(displayName)};;;;`;
+
   const lines: string[] = [
     'BEGIN:VCARD',
     'VERSION:3.0',
     propertyLine('FN', displayName),
-    // Structured name fallback: entire displayName in family-name slot.
-    foldVCardLine(`N:${escapeVCardText(displayName)};;;;`),
+    foldVCardLine(structuredN),
   ];
 
   if (source.companyName?.trim()) {

@@ -17,6 +17,10 @@ export type ContactOrderKey = 'phone' | 'email' | 'website' | (string & {});
 
 export type CardDraft = {
   displayName: string;
+  lastName: string;
+  firstName: string;
+  patronymic: string;
+  showPatronymic: boolean;
   jobTitle: string;
   companyName: string;
   summary: string;
@@ -36,6 +40,10 @@ export type CardDraft = {
 export type OwnerCard = {
   id: string;
   displayName: string;
+  lastName?: string | null;
+  firstName?: string | null;
+  patronymic?: string | null;
+  showPatronymic?: boolean;
   jobTitle: string | null;
   companyName: string | null;
   summary: string | null;
@@ -143,8 +151,16 @@ export function ownerCardToDraft(card: OwnerCard): CardDraft {
       type: normalizeLinkType(link.type),
     }));
 
+  const hasParts = Boolean(
+    card.lastName?.trim() || card.firstName?.trim() || card.patronymic?.trim(),
+  );
+
   return {
     displayName: card.displayName,
+    lastName: hasParts ? (card.lastName ?? '') : card.displayName,
+    firstName: hasParts ? (card.firstName ?? '') : '',
+    patronymic: card.patronymic ?? '',
+    showPatronymic: Boolean(card.showPatronymic),
     jobTitle: card.jobTitle ?? '',
     companyName: card.companyName ?? '',
     summary: card.summary ?? '',

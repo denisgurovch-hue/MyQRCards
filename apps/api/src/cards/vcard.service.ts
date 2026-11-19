@@ -63,6 +63,10 @@ export class VcardService {
     try {
       const body = buildVCard30({
         displayName: card.displayName,
+        lastName: entity.lastName,
+        firstName: entity.firstName,
+        patronymic: entity.patronymic,
+        showPatronymic: entity.showPatronymic,
         jobTitle: card.jobTitle,
         companyName: card.companyName,
         summary: card.summary,

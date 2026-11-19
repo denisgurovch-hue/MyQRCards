@@ -2602,6 +2602,18 @@ a.phone-contact-value:focus-visible {
   background: color-mix(in srgb, var(--panel) 88%, var(--mist));
 }
 
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.95rem;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

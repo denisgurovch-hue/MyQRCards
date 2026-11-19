@@ -41,6 +41,7 @@ import {
   type OwnerCard,
 } from './card-draft';
 import { NestedSheet } from './nested-sheet';
+import { composeDisplayName } from './card-name';
 import {
   buildCreateBody,
   buildSavePlan,
@@ -86,6 +87,10 @@ const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';
 function emptyDraft(): CardDraft {
   return {
     displayName: '',
+    lastName: '',
+    firstName: '',
+    patronymic: '',
+    showPatronymic: false,
     jobTitle: '',
     companyName: '',
     summary: '',
@@ -170,7 +175,10 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   const [flash, setFlash] = useState<UiFlash>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState({
-    displayName: '',
+    lastName: '',
+    firstName: '',
+    patronymic: '',
+    showPatronymic: false,
     jobTitle: '',
     companyName: '',
     summary: '',
@@ -240,7 +248,10 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
 
   function openProfile(source: CardDraft = draft) {
     setProfileForm({
-      displayName: source.displayName,
+      lastName: source.lastName,
+      firstName: source.firstName,
+      patronymic: source.patronymic,
+      showPatronymic: source.showPatronymic,
       jobTitle: source.jobTitle,
       companyName: source.companyName,
       summary: source.summary,
@@ -307,13 +318,26 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   }
 
   function applyProfile() {
-    const name = profileForm.displayName.trim();
-    if (!name) {
+    const lastName = profileForm.lastName.trim();
+    const firstName = profileForm.firstName.trim();
+    if (!lastName || !firstName) {
       return;
     }
+    const patronymic = profileForm.patronymic.trim();
+    const showPatronymic = profileForm.showPatronymic;
+    const displayName = composeDisplayName({
+      lastName,
+      firstName,
+      patronymic,
+      showPatronymic,
+    });
     setDraft((current) => ({
       ...current,
-      displayName: name,
+      lastName,
+      firstName,
+      patronymic,
+      showPatronymic,
+      displayName,
       jobTitle: profileForm.jobTitle.trim(),
       companyName: profileForm.companyName.trim(),
       summary: profileForm.summary.trim(),
@@ -711,8 +735,8 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
     if (!dirty || flash === 'saving') {
       return;
     }
-    if (!draft.displayName.trim()) {
-      setSaveError('Укажите ФИО перед сохранением');
+    if (!draft.lastName.trim() || !draft.firstName.trim()) {
+      setSaveError('Укажите фамилию и имя перед сохранением');
       setFlash('error');
       openProfile();
       return;
@@ -1051,7 +1075,7 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
                 <span className="public-name">{draft.displayName}</span>
               ) : (
                 <span className="public-name edit-v2-placeholder">
-                  Добавить ФИО
+                  Добавить фамилию и имя
                 </span>
               )}
               {draft.jobTitle ? (
@@ -1219,18 +1243,62 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
         }
       >
         <label>
-          ФИО *
+          Фамилия *
           <input
-            value={profileForm.displayName}
-            maxLength={120}
+            value={profileForm.lastName}
+            maxLength={60}
+            autoComplete="family-name"
             onChange={(event) =>
               setProfileForm((current) => ({
                 ...current,
-                displayName: event.target.value,
+                lastName: event.target.value,
               }))
             }
           />
         </label>
+        <label>
+          Имя *
+          <input
+            value={profileForm.firstName}
+            maxLength={60}
+            autoComplete="given-name"
+            onChange={(event) =>
+              setProfileForm((current) => ({
+                ...current,
+                firstName: event.target.value,
+              }))
+            }
+          />
+        </label>
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={profileForm.showPatronymic}
+            onChange={(event) =>
+              setProfileForm((current) => ({
+                ...current,
+                showPatronymic: event.target.checked,
+              }))
+            }
+          />
+          <span>Показывать отчество</span>
+        </label>
+        {profileForm.showPatronymic ? (
+          <label>
+            Отчество
+            <input
+              value={profileForm.patronymic}
+              maxLength={60}
+              autoComplete="additional-name"
+              onChange={(event) =>
+                setProfileForm((current) => ({
+                  ...current,
+                  patronymic: event.target.value,
+                }))
+              }
+            />
+          </label>
+        ) : null}
         <label>
           Должность
           <input

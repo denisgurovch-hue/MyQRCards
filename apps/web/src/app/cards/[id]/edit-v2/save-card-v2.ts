@@ -39,6 +39,10 @@ export function buildSavePlan(input: {
     coverMode === 'color' ? draft.coverColor || null : null;
 
   const patch: Record<string, unknown> = {
+    lastName: draft.lastName.trim(),
+    firstName: draft.firstName.trim(),
+    patronymic: draft.patronymic.trim() || null,
+    showPatronymic: draft.showPatronymic,
     displayName: draft.displayName.trim(),
     jobTitle: draft.jobTitle.trim() || null,
     companyName: draft.companyName.trim() || null,
@@ -78,10 +82,20 @@ export function buildSavePlan(input: {
 
 /** Body for POST /api/v1/cards from an edit-v2 save plan (create mode). */
 export function buildCreateBody(plan: SavePlan): Record<string, unknown> {
-  const displayName = String(plan.patch.displayName ?? '').trim();
+  const lastName = String(plan.patch.lastName ?? '').trim();
+  const firstName = String(plan.patch.firstName ?? '').trim();
   const body: Record<string, unknown> = {
-    displayName,
+    lastName,
+    firstName,
   };
+
+  const patronymic = plan.patch.patronymic;
+  if (typeof patronymic === 'string' && patronymic.trim()) {
+    body.patronymic = patronymic.trim();
+  }
+  if (typeof plan.patch.showPatronymic === 'boolean') {
+    body.showPatronymic = plan.patch.showPatronymic;
+  }
 
   const copyIfPresent = (key: string) => {
     const value = plan.patch[key];
