@@ -2680,4 +2680,4 @@ Stage 2 — реализация вместе со спекой.
 - [x] Миграция + код + тесты
 - [x] lint / typecheck / tests
 - [x] Commit + push
-- [ ] Merge/deploy по команде
+- [x] Merge/deploy по команде (prod `59112b0`, 2026-11-19 Europe/Moscow)
