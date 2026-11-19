@@ -2674,5 +2674,5 @@ Stage 2 — реализация вместе со спекой.
 - [x] Спека
 - [x] Миграция + код + тесты
 - [x] lint / typecheck / tests
-- [ ] Commit + push
+- [x] Commit + push
 - [ ] Merge/deploy по команде
