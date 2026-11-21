@@ -418,11 +418,18 @@ a:hover {
 
 .workspace-top {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.85rem;
   margin-bottom: 1.6rem;
+}
+
+.workspace-top-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .workspace-top .brand {
@@ -434,10 +441,6 @@ a:hover {
   flex-wrap: wrap;
   gap: 0.65rem;
   align-items: center;
-  flex: 1 1 auto;
-  justify-content: flex-end;
-  margin-left: auto;
-  min-width: 0;
 }
 
 button.logout-icon-button {
@@ -445,8 +448,6 @@ button.logout-icon-button {
   min-height: 2.75rem;
   padding: 0.55rem;
   flex-shrink: 0;
-  /* Stick to the far right of the header action row (incl. when actions wrap). */
-  margin-left: auto;
 }
 
 button.logout-icon-button svg {
