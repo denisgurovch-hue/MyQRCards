@@ -98,10 +98,11 @@ export function CabinetChrome({
 
   return (
     <header className={className ?? 'workspace-top'}>
-      <div>
+      <div className="workspace-top-brand-row">
         {brand}
-        {title}
+        {actions.showLogout ? <LogoutButton /> : null}
       </div>
+      {title}
       <div className="workspace-actions">
         {actions.showCreate ? (
           <Link className="button accent" href="/cards/new">
@@ -127,7 +128,6 @@ export function CabinetChrome({
             Кабинет
           </Link>
         ) : null}
-        {actions.showLogout ? <LogoutButton /> : null}
         {extraActions}
       </div>
     </header>
