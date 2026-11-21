@@ -127,8 +127,8 @@ export function CabinetChrome({
             Кабинет
           </Link>
         ) : null}
-        {actions.showLogout ? <LogoutButton /> : null}
         {extraActions}
+        {actions.showLogout ? <LogoutButton /> : null}
       </div>
     </header>
   );

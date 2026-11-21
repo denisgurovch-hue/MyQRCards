@@ -434,6 +434,10 @@ a:hover {
   flex-wrap: wrap;
   gap: 0.65rem;
   align-items: center;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  margin-left: auto;
+  min-width: 0;
 }
 
 button.logout-icon-button {
@@ -441,6 +445,8 @@ button.logout-icon-button {
   min-height: 2.75rem;
   padding: 0.55rem;
   flex-shrink: 0;
+  /* Stick to the far right of the header action row (incl. when actions wrap). */
+  margin-left: auto;
 }
 
 button.logout-icon-button svg {
