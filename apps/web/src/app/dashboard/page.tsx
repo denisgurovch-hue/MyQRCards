@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { CabinetChrome } from '../../components/cabinet-chrome';
+import { cardStatusLabel } from '../../lib/card-status-label';
+import { serverApiFetch } from '../../lib/server-api';
 import { CardAnalytics } from './card-analytics';
 import { PublicLinkActions } from './public-link-actions';
-import { serverApiFetch } from '../../lib/server-api';
 
 type MeResponse = {
   user: {
@@ -70,7 +71,7 @@ export default async function DashboardPage() {
                         : 'status-pill'
                     }
                   >
-                    {card.status}
+                    {cardStatusLabel(card.status)}
                   </span>
                 </div>
                 <div className="muted">

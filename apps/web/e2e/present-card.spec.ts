@@ -52,7 +52,7 @@ test.describe('present card (T-013)', () => {
       name: 'Опубликовать визитку?',
     });
     await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
+    await expect(manage.getByText(/Статус сейчас:\s*Опубликовано/i)).toBeVisible();
 
     await page.goto(`/cards/${cardId}/present`);
     await expect(page.getByRole('img', { name: /QR-код визитки/ })).toBeVisible({

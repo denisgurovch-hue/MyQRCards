@@ -27,6 +27,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CabinetChrome } from '../../../../components/cabinet-chrome';
 import { apiFetch } from '../../../../lib/api';
+import { cardStatusLabel } from '../../../../lib/card-status-label';
 import {
   cloneDraft,
   draftsEqual,
@@ -1707,7 +1708,8 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
           />
         </label>
         <p className="muted">
-          Статус сейчас: {isCreate ? 'не создана' : draft.status}
+          Статус сейчас:{' '}
+          {isCreate ? 'не создана' : cardStatusLabel(draft.status)}
         </p>
         <div className="edit-v2-sheet-actions">
           <button

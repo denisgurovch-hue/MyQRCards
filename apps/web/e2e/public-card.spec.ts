@@ -39,7 +39,7 @@ test.describe('public card page', () => {
     });
     await expect(publishConfirm.getByText(/конфиденциальную информацию/i)).toBeVisible();
     await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
+    await expect(manage.getByText(/Статус сейчас:\s*Опубликовано/i)).toBeVisible();
     await manage.getByRole('button', { name: 'Закрыть', exact: true }).click();
 
     const guest = await browser.newContext();
@@ -98,7 +98,7 @@ test.describe('public card page', () => {
 
     await ownerPage.getByRole('button', { name: 'Управление' }).click();
     await manage.getByRole('button', { name: 'Снять с публикации' }).click();
-    await expect(manage.getByText(/Статус сейчас:\s*draft/i)).toBeVisible();
+    await expect(manage.getByText(/Статус сейчас:\s*Черновик/i)).toBeVisible();
 
     await guestPage.reload();
     await expect(guestPage.getByRole('heading', { name: 'Визитка не найдена' })).toBeVisible();

@@ -37,7 +37,7 @@ test.describe('public vCard download', () => {
       name: 'Опубликовать визитку?',
     });
     await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
+    await expect(manage.getByText(/Статус сейчас:\s*Опубликовано/i)).toBeVisible();
 
     const guest = await browser.newContext();
     const guestPage = await guest.newPage();
