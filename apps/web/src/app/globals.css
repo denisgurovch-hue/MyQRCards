@@ -1730,6 +1730,14 @@ a.phone-contact-value:focus-visible {
   padding: 0.85rem 1rem 0;
 }
 
+.edit-v2-top-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
 .edit-v2-top-brand {
   min-width: 0;
 }
@@ -1737,15 +1745,23 @@ a.phone-contact-value:focus-visible {
 .edit-v2-top-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.65rem;
 }
 
-.edit-v2-top-actions-spacer {
-  flex: 0 0 auto;
+.edit-v2-back-icon {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem;
+  flex-shrink: 0;
 }
 
-.edit-v2-back-cards,
+.edit-v2-back-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
+}
+
 .edit-v2-manage {
   padding: 0.55rem 0.85rem;
   font-size: 0.9rem;

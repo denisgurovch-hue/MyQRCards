@@ -842,10 +842,15 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   }
 
   function requestCancel() {
-    if (!dirty) {
+    if (flash === 'saving') {
       return;
     }
-    setNested('cancel-confirm');
+    // Always leave the editor: dirty → confirm, clean → hub.
+    if (dirty) {
+      setNested('leave-confirm');
+      return;
+    }
+    router.push('/dashboard');
   }
 
   function confirmCancel() {
@@ -1235,7 +1240,7 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
           <button
             type="button"
             className="button secondary"
-            disabled={!dirty || flash === 'saving'}
+            disabled={flash === 'saving'}
             onClick={requestCancel}
           >
             Отменить

@@ -10,7 +10,7 @@ function email(prefix: string) {
 
 /**
  * One registration per file — register is rate-limited (10/min) across the suite.
- * Covers hub escape, dirty leave, Отменить reset, present + account back.
+ * Covers hub escape, dirty leave, Отменить leave, present + account back.
  */
 test.describe('cabinet navigation (T-022)', () => {
   test('hub escapes: create save, dirty leave, present, account', async ({
@@ -58,18 +58,21 @@ test.describe('cabinet navigation (T-022)', () => {
     await leave.getByRole('button', { name: 'Остаться' }).click();
     await expect(page).toHaveURL(new RegExp(`/cards/${cardId}/edit-v2`));
 
-    // Отменить = reset dirty, no navigation.
+    // Отменить always available → leave confirm when dirty, then hub.
+    await expect(page.getByRole('button', { name: 'Отменить' })).toBeEnabled();
     await page.getByRole('button', { name: 'Отменить' }).click();
-    const cancel = page.getByRole('dialog', { name: 'Отменить изменения?' });
-    await expect(cancel).toBeVisible();
-    await cancel.getByRole('button', { name: 'Отменить изменения' }).click();
-    await expect(page).toHaveURL(new RegExp(`/cards/${cardId}/edit-v2`));
-    await expect(page.getByText('Nav Card Changed')).toHaveCount(0);
-
-    // Clean escape to list.
-    await page.getByRole('link', { name: 'К визиткам' }).click();
+    const leaveCancel = page.getByRole('dialog', {
+      name: 'Данные не сохранены. Закрыть?',
+    });
+    await expect(leaveCancel).toBeVisible();
+    await leaveCancel.getByRole('button', { name: 'Закрыть' }).click();
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText('Nav Card')).toBeVisible();
+
+    // Clean escape via back icon.
+    await page.goto(`/cards/${cardId}/edit-v2`);
+    await page.getByRole('link', { name: 'К визиткам' }).click();
+    await expect(page).toHaveURL(/\/dashboard/);
 
     // Present: X + brand → dashboard.
     await page.goto(`/cards/${cardId}/present`);
