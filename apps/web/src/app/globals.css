@@ -660,31 +660,32 @@ button.accent:hover,
 
 .card-row-actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: space-between;
   gap: 0.55rem;
+  width: 100%;
 }
 
 .card-row-actions > .button,
 .card-row-actions > a.button,
 .card-row-actions > button {
+  flex: 1 1 0;
   font-size: 0.9rem;
   min-height: 2.6rem;
-  padding: 0.55rem 0.95rem;
-}
-
-.card-row-actions-lifecycle {
-  flex-wrap: nowrap;
+  padding: 0.55rem 0.75rem;
+  text-align: center;
+  justify-content: center;
 }
 
 .card-row-actions-lifecycle .card-row-status {
-  flex: 1 1 auto;
+  flex: 2.4 1 0;
   white-space: nowrap;
 }
 
 .card-row-actions-lifecycle .card-row-delete {
-  flex: 0 0 auto;
-  padding-inline: 0.7rem;
+  flex: 1 1 0;
+  padding-inline: 0.55rem;
   font-size: 0.85rem;
 }
 
