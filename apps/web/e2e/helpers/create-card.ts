@@ -60,7 +60,13 @@ export async function createCardViaEditor(
     throw new Error('Expected redirect to /cards/{id}/edit-v2 after create');
   }
   if (input.slug) {
+    // API sets slug outside React draft; reload so a later «Сохранить»
+    // does not PATCH the auto-generated slug back over the custom one.
     await patchCardSlug(page, cardId, input.slug);
+    await page.goto(`/cards/${cardId}/edit-v2`);
+    await expect(
+      page.getByRole('button', { name: /Изменить основное/i }),
+    ).toBeVisible();
   }
   return cardId;
 }
