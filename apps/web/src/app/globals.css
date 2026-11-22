@@ -673,8 +673,19 @@ button.accent:hover,
   padding: 0.55rem 0.95rem;
 }
 
-.card-row-actions-lifecycle > .button {
-  flex: 1 1 10rem;
+.card-row-actions-lifecycle {
+  flex-wrap: nowrap;
+}
+
+.card-row-actions-lifecycle .card-row-status {
+  flex: 1 1 auto;
+  white-space: nowrap;
+}
+
+.card-row-actions-lifecycle .card-row-delete {
+  flex: 0 0 auto;
+  padding-inline: 0.7rem;
+  font-size: 0.85rem;
 }
 
 .card-action-note {

@@ -83,7 +83,7 @@ export function CardRowActions({ cardId, slug, status }: Props) {
         {published ? (
           <button
             type="button"
-            className="button secondary"
+            className="button secondary card-row-status"
             disabled={busy}
             onClick={() => void runStatus('unpublish')}
           >
@@ -92,7 +92,7 @@ export function CardRowActions({ cardId, slug, status }: Props) {
         ) : (
           <button
             type="button"
-            className="button secondary"
+            className="button secondary card-row-status"
             disabled={busy}
             onClick={() => void runStatus('publish')}
           >
@@ -101,7 +101,7 @@ export function CardRowActions({ cardId, slug, status }: Props) {
         )}
         <button
           type="button"
-          className="button secondary"
+          className="button secondary card-row-delete"
           disabled={busy}
           onClick={() => void onDelete()}
         >
