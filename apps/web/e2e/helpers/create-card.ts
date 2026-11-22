@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
+import { patchCardSlug } from './card-lifecycle';
 
 export type CreateCardInput = {
   name: string;
@@ -52,18 +53,14 @@ export async function createCardViaEditor(
     await emailSheet.getByRole('button', { name: 'Применить' }).click();
   }
 
-  if (input.slug) {
-    await page.getByRole('button', { name: 'Управление' }).click();
-    const manage = page.getByRole('dialog', { name: 'Управление визиткой' });
-    await manage.getByLabel('Slug').fill(input.slug);
-    await manage.getByRole('button', { name: 'Закрыть', exact: true }).click();
-  }
-
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
   const cardId = page.url().match(/\/cards\/([^/]+)\/edit-v2/)?.[1];
   if (!cardId) {
     throw new Error('Expected redirect to /cards/{id}/edit-v2 after create');
+  }
+  if (input.slug) {
+    await patchCardSlug(page, cardId, input.slug);
   }
   return cardId;
 }

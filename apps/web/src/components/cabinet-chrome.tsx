@@ -37,8 +37,6 @@ export type CabinetChromeProps = {
   title?: ReactNode;
   /** Dirty-guard for Signet / «К визиткам» / «Кабинет». */
   onHubNavigate?: (event: MouseEvent<HTMLAnchorElement>) => void;
-  /** Edit-only: open card lifecycle sheet. */
-  onManage?: () => void;
   /** Extra actions after contextual ones (rare). */
   extraActions?: ReactNode;
   className?: string;
@@ -54,7 +52,6 @@ export function CabinetChrome({
   isAdmin = false,
   title,
   onHubNavigate,
-  onManage,
   extraActions,
   className,
   brandClassName,
@@ -100,20 +97,7 @@ export function CabinetChrome({
             </Link>
           ) : null}
         </div>
-        {actions.showManage && onManage ? (
-          <div className="edit-v2-top-actions">
-            <div className="workspace-actions">
-              <button
-                type="button"
-                className="button secondary edit-v2-manage"
-                onClick={onManage}
-              >
-                Управление
-              </button>
-              {extraActions}
-            </div>
-          </div>
-        ) : extraActions ? (
+        {extraActions ? (
           <div className="edit-v2-top-actions">
             <div className="workspace-actions">{extraActions}</div>
           </div>

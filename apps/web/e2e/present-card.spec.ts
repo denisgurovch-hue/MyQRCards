@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { registerUser } from './helpers/register';
+import { publishCard } from './helpers/card-lifecycle';
 import { createCardViaEditor } from './helpers/create-card';
+import { registerUser } from './helpers/register';
 
 const password = 'StrongPassphrase123!';
 
@@ -44,15 +45,7 @@ test.describe('present card (T-013)', () => {
     await expect(page.getByRole('button', { name: 'Копировать ссылку' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Открыть визитку' })).toHaveCount(0);
 
-    await page.goto(`/cards/${cardId}/edit-v2`);
-    await page.getByRole('button', { name: 'Управление' }).click();
-    const manage = page.getByRole('dialog', { name: 'Управление визиткой' });
-    await manage.getByRole('button', { name: 'Опубликовать' }).click();
-    const publishConfirm = page.getByRole('dialog', {
-      name: 'Опубликовать визитку?',
-    });
-    await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(manage.getByText(/Статус сейчас:\s*Опубликовано/i)).toBeVisible();
+    await publishCard(page, cardId);
 
     await page.goto(`/cards/${cardId}/present`);
     await expect(page.getByRole('img', { name: /QR-код визитки/ })).toBeVisible({

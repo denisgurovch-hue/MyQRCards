@@ -41,7 +41,7 @@ test.describe('cabinet navigation (T-022)', () => {
     ).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Управление' }),
-    ).toBeVisible();
+    ).toHaveCount(0);
 
     // Dirty leave confirm, then stay.
     await page.getByRole('button', { name: /Изменить основное/i }).click();

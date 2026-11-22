@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { registerUser } from './helpers/register';
+import { publishCard } from './helpers/card-lifecycle';
 import { createCardViaEditor } from './helpers/create-card';
+import { registerUser } from './helpers/register';
 
 const password = 'StrongPassphrase123!';
 
@@ -23,21 +24,14 @@ test.describe('public vCard download', () => {
       password,
     });
 
-    await createCardViaEditor(ownerPage, {
+    const cardId = await createCardViaEditor(ownerPage, {
       name: 'VCard Person',
       slug,
       phone: '+79991112233',
       email: 'card@example.com',
       showEmail: true,
     });
-    await ownerPage.getByRole('button', { name: 'Управление' }).click();
-    const manage = ownerPage.getByRole('dialog', { name: 'Управление визиткой' });
-    await manage.getByRole('button', { name: 'Опубликовать' }).click();
-    const publishConfirm = ownerPage.getByRole('dialog', {
-      name: 'Опубликовать визитку?',
-    });
-    await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(manage.getByText(/Статус сейчас:\s*Опубликовано/i)).toBeVisible();
+    await publishCard(ownerPage, cardId);
 
     const guest = await browser.newContext();
     const guestPage = await guest.newPage();

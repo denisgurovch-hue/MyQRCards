@@ -984,11 +984,7 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   return (
     <div className="edit-v2-root is-chrome-off">
       <div className="edit-v2-stage">
-        <CabinetChrome
-          context="edit"
-          onHubNavigate={onHubNavigate}
-          onManage={() => setNested('card-actions')}
-        />
+        <CabinetChrome context="edit" onHubNavigate={onHubNavigate} />
 
         {flash === 'error' ? (
           <p className="error edit-v2-banner" role="alert">
