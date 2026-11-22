@@ -119,119 +119,121 @@ export function CardRowActions({
         </p>
       ) : null}
 
-      <NestedSheet
-        open={panel === 'menu'}
-        title="Управление"
-        onClose={closePanels}
-      >
-        {error ? (
-          <p className="muted" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <div className="edit-v2-sheet-actions">
-          {published ? (
-            <button
-              type="button"
-              className="button secondary"
-              disabled={busy}
-              onClick={() => void runStatus('unpublish')}
-            >
-              Снять с публикации
-            </button>
-          ) : (
+      {panel === 'menu' ? (
+        <NestedSheet open title="Управление" onClose={closePanels}>
+          {error ? (
+            <p className="muted" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="edit-v2-sheet-actions">
+            {published ? (
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy}
+                onClick={() => void runStatus('unpublish')}
+              >
+                Снять с публикации
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy}
+                onClick={() => {
+                  setError(null);
+                  setPanel('publish-confirm');
+                }}
+              >
+                Опубликовать
+              </button>
+            )}
             <button
               type="button"
               className="button secondary"
               disabled={busy}
               onClick={() => {
                 setError(null);
-                setPanel('publish-confirm');
+                setPanel('delete-confirm');
               }}
-            >
-              Опубликовать
-            </button>
-          )}
-          <button
-            type="button"
-            className="button secondary"
-            disabled={busy}
-            onClick={() => {
-              setError(null);
-              setPanel('delete-confirm');
-            }}
-          >
-            Удалить
-          </button>
-        </div>
-      </NestedSheet>
-
-      <NestedSheet
-        open={panel === 'publish-confirm'}
-        title="Опубликовать визитку?"
-        onClose={() => {
-          if (!busy) setPanel('menu');
-        }}
-        footer={
-          <>
-            <button
-              type="button"
-              className="button secondary"
-              disabled={busy}
-              onClick={() => setPanel('menu')}
-            >
-              Отмена
-            </button>
-            <button
-              type="button"
-              className="button accent"
-              disabled={busy}
-              onClick={() => void runStatus('publish')}
-            >
-              Опубликовать
-            </button>
-          </>
-        }
-      >
-        <p>
-          После публикации указанные публичные данные будут доступны любому, кто
-          получит ссылку или QR-код. Ссылку можно переслать. Не размещайте
-          конфиденциальную информацию.
-        </p>
-      </NestedSheet>
-
-      <NestedSheet
-        open={panel === 'delete-confirm'}
-        title="Удалить визитку?"
-        onClose={() => {
-          if (!busy) setPanel('menu');
-        }}
-        footer={
-          <>
-            <button
-              type="button"
-              className="button secondary"
-              disabled={busy}
-              onClick={() => setPanel('menu')}
-            >
-              Отмена
-            </button>
-            <button
-              type="button"
-              className="button accent"
-              disabled={busy}
-              onClick={() => void onDelete()}
             >
               Удалить
             </button>
-          </>
-        }
-      >
-        <p>
-          Визитка «{displayName}» будет удалена безвозвратно. Публичная ссылка
-          и QR-код перестанут работать.
-        </p>
-      </NestedSheet>
+          </div>
+        </NestedSheet>
+      ) : null}
+
+      {panel === 'publish-confirm' ? (
+        <NestedSheet
+          open
+          title="Опубликовать визитку?"
+          onClose={() => {
+            if (!busy) setPanel('menu');
+          }}
+          footer={
+            <>
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setPanel('menu')}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className="button accent"
+                disabled={busy}
+                onClick={() => void runStatus('publish')}
+              >
+                Опубликовать
+              </button>
+            </>
+          }
+        >
+          <p>
+            После публикации указанные публичные данные будут доступны любому,
+            кто получит ссылку или QR-код. Ссылку можно переслать. Не размещайте
+            конфиденциальную информацию.
+          </p>
+        </NestedSheet>
+      ) : null}
+
+      {panel === 'delete-confirm' ? (
+        <NestedSheet
+          open
+          title="Удалить визитку?"
+          onClose={() => {
+            if (!busy) setPanel('menu');
+          }}
+          footer={
+            <>
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setPanel('menu')}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className="button accent"
+                disabled={busy}
+                onClick={() => void onDelete()}
+              >
+                Удалить
+              </button>
+            </>
+          }
+        >
+          <p>
+            Визитка «{displayName}» будет удалена безвозвратно. Публичная ссылка
+            и QR-код перестанут работать.
+          </p>
+        </NestedSheet>
+      ) : null}
     </>
   );
 }

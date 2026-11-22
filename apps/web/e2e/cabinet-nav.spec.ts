@@ -68,7 +68,9 @@ test.describe('cabinet navigation (T-022)', () => {
     // Footer confirm is accent; header also has a secondary «Закрыть».
     await leaveCancel.locator('button.button.accent', { hasText: 'Закрыть' }).click();
     await expect(page).toHaveURL(/\/dashboard/);
-    await expect(page.getByText('Nav Card')).toBeVisible();
+    await expect(
+      page.locator('li.card-item strong', { hasText: 'Nav Card' }),
+    ).toBeVisible();
 
     // Clean escape via back icon.
     await page.goto(`/cards/${cardId}/edit-v2`);
