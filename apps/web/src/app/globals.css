@@ -1727,7 +1727,8 @@ a.phone-contact-value:focus-visible {
   flex-direction: column;
   align-items: stretch;
   gap: 0.65rem;
-  padding: 0.85rem 1rem 0;
+  /* Bottom padding keeps the back icon clear of the card cover below. */
+  padding: 0.85rem 1rem 1rem;
 }
 
 .edit-v2-top-brand-row {
