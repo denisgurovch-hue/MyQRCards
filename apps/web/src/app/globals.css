@@ -443,6 +443,27 @@ a:hover {
   align-items: center;
 }
 
+/* Dashboard/admin chrome: equal-width actions spanning the workspace. */
+.workspace-top > .workspace-actions {
+  width: 100%;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.workspace-top > .workspace-actions > .button {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  text-align: center;
+  justify-content: center;
+  /* Match secondary border box so accent/secondary heights stay equal. */
+  border: 1px solid transparent;
+}
+
+.workspace-top > .workspace-actions > .button.secondary {
+  border-color: var(--line);
+}
+
 button.logout-icon-button {
   min-width: 2.75rem;
   min-height: 2.75rem;
