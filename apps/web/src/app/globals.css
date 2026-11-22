@@ -670,7 +670,7 @@ button.accent:hover,
 
 .card-action-note {
   width: 100%;
-  margin: 0;
+  margin: 0.55rem 0 0;
 }
 
 .card-action-url {

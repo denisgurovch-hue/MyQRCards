@@ -28,10 +28,10 @@ test.describe('present card (T-013)', () => {
     });
 
     await page.goto('/dashboard');
-    await expect(page.getByRole('link', { name: 'Показать визитку' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Показать' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'QR-код' })).toHaveCount(0);
 
-    await page.getByRole('link', { name: 'Показать визитку' }).click();
+    await page.getByRole('link', { name: 'Показать' }).click();
     await expect(page).toHaveURL(new RegExp(`/cards/${cardId}/present`));
     await expect(page.getByRole('heading', { name: 'Present Name' })).toBeVisible();
     await expect(

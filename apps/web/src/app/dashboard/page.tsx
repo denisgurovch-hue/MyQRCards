@@ -1,10 +1,9 @@
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { CabinetChrome } from '../../components/cabinet-chrome';
 import { cardStatusLabel } from '../../lib/card-status-label';
 import { serverApiFetch } from '../../lib/server-api';
 import { CardAnalytics } from './card-analytics';
-import { PublicLinkActions } from './public-link-actions';
+import { CardRowActions } from './card-row-actions';
 
 type MeResponse = {
   user: {
@@ -79,21 +78,12 @@ export default async function DashboardPage() {
                   {card.jobTitle ? ` · ${card.jobTitle}` : ''}
                   {card.companyName ? ` · ${card.companyName}` : ''}
                 </div>
-                <div className="card-row-actions">
-                  <Link
-                    className="button secondary"
-                    href={`/cards/${card.id}/edit-v2`}
-                  >
-                    Редактировать
-                  </Link>
-                  <Link
-                    className="button secondary"
-                    href={`/cards/${card.id}/present`}
-                  >
-                    Показать визитку
-                  </Link>
-                  <PublicLinkActions slug={card.slug} status={card.status} />
-                </div>
+                <CardRowActions
+                  cardId={card.id}
+                  slug={card.slug}
+                  status={card.status}
+                  displayName={card.displayName}
+                />
                 <CardAnalytics cardId={card.id} />
               </li>
             ))}
