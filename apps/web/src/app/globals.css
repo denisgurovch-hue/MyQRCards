@@ -652,12 +652,17 @@ button.accent:hover,
   letter-spacing: -0.03em;
 }
 
+.card-row-stack {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
 .card-row-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
-  margin-top: 0.75rem;
 }
 
 .card-row-actions > .button,
@@ -666,6 +671,10 @@ button.accent:hover,
   font-size: 0.9rem;
   min-height: 2.6rem;
   padding: 0.55rem 0.95rem;
+}
+
+.card-row-actions-lifecycle > .button {
+  flex: 1 1 10rem;
 }
 
 .card-action-note {
