@@ -931,11 +931,6 @@ button.linkish:hover {
   gap: 0.45rem;
 }
 
-.public-vcard-hint {
-  margin: 0;
-  text-align: center;
-}
-
 .public-vcard-download {
   display: block;
   text-align: center;
@@ -954,13 +949,17 @@ button.linkish:hover {
   margin-top: 1.25rem;
   text-align: center;
   font-size: 0.8rem;
-  color: var(--muted);
 }
 
 .public-foot a {
-  color: inherit;
-  text-decoration: none;
+  color: var(--accent-deep);
   font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.public-foot a:hover {
+  color: var(--ink);
 }
 
 /* ——— Owner presentation (T-013): landing phone mock as attachment ——— */

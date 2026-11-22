@@ -17,13 +17,6 @@ export function SaveContactButton({ slug }: Props) {
       <a className="public-action public-action-secondary" href={openHref}>
         Сохранить контакт
       </a>
-      <p className="muted public-vcard-hint">
-        Откроется файл контакта. Подтвердите добавление на устройстве.
-      </p>
-      <p className="muted public-vcard-hint">
-        Если файл скачался, откройте его из загрузок браузера и выберите
-        добавление или импорт контакта.
-      </p>
       <a className="public-vcard-download" href={downloadHref}>
         Скачать .vcf
       </a>

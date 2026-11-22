@@ -39,11 +39,6 @@ test.describe('public vCard download', () => {
     await expect(
       guestPage.getByRole('heading', { name: 'VCard Person' }),
     ).toBeVisible();
-    await expect(
-      guestPage.getByText(
-        'Если файл скачался, откройте его из загрузок браузера',
-      ),
-    ).toBeVisible();
 
     const saveLink = guestPage.getByRole('link', {
       name: 'Сохранить контакт',
