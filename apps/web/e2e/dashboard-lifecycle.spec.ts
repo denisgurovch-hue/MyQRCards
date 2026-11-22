@@ -36,6 +36,11 @@ test.describe('dashboard card lifecycle', () => {
     await expect(row.getByRole('link', { name: 'Открыть' })).toHaveCount(0);
 
     await row.getByRole('button', { name: 'Удалить' }).click();
+    const deleteConfirm = page.getByRole('dialog', {
+      name: 'Удалить визитку?',
+    });
+    await expect(deleteConfirm).toBeVisible();
+    await deleteConfirm.getByRole('button', { name: 'Удалить' }).click();
     await expect(
       page.locator('li.card-item strong', { hasText: 'Life Card' }),
     ).toHaveCount(0);

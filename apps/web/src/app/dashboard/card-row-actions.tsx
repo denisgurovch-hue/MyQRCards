@@ -5,21 +5,30 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { apiFetch } from '../../lib/api';
 import { publicCardPath } from '../../lib/public-url';
+import { NestedSheet } from '../cards/[id]/edit-v2/nested-sheet';
 
 type Props = {
   cardId: string;
   slug: string;
   status: string;
+  displayName: string;
 };
 
 /**
  * Row 1: navigate (edit / present / public).
- * Row 2: lifecycle (publish|unpublish + delete) — no overflow sheet.
+ * Row 2: lifecycle (publish|unpublish + delete).
+ * Delete asks for confirm; publish/unpublish stay one-click.
  */
-export function CardRowActions({ cardId, slug, status }: Props) {
+export function CardRowActions({
+  cardId,
+  slug,
+  status,
+  displayName,
+}: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const published = status === 'published';
 
   async function runStatus(path: 'publish' | 'unpublish') {
@@ -44,9 +53,11 @@ export function CardRowActions({ cardId, slug, status }: Props) {
       await apiFetch(`/api/v1/cards/${encodeURIComponent(cardId)}`, {
         method: 'DELETE',
       });
+      setDeleteOpen(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось удалить');
+      setDeleteOpen(false);
     } finally {
       setBusy(false);
     }
@@ -103,7 +114,10 @@ export function CardRowActions({ cardId, slug, status }: Props) {
           type="button"
           className="button secondary card-row-delete"
           disabled={busy}
-          onClick={() => void onDelete()}
+          onClick={() => {
+            setError(null);
+            setDeleteOpen(true);
+          }}
         >
           Удалить
         </button>
@@ -113,6 +127,41 @@ export function CardRowActions({ cardId, slug, status }: Props) {
         <p className="muted card-action-note" role="alert">
           {error}
         </p>
+      ) : null}
+
+      {deleteOpen ? (
+        <NestedSheet
+          open
+          title="Удалить визитку?"
+          onClose={() => {
+            if (!busy) setDeleteOpen(false);
+          }}
+          footer={
+            <>
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setDeleteOpen(false)}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className="button accent"
+                disabled={busy}
+                onClick={() => void onDelete()}
+              >
+                Удалить
+              </button>
+            </>
+          }
+        >
+          <p>
+            Визитка «{displayName}» будет удалена безвозвратно. Публичная ссылка
+            и QR-код перестанут работать.
+          </p>
+        </NestedSheet>
       ) : null}
     </div>
   );

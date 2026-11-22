@@ -82,6 +82,7 @@ export default async function DashboardPage() {
                   cardId={card.id}
                   slug={card.slug}
                   status={card.status}
+                  displayName={card.displayName}
                 />
                 <CardAnalytics cardId={card.id} />
               </li>
