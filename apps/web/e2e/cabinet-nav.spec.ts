@@ -65,7 +65,8 @@ test.describe('cabinet navigation (T-022)', () => {
       name: 'Данные не сохранены. Закрыть?',
     });
     await expect(leaveCancel).toBeVisible();
-    await leaveCancel.getByRole('button', { name: 'Закрыть' }).click();
+    // Footer confirm is accent; header also has a secondary «Закрыть».
+    await leaveCancel.locator('button.button.accent', { hasText: 'Закрыть' }).click();
     await expect(page).toHaveURL(/\/dashboard/);
     await expect(page.getByText('Nav Card')).toBeVisible();
 
