@@ -144,18 +144,20 @@ export function AvatarAlignDialog({
             role="img"
             aria-label="Область кадрирования фото"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={objectUrl}
-              alt=""
-              draggable={false}
-              className="edit-v2-cover-align-image"
-              style={{
-                width: crop.imageWidth * scale,
-                height: crop.imageHeight * scale,
-                transform: `translate(${crop.offsetX}px, ${crop.offsetY}px)`,
-              }}
-            />
+            {objectUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={objectUrl}
+                alt=""
+                draggable={false}
+                className="edit-v2-cover-align-image"
+                style={{
+                  width: crop.imageWidth * scale,
+                  height: crop.imageHeight * scale,
+                  transform: `translate(${crop.offsetX}px, ${crop.offsetY}px)`,
+                }}
+              />
+            ) : null}
             <div className="edit-v2-avatar-align-guide" aria-hidden="true" />
           </div>
 
