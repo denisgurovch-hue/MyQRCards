@@ -164,9 +164,14 @@ actor APIClient {
     var request = URLRequest(url: url)
     request.httpMethod = method
     request.setValue("application/json", forHTTPHeaderField: "Accept")
+    // Native clients: always ask for token bodies on auth mutations when header set by caller.
     if authorized, let token = KeychainStore.get(.accessToken) {
       request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     }
+#if DEBUG
+    // Helps diagnose Simulator → Colima/local Nest connectivity in Xcode console.
+    print("[SignetAPI] \(method) \(url.absoluteString)")
+#endif
     return request
   }
 

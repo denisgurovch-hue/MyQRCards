@@ -20,10 +20,28 @@ open Signet.xcodeproj
 
 ## Конфиг
 
-- `Config/Debug.xcconfig` → `http://127.0.0.1:3001` (API), `http://127.0.0.1:3000` (public web)
+- `Config/Debug.xcconfig` → `http://127.0.0.1:3001` (API host), `http://127.0.0.1:3000` (public web)
+- `Signet/Info.plist` подставляет эти значения и разрешает cleartext к `127.0.0.1` / `localhost` (ATS)
 - `Config/Release.xcconfig` → пропишите prod hosts перед TestFlight
 
-Симулятор ходит на `127.0.0.1` хоста. Для устройства замените Debug URL на LAN IP Mac.
+Симулятор ходит на `127.0.0.1` Mac. Для физического устройства замените Debug URL на LAN IP Mac.
+
+### Локальный запуск (Simulator)
+
+```bash
+# терминал 1 — API+web (из корня репо)
+cd ~/MyQRCards && npm run dev
+
+# smoke API
+curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3001/api/v1/auth/me
+# ожидайте 401 (сервер жив)
+
+# терминал 2 — Xcode
+cd ~/MyQRCards/apps/ios && ./generate-xcodeproj.sh && open Signet.xcodeproj
+```
+
+Scheme: **Signet** / destination **iPhone Simulator**. Register бьёт в  
+`POST http://127.0.0.1:3001/api/v1/auth/register` с `X-Auth-Tokens: 1`.
 
 ## Слои
 
