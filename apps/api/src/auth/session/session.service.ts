@@ -59,7 +59,7 @@ export class SessionService {
   async issueSession(
     res: Response,
     user: { id: string; email: string | null },
-  ): Promise<void> {
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = this.createAccessToken(user);
     const refreshToken = generateOpaqueToken(48);
     const refreshDays = Number(
@@ -84,6 +84,8 @@ export class SessionService {
       ...this.cookieBase(),
       maxAge: refreshDays * 24 * 60 * 60 * 1000,
     });
+
+    return { accessToken, refreshToken };
   }
 
   clearSessionCookies(res: Response): void {
@@ -96,7 +98,18 @@ export class SessionService {
     return cookies?.[REFRESH_COOKIE];
   }
 
+  /**
+   * Prefer Authorization Bearer (native clients); fall back to httpOnly cookie (web).
+   */
   getAccessTokenFromRequest(req: Request): string | undefined {
+    const header = req.headers.authorization;
+    if (typeof header === 'string') {
+      const match = /^Bearer\s+(.+)$/i.exec(header.trim());
+      const bearer = match?.[1]?.trim();
+      if (bearer) {
+        return bearer;
+      }
+    }
     const cookies = req.cookies as Record<string, string> | undefined;
     return cookies?.[ACCESS_COOKIE];
   }
@@ -119,7 +132,11 @@ export class SessionService {
   async rotateRefreshToken(
     res: Response,
     rawToken: string,
-  ): Promise<{ id: string; email: string | null } | null> {
+  ): Promise<{
+    user: { id: string; email: string | null };
+    accessToken: string;
+    refreshToken: string;
+  } | null> {
     const tokenHash = hashToken(rawToken);
     const existing = await this.prisma.refreshToken.findUnique({
       where: { tokenHash },
@@ -139,7 +156,10 @@ export class SessionService {
       data: { revokedAt: new Date() },
     });
 
-    await this.issueSession(res, existing.user);
-    return { id: existing.user.id, email: existing.user.email };
+    const tokens = await this.issueSession(res, existing.user);
+    return {
+      user: { id: existing.user.id, email: existing.user.email },
+      ...tokens,
+    };
   }
 }

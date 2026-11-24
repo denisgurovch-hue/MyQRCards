@@ -1,0 +1,6 @@
+Signet.xcodeproj/
+Signet.xcworkspace/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store

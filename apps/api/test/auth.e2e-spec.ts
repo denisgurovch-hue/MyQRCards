@@ -550,5 +550,50 @@ describe('Auth API (e2e)', () => {
 
     expect(limited.body.error.code).toBe('RATE_LIMITED');
   });
+
+  it('returns bearer tokens with X-Auth-Tokens and accepts Authorization', async () => {
+    const email = uniqueEmail('bearer');
+    const register = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .set('X-Auth-Tokens', '1')
+      .send({
+        email,
+        password: 'StrongPassphrase123!',
+        lastName: 'Bearer',
+        firstName: 'User',
+      })
+      .expect(201);
+
+    expect(register.body.accessToken).toEqual(expect.any(String));
+    expect(register.body.refreshToken).toEqual(expect.any(String));
+
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${register.body.accessToken}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.user.email).toBe(email);
+      });
+
+    const refreshed = await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .set('X-Auth-Tokens', '1')
+      .send({ refreshToken: register.body.refreshToken })
+      .expect(200);
+
+    expect(refreshed.body.accessToken).toEqual(expect.any(String));
+    expect(refreshed.body.refreshToken).toEqual(expect.any(String));
+    expect(refreshed.body.refreshToken).not.toBe(register.body.refreshToken);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${refreshed.body.accessToken}`)
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .send({ refreshToken: refreshed.body.refreshToken })
+      .expect(204);
+  });
 });
 

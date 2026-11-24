@@ -14,6 +14,8 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { DeleteAccountDto } from './dto/delete-account.dto';
@@ -22,6 +24,10 @@ import { RateLimitGuard } from '../common/rate-limit/rate-limit.guard';
 import { AuthGuard, type AuthenticatedRequest } from './guards/auth.guard';
 import { SessionService } from './session/session.service';
 import { AppError } from '../common/errors/app-error';
+
+function wantsBearerTokens(req: Request): boolean {
+  return req.header('x-auth-tokens') === '1';
+}
 
 @Controller('auth')
 @UseGuards(RateLimitGuard)
@@ -35,26 +41,52 @@ export class AuthController {
   @HttpCode(201)
   @RateLimit({ key: 'auth:register', limit: 10, windowSeconds: 60 })
   register(
+    @Req() req: Request,
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.auth.register(dto, res);
+    return this.auth.register(dto, res, {
+      includeTokens: wantsBearerTokens(req),
+    });
   }
 
   @Post('login')
   @HttpCode(200)
   @RateLimit({ key: 'auth:login', limit: 20, windowSeconds: 60 })
-  login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-    return this.auth.login(dto, res);
+  login(
+    @Req() req: Request,
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.auth.login(dto, res, {
+      includeTokens: wantsBearerTokens(req),
+    });
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  @RateLimit({ key: 'auth:refresh', limit: 60, windowSeconds: 60 })
+  refresh(
+    @Req() req: Request,
+    @Body() dto: RefreshDto = {},
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refresh =
+      dto.refreshToken ?? this.sessions.getRefreshTokenFromRequest(req);
+    return this.auth.refreshSession(refresh, res, {
+      includeTokens: wantsBearerTokens(req) || Boolean(dto.refreshToken),
+    });
   }
 
   @Post('logout')
   @HttpCode(204)
   async logout(
     @Req() req: Request,
+    @Body() dto: LogoutDto = {},
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    const refresh = this.sessions.getRefreshTokenFromRequest(req);
+    const refresh =
+      dto.refreshToken ?? this.sessions.getRefreshTokenFromRequest(req);
     await this.auth.logout(refresh, res);
   }
 
@@ -80,7 +112,9 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    return this.auth.changePasswordAuthenticated(req.user!.id, dto, res);
+    return this.auth.changePasswordAuthenticated(req.user!.id, dto, res, {
+      includeTokens: wantsBearerTokens(req),
+    });
   }
 
   @Post('account/delete')

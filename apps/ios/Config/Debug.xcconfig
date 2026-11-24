@@ -1,0 +1,4 @@
+// xcconfig treats // as a comment — use http:/$()/… to emit http://
+// Host only; paths already include api/v1/… (see AuthAPI / CardsAPI).
+API_BASE_URL = http:/$()/127.0.0.1:3001
+PUBLIC_WEB_BASE_URL = http:/$()/127.0.0.1:3000
