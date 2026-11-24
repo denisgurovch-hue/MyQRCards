@@ -142,18 +142,20 @@ export function CoverAlignDialog({
             role="img"
             aria-label="Область кадрирования фона"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={objectUrl}
-              alt=""
-              draggable={false}
-              className="edit-v2-cover-align-image"
-              style={{
-                width: crop.imageWidth * scale,
-                height: crop.imageHeight * scale,
-                transform: `translate(${crop.offsetX}px, ${crop.offsetY}px)`,
-              }}
-            />
+            {objectUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={objectUrl}
+                alt=""
+                draggable={false}
+                className="edit-v2-cover-align-image"
+                style={{
+                  width: crop.imageWidth * scale,
+                  height: crop.imageHeight * scale,
+                  transform: `translate(${crop.offsetX}px, ${crop.offsetY}px)`,
+                }}
+              />
+            ) : null}
           </div>
 
           <label className="edit-v2-cover-align-zoom">

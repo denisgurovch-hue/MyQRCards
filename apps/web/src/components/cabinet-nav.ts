@@ -16,7 +16,7 @@ export type CabinetChromeActions = {
   showBackToCards: boolean;
   /** Create CTA — list only. */
   showCreate: boolean;
-  /** Card lifecycle sheet — edit only. */
+  /** Card lifecycle sheet — reserved; edit chrome no longer shows Управление. */
   showManage: boolean;
   /** Admin entry — allowlisted users, list only. */
   showAdmin: boolean;
@@ -37,7 +37,7 @@ export function cabinetChromeActions(
     brandLinksToDashboard: true,
     showBackToCards: context === 'edit',
     showCreate: context === 'dashboard',
-    showManage: context === 'edit',
+    showManage: false,
     showAdmin: context === 'dashboard' && isAdmin,
     showAccount: context === 'dashboard',
     showCabinet: context === 'account' || context === 'admin',

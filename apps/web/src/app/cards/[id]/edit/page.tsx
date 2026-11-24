@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { BrandMark } from '../../../../components/brand-mark';
 import { apiFetch } from '../../../../lib/api';
+import { cardStatusLabel } from '../../../../lib/card-status-label';
 import { CardCoverEditor } from './card-cover-editor';
 import { CardPhotoEditor } from './card-photo-editor';
 
@@ -166,7 +167,7 @@ export default function EditCardPage() {
                   : 'status-pill'
               }
             >
-              {card.status}
+              {cardStatusLabel(card.status)}
             </span>
           </p>
         </div>

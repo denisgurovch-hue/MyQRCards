@@ -418,11 +418,18 @@ a:hover {
 
 .workspace-top {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.85rem;
   margin-bottom: 1.6rem;
+}
+
+.workspace-top-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .workspace-top .brand {
@@ -433,6 +440,41 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
+  align-items: center;
+}
+
+/* Dashboard/admin chrome: equal-width actions spanning the workspace. */
+.workspace-top > .workspace-actions {
+  width: 100%;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.workspace-top > .workspace-actions > .button {
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  text-align: center;
+  justify-content: center;
+  /* Match secondary border box so accent/secondary heights stay equal. */
+  border: 1px solid transparent;
+}
+
+.workspace-top > .workspace-actions > .button.secondary {
+  border-color: var(--line);
+}
+
+button.logout-icon-button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem;
+  flex-shrink: 0;
+}
+
+button.logout-icon-button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
 }
 
 .section-title {
@@ -610,25 +652,46 @@ button.accent:hover,
   letter-spacing: -0.03em;
 }
 
-.card-row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+.card-row-stack {
+  display: grid;
   gap: 0.55rem;
   margin-top: 0.75rem;
+}
+
+.card-row-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0.55rem;
+  width: 100%;
 }
 
 .card-row-actions > .button,
 .card-row-actions > a.button,
 .card-row-actions > button {
+  flex: 1 1 0;
   font-size: 0.9rem;
   min-height: 2.6rem;
-  padding: 0.55rem 0.95rem;
+  padding: 0.55rem 0.75rem;
+  text-align: center;
+  justify-content: center;
+}
+
+.card-row-actions-lifecycle .card-row-status {
+  flex: 2.4 1 0;
+  white-space: nowrap;
+}
+
+.card-row-actions-lifecycle .card-row-delete {
+  flex: 1 1 0;
+  padding-inline: 0.55rem;
+  font-size: 0.85rem;
 }
 
 .card-action-note {
   width: 100%;
-  margin: 0;
+  margin: 0.55rem 0 0;
 }
 
 .card-action-url {
@@ -889,11 +952,6 @@ button.linkish:hover {
   gap: 0.45rem;
 }
 
-.public-vcard-hint {
-  margin: 0;
-  text-align: center;
-}
-
 .public-vcard-download {
   display: block;
   text-align: center;
@@ -912,13 +970,17 @@ button.linkish:hover {
   margin-top: 1.25rem;
   text-align: center;
   font-size: 0.8rem;
-  color: var(--muted);
 }
 
 .public-foot a {
-  color: inherit;
-  text-decoration: none;
+  color: var(--accent-deep);
   font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.public-foot a:hover {
+  color: var(--ink);
 }
 
 /* ——— Owner presentation (T-013): landing phone mock as attachment ——— */
@@ -1685,7 +1747,16 @@ a.phone-contact-value:focus-visible {
   flex-direction: column;
   align-items: stretch;
   gap: 0.65rem;
-  padding: 0.85rem 1rem 0;
+  /* Bottom padding keeps the back icon clear of the card cover below. */
+  padding: 0.85rem 1rem 1rem;
+}
+
+.edit-v2-top-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .edit-v2-top-brand {
@@ -1695,15 +1766,23 @@ a.phone-contact-value:focus-visible {
 .edit-v2-top-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.65rem;
 }
 
-.edit-v2-top-actions-spacer {
-  flex: 0 0 auto;
+.edit-v2-back-icon {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.55rem;
+  flex-shrink: 0;
 }
 
-.edit-v2-back-cards,
+.edit-v2-back-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
+}
+
 .edit-v2-manage {
   padding: 0.55rem 0.85rem;
   font-size: 0.9rem;

@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
+import { patchCardSlug } from './card-lifecycle';
 
 export type CreateCardInput = {
   name: string;
@@ -36,19 +37,15 @@ export async function createCardViaEditor(
   }
 
   if (input.email) {
-    const addEmail = page.getByRole('button', {
-      name: 'Добавить e-mail',
-      exact: true,
-    });
-    if (await addEmail.count()) {
-      await addEmail.click();
-    } else {
-      // Prefill from registration may already show the email row.
-      await page.getByRole('button', { name: input.email, exact: false }).first().click().catch(async () => {
-        await page.locator('button').filter({ hasText: /@/ }).first().click();
-      });
-    }
+    // Create mode prefills account email (T-023), so the empty CTA may be absent.
+    // Open the email contact row by stable data attribute — avoid click().catch races.
+    const emailRow = page.locator(
+      '[data-contact-key="email"] button.edit-v2-contact-main',
+    );
+    await expect(emailRow).toBeVisible();
+    await emailRow.click();
     const emailSheet = page.getByRole('dialog', { name: 'E-mail' });
+    await expect(emailSheet).toBeVisible();
     await emailSheet.getByLabel('E-mail карточки').fill(input.email);
     if (input.showEmail) {
       await emailSheet.getByLabel(/Показывать e-mail публично/i).check();
@@ -56,18 +53,20 @@ export async function createCardViaEditor(
     await emailSheet.getByRole('button', { name: 'Применить' }).click();
   }
 
-  if (input.slug) {
-    await page.getByRole('button', { name: 'Управление' }).click();
-    const manage = page.getByRole('dialog', { name: 'Управление визиткой' });
-    await manage.getByLabel('Slug').fill(input.slug);
-    await manage.getByRole('button', { name: 'Закрыть', exact: true }).click();
-  }
-
   await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/cards/.+/edit-v2`));
   const cardId = page.url().match(/\/cards\/([^/]+)\/edit-v2/)?.[1];
   if (!cardId) {
     throw new Error('Expected redirect to /cards/{id}/edit-v2 after create');
+  }
+  if (input.slug) {
+    // API sets slug outside React draft; reload so a later «Сохранить»
+    // does not PATCH the auto-generated slug back over the custom one.
+    await patchCardSlug(page, cardId, input.slug);
+    await page.goto(`/cards/${cardId}/edit-v2`);
+    await expect(
+      page.getByRole('button', { name: /Изменить основное/i }),
+    ).toBeVisible();
   }
   return cardId;
 }

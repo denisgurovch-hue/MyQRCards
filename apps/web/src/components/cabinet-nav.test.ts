@@ -31,9 +31,9 @@ describe('cabinetChromeActions (T-022)', () => {
     }
   });
 
-  it('shows Управление and К визиткам only on edit', () => {
+  it('shows К визиткам only on edit; Управление chrome is off', () => {
     const edit = cabinetChromeActions('edit');
-    expect(edit.showManage).toBe(true);
+    expect(edit.showManage).toBe(false);
     expect(edit.showBackToCards).toBe(true);
     for (const context of CONTEXTS.filter((c) => c !== 'edit')) {
       const actions = cabinetChromeActions(context);

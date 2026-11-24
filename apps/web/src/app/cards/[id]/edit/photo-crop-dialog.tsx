@@ -170,18 +170,20 @@ export function PhotoCropDialog({
             aria-label="Область кадрирования. Перетащите фото или смещайте стрелками клавиатуры."
             tabIndex={0}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={objectUrl}
-              alt=""
-              className="photo-crop-image"
-              draggable={false}
-              style={{
-                width: crop.imageWidth * scale,
-                height: crop.imageHeight * scale,
-                transform: `translate(${crop.offsetX}px, ${crop.offsetY}px)`,
-              }}
-            />
+            {objectUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={objectUrl}
+                alt=""
+                className="photo-crop-image"
+                draggable={false}
+                style={{
+                  width: crop.imageWidth * scale,
+                  height: crop.imageHeight * scale,
+                  transform: `translate(${crop.offsetX}px, ${crop.offsetY}px)`,
+                }}
+              />
+            ) : null}
             <div className="photo-crop-guide" aria-hidden="true" />
           </div>
 

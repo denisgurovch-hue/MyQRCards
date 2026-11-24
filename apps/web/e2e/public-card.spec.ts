@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { registerUser } from './helpers/register';
+import { publishCard, unpublishCard } from './helpers/card-lifecycle';
 import { createCardViaEditor } from './helpers/create-card';
+import { registerUser } from './helpers/register';
 
 const password = 'StrongPassphrase123!';
 
@@ -23,24 +24,14 @@ test.describe('public card page', () => {
       password,
     });
 
-    await createCardViaEditor(ownerPage, {
+    const cardId = await createCardViaEditor(ownerPage, {
       name: 'Public Name',
       email: 'visible@example.com',
       showEmail: true,
       slug,
       phone: '+79991112233',
     });
-
-    await ownerPage.getByRole('button', { name: 'Управление' }).click();
-    const manage = ownerPage.getByRole('dialog', { name: 'Управление визиткой' });
-    await manage.getByRole('button', { name: 'Опубликовать' }).click();
-    const publishConfirm = ownerPage.getByRole('dialog', {
-      name: 'Опубликовать визитку?',
-    });
-    await expect(publishConfirm.getByText(/конфиденциальную информацию/i)).toBeVisible();
-    await publishConfirm.getByRole('button', { name: 'Опубликовать' }).click();
-    await expect(manage.getByText(/Статус сейчас:\s*published/i)).toBeVisible();
-    await manage.getByRole('button', { name: 'Закрыть', exact: true }).click();
+    await publishCard(ownerPage, cardId);
 
     const guest = await browser.newContext();
     const guestPage = await guest.newPage();
@@ -96,9 +87,7 @@ test.describe('public card page', () => {
       guestPage.getByRole('link', { name: 'Позвонить · +79991112233' }),
     ).toBeVisible();
 
-    await ownerPage.getByRole('button', { name: 'Управление' }).click();
-    await manage.getByRole('button', { name: 'Снять с публикации' }).click();
-    await expect(manage.getByText(/Статус сейчас:\s*draft/i)).toBeVisible();
+    await unpublishCard(ownerPage, cardId);
 
     await guestPage.reload();
     await expect(guestPage.getByRole('heading', { name: 'Визитка не найдена' })).toBeVisible();

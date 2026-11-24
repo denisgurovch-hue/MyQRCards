@@ -10,6 +10,26 @@ import {
   type CabinetNavContext,
 } from './cabinet-nav';
 
+function BackToCardsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M15.5 5.5 9 12l6.5 6.5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.5 12H20"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export type CabinetChromeProps = {
   context: CabinetNavContext;
   isAdmin?: boolean;
@@ -17,8 +37,6 @@ export type CabinetChromeProps = {
   title?: ReactNode;
   /** Dirty-guard for Signet / «К визиткам» / «Кабинет». */
   onHubNavigate?: (event: MouseEvent<HTMLAnchorElement>) => void;
-  /** Edit-only: open card lifecycle sheet. */
-  onManage?: () => void;
   /** Extra actions after contextual ones (rare). */
   extraActions?: ReactNode;
   className?: string;
@@ -34,7 +52,6 @@ export function CabinetChrome({
   isAdmin = false,
   title,
   onHubNavigate,
-  onManage,
   extraActions,
   className,
   brandClassName,
@@ -66,42 +83,36 @@ export function CabinetChrome({
   if (isEdit) {
     return (
       <header className={className ?? 'edit-v2-top'}>
-        <div className="edit-v2-top-brand">{brand}</div>
-        <div className="edit-v2-top-actions">
+        <div className="edit-v2-top-brand-row">
+          <div className="edit-v2-top-brand">{brand}</div>
           {actions.showBackToCards ? (
             <Link
               href={CABINET_HUB_HREF}
-              className="button secondary edit-v2-back-cards"
+              className="button secondary edit-v2-back-icon"
+              aria-label="К визиткам"
+              title="К визиткам"
               onClick={onHubNavigate}
             >
-              К визиткам
+              <BackToCardsIcon />
             </Link>
-          ) : (
-            <span className="edit-v2-top-actions-spacer" aria-hidden="true" />
-          )}
-          <div className="workspace-actions">
-            {actions.showManage && onManage ? (
-              <button
-                type="button"
-                className="button secondary edit-v2-manage"
-                onClick={onManage}
-              >
-                Управление
-              </button>
-            ) : null}
-            {extraActions}
-          </div>
+          ) : null}
         </div>
+        {extraActions ? (
+          <div className="edit-v2-top-actions">
+            <div className="workspace-actions">{extraActions}</div>
+          </div>
+        ) : null}
       </header>
     );
   }
 
   return (
     <header className={className ?? 'workspace-top'}>
-      <div>
+      <div className="workspace-top-brand-row">
         {brand}
-        {title}
+        {actions.showLogout ? <LogoutButton /> : null}
       </div>
+      {title}
       <div className="workspace-actions">
         {actions.showCreate ? (
           <Link className="button accent" href="/cards/new">
@@ -127,7 +138,6 @@ export function CabinetChrome({
             Кабинет
           </Link>
         ) : null}
-        {actions.showLogout ? <LogoutButton /> : null}
         {extraActions}
       </div>
     </header>

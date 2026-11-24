@@ -27,6 +27,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CabinetChrome } from '../../../../components/cabinet-chrome';
 import { apiFetch } from '../../../../lib/api';
+import { cardStatusLabel } from '../../../../lib/card-status-label';
 import {
   cloneDraft,
   draftsEqual,
@@ -841,10 +842,15 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   }
 
   function requestCancel() {
-    if (!dirty) {
+    if (flash === 'saving') {
       return;
     }
-    setNested('cancel-confirm');
+    // Always leave the editor: dirty → confirm, clean → hub.
+    if (dirty) {
+      setNested('leave-confirm');
+      return;
+    }
+    router.push('/dashboard');
   }
 
   function confirmCancel() {
@@ -978,11 +984,7 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
   return (
     <div className="edit-v2-root is-chrome-off">
       <div className="edit-v2-stage">
-        <CabinetChrome
-          context="edit"
-          onHubNavigate={onHubNavigate}
-          onManage={() => setNested('card-actions')}
-        />
+        <CabinetChrome context="edit" onHubNavigate={onHubNavigate} />
 
         {flash === 'error' ? (
           <p className="error edit-v2-banner" role="alert">
@@ -1234,7 +1236,7 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
           <button
             type="button"
             className="button secondary"
-            disabled={!dirty || flash === 'saving'}
+            disabled={flash === 'saving'}
             onClick={requestCancel}
           >
             Отменить
@@ -1707,7 +1709,8 @@ export function EditCardV2({ cardId }: { cardId?: string }) {
           />
         </label>
         <p className="muted">
-          Статус сейчас: {isCreate ? 'не создана' : draft.status}
+          Статус сейчас:{' '}
+          {isCreate ? 'не создана' : cardStatusLabel(draft.status)}
         </p>
         <div className="edit-v2-sheet-actions">
           <button
