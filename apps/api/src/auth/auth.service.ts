@@ -78,7 +78,11 @@ export class AuthService {
     return base;
   }
 
-  async register(dto: RegisterDto, res: Response) {
+  async register(
+    dto: RegisterDto,
+    res: Response,
+    options?: { includeTokens?: boolean },
+  ) {
     const email = dto.email.trim().toLowerCase();
     const passwordHash = await hashPassword(dto.password);
     const lastName = dto.lastName.trim();
@@ -101,10 +105,11 @@ export class AuthService {
         },
       });
 
-      await this.sessions.issueSession(res, user);
+      const tokens = await this.sessions.issueSession(res, user);
       this.logger.log('User registered');
       return {
         user: this.toPublicUser(user),
+        ...(options?.includeTokens ? tokens : {}),
       };
     } catch (error) {
       if (
@@ -121,7 +126,11 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto, res: Response) {
+  async login(
+    dto: LoginDto,
+    res: Response,
+    options?: { includeTokens?: boolean },
+  ) {
     const email = dto.email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({ where: { email } });
 
@@ -142,13 +151,14 @@ export class AuthService {
       );
     }
 
-    await this.sessions.issueSession(res, user);
+    const tokens = await this.sessions.issueSession(res, user);
     this.logger.log('User logged in');
     return {
       user: {
         id: user.id,
         email: user.email,
       },
+      ...(options?.includeTokens ? tokens : {}),
     };
   }
 
@@ -158,6 +168,41 @@ export class AuthService {
     }
     this.sessions.clearSessionCookies(res);
     this.logger.log('User logged out');
+  }
+
+  async refreshSession(
+    refreshToken: string | undefined,
+    res: Response,
+    options?: { includeTokens?: boolean },
+  ) {
+    if (!refreshToken) {
+      throw new AppError(
+        'UNAUTHORIZED',
+        'Authentication required',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    const rotated = await this.sessions.rotateRefreshToken(res, refreshToken);
+    if (!rotated) {
+      throw new AppError(
+        'UNAUTHORIZED',
+        'Authentication required',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    this.logger.log('Session refreshed');
+    return {
+      user: {
+        id: rotated.user.id,
+        email: rotated.user.email,
+      },
+      ...(options?.includeTokens !== false
+        ? {
+            accessToken: rotated.accessToken,
+            refreshToken: rotated.refreshToken,
+          }
+        : {}),
+    };
   }
 
   async me(userId: string) {
@@ -231,6 +276,7 @@ export class AuthService {
     userId: string,
     dto: ChangePasswordDto,
     res: Response,
+    options?: { includeTokens?: boolean },
   ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user?.passwordHash) {
@@ -254,7 +300,7 @@ export class AuthService {
     const refreshed = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
     });
-    await this.sessions.issueSession(res, refreshed);
+    const tokens = await this.sessions.issueSession(res, refreshed);
     this.logger.log('Password changed with session reissue');
     return {
       user: {
@@ -263,6 +309,7 @@ export class AuthService {
         displayName: refreshed.displayName,
         hasPassword: true,
       },
+      ...(options?.includeTokens ? tokens : {}),
     };
   }
 
