@@ -19,6 +19,7 @@ describe('Cards API (e2e)', () => {
   let redis: RedisService;
 
   beforeAll(async () => {
+    process.env.WEB_ORIGIN = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -325,5 +326,47 @@ describe('Cards API (e2e)', () => {
     });
     expect(links).toBe(1);
   });
+
+  it('serves owner lock-screen PNG with auth and attachment headers', async () => {
+    const { cookies } = await register(`lock-${Date.now()}@example.com`);
+    const created = await request(app.getHttpServer())
+      .post('/api/v1/cards')
+      .set('Cookie', cookies)
+      .send({
+        displayName: 'Lock Demo',
+        slug: 'lock-demo-card',
+        jobTitle: 'Demo',
+      })
+      .expect(201);
+
+    const cardId = created.body.card.id as string;
+
+    await request(app.getHttpServer())
+      .get(`/api/v1/cards/${cardId}/lock-screen.png`)
+      .expect(401);
+
+    const draft = await request(app.getHttpServer())
+      .get(`/api/v1/cards/${cardId}/lock-screen.png`)
+      .set('Cookie', cookies)
+      .expect(200);
+    expect(draft.headers['content-type']).toMatch(/image\/png/);
+    expect(draft.headers['content-disposition']).toBe(
+      'attachment; filename="lock-demo-card-lock-screen.png"',
+    );
+    expect(draft.headers['cache-control']).toBe('no-store');
+    expect(Buffer.from(draft.body).length).toBeGreaterThan(1000);
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/cards/${cardId}/publish`)
+      .set('Cookie', cookies)
+      .expect(201);
+
+    const published = await request(app.getHttpServer())
+      .get(`/api/v1/cards/${cardId}/lock-screen.png`)
+      .set('Cookie', cookies)
+      .expect(200);
+    expect(published.headers['content-type']).toMatch(/image\/png/);
+    expect(Buffer.from(published.body).length).toBeGreaterThan(1000);
+  }, 30_000);
 });
 

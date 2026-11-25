@@ -48,28 +48,21 @@ export class QrCodeService {
     return { slug, url: this.canonicalUrlFor(slug) };
   }
 
-  async generatePng(rawSlug: string): Promise<{
-    slug: string;
-    url: string;
-    buffer: Buffer;
-    filename: string;
-  }> {
-    const { slug, url } = await this.resolvePublishedUrl(rawSlug);
+  /** Encode an arbitrary URL as a PNG QR (no publish check). */
+  async pngBufferForUrl(
+    url: string,
+    width: number = PNG_SIZE,
+  ): Promise<Buffer> {
     try {
       const buffer = await QRCode.toBuffer(url, {
         ...QR_OPTIONS,
         type: 'png',
-        width: PNG_SIZE,
+        width,
       });
       if (!buffer?.length) {
         throw new Error('Empty PNG buffer');
       }
-      return {
-        slug,
-        url,
-        buffer,
-        filename: `qrcard-${slug}.png`,
-      };
+      return buffer;
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
@@ -80,6 +73,22 @@ export class QrCodeService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async generatePng(rawSlug: string): Promise<{
+    slug: string;
+    url: string;
+    buffer: Buffer;
+    filename: string;
+  }> {
+    const { slug, url } = await this.resolvePublishedUrl(rawSlug);
+    const buffer = await this.pngBufferForUrl(url, PNG_SIZE);
+    return {
+      slug,
+      url,
+      buffer,
+      filename: `qrcard-${slug}.png`,
+    };
   }
 
   async generateSvg(rawSlug: string): Promise<{

@@ -3,18 +3,22 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   Param,
   ParseUUIDPipe,
   Patch,
   Post,
   Query,
+  Res,
+  StreamableFile,
   UploadedFile,
   UseFilters,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { memoryStorage } from 'multer';
 import { AnalyticsService } from './analytics.service';
 import { CardPhotoService } from './card-photo.service';
@@ -24,6 +28,7 @@ import {
   PHOTO_MAX_BYTES,
 } from './card-photo.constants';
 import { CardsService } from './cards.service';
+import { LockScreenImageService } from './lock-screen-image.service';
 import { MulterExceptionFilter } from './multer-exception.filter';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -39,6 +44,7 @@ export class CardsController {
     private readonly cards: CardsService,
     private readonly analytics: AnalyticsService,
     private readonly photos: CardPhotoService,
+    private readonly lockScreens: LockScreenImageService,
   ) {}
 
   @Post()
@@ -70,6 +76,29 @@ export class CardsController {
     @Query('period') period?: string,
   ) {
     return this.analytics.getForOwner(user.id, id, period);
+  }
+
+  @Get(':id/lock-screen.png')
+  @Header('Cache-Control', 'no-store')
+  @Header('X-Content-Type-Options', 'nosniff')
+  @RateLimit({ key: 'cards:lock-screen', limit: 20, windowSeconds: 60 })
+  async getLockScreenPng(
+    @CurrentUser() user: { id: string },
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const { buffer, filename } = await this.lockScreens.generateForOwner(
+      user.id,
+      id,
+    );
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${filename}"`,
+    );
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return new StreamableFile(buffer);
   }
 
   @Post(':id/photo')

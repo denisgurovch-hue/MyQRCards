@@ -4,6 +4,7 @@ import { AnalyticsService } from './analytics.service';
 import { CardPhotoService } from './card-photo.service';
 import { CardsController } from './cards.controller';
 import { CardsService } from './cards.service';
+import { LockScreenImageService } from './lock-screen-image.service';
 import { MediaController } from './media.controller';
 import { PublicCardsController } from './public-cards.controller';
 import { PublicCardsService } from './public-cards.service';
@@ -18,6 +19,7 @@ import { VcardService } from './vcard.service';
     PublicCardsService,
     QrCodeService,
     VcardService,
+    LockScreenImageService,
     AnalyticsService,
     CardPhotoService,
   ],

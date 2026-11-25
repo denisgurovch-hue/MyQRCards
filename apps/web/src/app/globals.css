@@ -660,7 +660,7 @@ button.accent:hover,
 
 .card-row-actions {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: stretch;
   justify-content: space-between;
   gap: 0.55rem;
@@ -692,6 +692,12 @@ button.accent:hover,
 .card-action-note {
   width: 100%;
   margin: 0.55rem 0 0;
+}
+
+.card-lock-screen-hint {
+  margin-top: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
 }
 
 .card-action-url {
@@ -1086,6 +1092,26 @@ a.phone-contact-value:focus-visible {
 .present-qr-loading {
   color: #0b1520;
   font-weight: 700;
+}
+
+.present-lock-screen {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+  width: min(420px, 100%);
+}
+
+.present-lock-screen .button {
+  width: 100%;
+  text-align: center;
+  justify-content: center;
+}
+
+.present-lock-screen-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .present-notice {

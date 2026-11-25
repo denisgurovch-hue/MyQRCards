@@ -15,12 +15,13 @@ export const VCARD_PHOTO_MAX_BYTES = 150 * 1024;
 const logger = new Logger('VcardPhoto');
 
 /**
- * Read a stored card photo and return JPEG base64 for PHOTO;ENCODING=b.
- * Returns null on missing/unreadable files (caller omits PHOTO).
+ * Read a stored card photo and return a JPEG buffer (resized).
+ * Returns null on missing/unreadable files.
  */
-export async function jpegBase64ForVcardPhoto(
+export async function jpegBufferForCardPhoto(
   storageKey: string,
-): Promise<string | null> {
+  maxEdge: number = VCARD_PHOTO_MAX_EDGE,
+): Promise<Buffer | null> {
   if (!/^[0-9a-f-]{36}\.webp$/i.test(storageKey)) {
     return null;
   }
@@ -29,14 +30,14 @@ export async function jpegBase64ForVcardPhoto(
   try {
     await fs.access(absolutePath);
   } catch {
-    logger.warn('Card photo file missing for vCard embed');
+    logger.warn('Card photo file missing for embed');
     return null;
   }
 
   try {
     let jpeg = await sharp(absolutePath)
       .rotate()
-      .resize(VCARD_PHOTO_MAX_EDGE, VCARD_PHOTO_MAX_EDGE, {
+      .resize(maxEdge, maxEdge, {
         fit: 'inside',
         withoutEnlargement: true,
       })
@@ -49,9 +50,20 @@ export async function jpegBase64ForVcardPhoto(
         .toBuffer();
     }
 
-    return jpeg.toString('base64');
+    return jpeg;
   } catch {
-    logger.warn('Failed to convert card photo for vCard embed');
+    logger.warn('Failed to convert card photo for embed');
     return null;
   }
+}
+
+/**
+ * Read a stored card photo and return JPEG base64 for PHOTO;ENCODING=b.
+ * Returns null on missing/unreadable files (caller omits PHOTO).
+ */
+export async function jpegBase64ForVcardPhoto(
+  storageKey: string,
+): Promise<string | null> {
+  const jpeg = await jpegBufferForCardPhoto(storageKey, VCARD_PHOTO_MAX_EDGE);
+  return jpeg ? jpeg.toString('base64') : null;
 }

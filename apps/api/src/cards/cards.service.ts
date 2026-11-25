@@ -270,7 +270,7 @@ export class CardsService {
 
 
 
-  private async findOwnedOrThrow(userId: string, cardId: string) {
+  async findOwnedOrThrow(userId: string, cardId: string) {
     const card = await this.prisma.card.findFirst({
       where: { id: cardId, userId, deletedAt: null },
       include: { links: true },
