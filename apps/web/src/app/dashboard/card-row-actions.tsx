@@ -88,7 +88,18 @@ export function CardRowActions({
             Открыть
           </a>
         ) : null}
+        <a
+          className="button secondary"
+          href={`/api/v1/cards/${encodeURIComponent(cardId)}/lock-screen.png`}
+          download
+        >
+          На экран блокировки
+        </a>
       </div>
+      <p className="muted card-action-note card-lock-screen-hint">
+        Сохраните PNG, затем в Фото (iOS) или Галерее (Android) задайте его как
+        обои экрана блокировки.
+      </p>
 
       <div className="card-row-actions card-row-actions-lifecycle">
         {published ? (

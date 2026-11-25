@@ -158,6 +158,20 @@ export function PresentView({ card }: Props) {
         </div>
       </div>
 
+      <div className="present-lock-screen">
+        <a
+          className="button secondary"
+          href={`/api/v1/cards/${encodeURIComponent(card.id)}/lock-screen.png`}
+          download
+        >
+          На экран блокировки
+        </a>
+        <p className="muted present-lock-screen-hint">
+          Сохраните PNG, затем в Фото (iOS) или Галерее (Android) задайте его как
+          обои экрана блокировки.
+        </p>
+      </div>
+
       {previewOnly ? (
         <p className="present-notice" role="status">
           {PRESENT_PREVIEW_NOTICE}
