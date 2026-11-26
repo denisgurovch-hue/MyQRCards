@@ -8,10 +8,13 @@ import {
   resolvePublicCoverMode,
 } from '../../../lib/public-cover';
 import { publicCardAbsoluteUrl } from '../../../lib/public-url';
+import { safeHttpUrl } from '../../../lib/safe-url';
 import { PublicCardView } from './public-card-view';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+const BRAND_OG_IMAGE = '/opengraph-image';
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -25,7 +28,7 @@ export async function generateMetadata({
 
   if (!result.ok) {
     return {
-      title: 'Визитка не найдена — Signet',
+      title: 'Визитка не найдена',
       robots: { index: false, follow: false },
     };
   }
@@ -35,16 +38,42 @@ export async function generateMetadata({
     card.summary?.trim() ||
     [card.jobTitle, card.companyName].filter(Boolean).join(' · ') ||
     'Цифровая визитка Signet';
+  const canonical = publicCardAbsoluteUrl(card.slug);
+  const photoUrl = safeHttpUrl(card.photoUrl);
+  const ogImages = photoUrl
+    ? [{ url: photoUrl, alt: card.displayName }]
+    : [
+        {
+          url: BRAND_OG_IMAGE,
+          width: 1200,
+          height: 630,
+          alt: 'Signet',
+        },
+      ];
 
   return {
-    title: `${card.displayName} — Signet`,
+    title: card.displayName,
     description,
     alternates: {
-      canonical: publicCardAbsoluteUrl(card.slug),
+      canonical,
     },
     robots: {
       index: false,
       follow: false,
+    },
+    openGraph: {
+      title: card.displayName,
+      description,
+      url: canonical,
+      locale: 'ru_RU',
+      type: 'profile',
+      images: ogImages,
+    },
+    twitter: {
+      card: photoUrl ? 'summary_large_image' : 'summary',
+      title: card.displayName,
+      description,
+      images: photoUrl ? [photoUrl] : [BRAND_OG_IMAGE],
     },
   };
 }

@@ -1,10 +1,48 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BrandMark } from '../components/brand-mark';
+import { LandingJsonLd } from '../components/landing-json-ld';
+
+const landingTitle = 'Визитка, которая открывается с телефона';
+const landingDescription =
+  'Одна ссылка, QR и контакт в записной книжке — без приложений и бумаг.';
+
+export const metadata: Metadata = {
+  // Same segment as root layout — template does not apply; set absolute.
+  title: {
+    absolute: `${landingTitle} · Signet`,
+  },
+  description: landingDescription,
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: landingTitle,
+    description: landingDescription,
+    url: '/',
+    locale: 'ru_RU',
+    type: 'website',
+    images: [
+      {
+        url: '/opengraph-image',
+        width: 1200,
+        height: 630,
+        alt: 'Signet — цифровые визитки с QR-кодом',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: landingTitle,
+    description: landingDescription,
+  },
+};
 
 export default function HomePage() {
   return (
     <main className="landing">
+      <LandingJsonLd />
       <section className="landing-copy">
         <BrandMark />
         <h1 className="landing-headline">Визитка, которая открывается с телефона</h1>
