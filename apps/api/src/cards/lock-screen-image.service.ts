@@ -1,10 +1,15 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CardStatus } from '@prisma/client';
+import { Resvg } from '@resvg/resvg-js';
 import sharp, { type OverlayOptions } from 'sharp';
 import { AppError } from '../common/errors/app-error';
 import { PrismaService } from '../prisma/prisma.service';
 import { CardsService } from './cards.service';
+import {
+  LOCK_SCREEN_FONT_FAMILY,
+  lockScreenFontFiles,
+} from './lock-screen-fonts';
 import {
   normalizePublicAppUrl,
   publicCardCanonicalUrl,
@@ -117,7 +122,8 @@ export class LockScreenImageService {
     initial: string;
     hasPhoto: boolean;
     hasQr: boolean;
-  }): Buffer {
+  }): string {
+    const font = LOCK_SCREEN_FONT_FAMILY;
     const nameLines = wrapLines(input.displayName, 22, 3);
     const metaLines = input.metaLine
       ? wrapLines(input.metaLine, 28, 2)
@@ -141,30 +147,48 @@ export class LockScreenImageService {
     const avatar = input.hasPhoto
       ? ''
       : `<circle cx="589.5" cy="420" r="160" fill="#132536" stroke="${ACCENT}" stroke-width="6"/>
-         <text x="589.5" y="445" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="120" font-weight="700" fill="${INK}">${escapeXml(input.initial)}</text>`;
+         <text x="589.5" y="445" text-anchor="middle" font-family="${font}" font-size="120" font-weight="700" fill="${INK}">${escapeXml(input.initial)}</text>`;
 
     const qrHintY = input.hasQr ? 2140 : 1680;
     const qrLabel = input.hasQr
-      ? `<text x="589.5" y="${qrHintY}" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="28" fill="${MUTED}">Сканируйте QR · Signet</text>`
-      : `<text x="589.5" y="${qrHintY}" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="28" fill="${MUTED}">Черновик · QR появится после публикации</text>`;
+      ? `<text x="589.5" y="${qrHintY}" text-anchor="middle" font-family="${font}" font-size="28" fill="${MUTED}">Сканируйте QR · Signet</text>`
+      : `<text x="589.5" y="${qrHintY}" text-anchor="middle" font-family="${font}" font-size="28" fill="${MUTED}">Черновик · QR появится после публикации</text>`;
 
-    const svg = `<?xml version="1.0" encoding="UTF-8"?>
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${LOCK_SCREEN_WIDTH}" height="${LOCK_SCREEN_HEIGHT}" viewBox="0 0 ${LOCK_SCREEN_WIDTH} ${LOCK_SCREEN_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
   <rect width="100%" height="100%" fill="${BG}"/>
   <circle cx="180" cy="220" r="320" fill="#132536" opacity="0.55"/>
   <circle cx="1020" cy="2100" r="380" fill="#132536" opacity="0.45"/>
   ${avatar}
-  <text x="589.5" y="${nameStartY}" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="68" font-weight="700" fill="${INK}">${nameTspans}</text>
+  <text x="589.5" y="${nameStartY}" text-anchor="middle" font-family="${font}" font-size="68" font-weight="700" fill="${INK}">${nameTspans}</text>
   ${
     metaTspans
-      ? `<text x="589.5" y="${metaStartY}" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="36" fill="${MUTED}">${metaTspans}</text>`
+      ? `<text x="589.5" y="${metaStartY}" text-anchor="middle" font-family="${font}" font-size="36" fill="${MUTED}">${metaTspans}</text>`
       : ''
   }
   ${qrLabel}
-  <text x="589.5" y="2460" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="32" font-weight="600" fill="${ACCENT}">Signet</text>
+  <text x="589.5" y="2460" text-anchor="middle" font-family="${font}" font-size="32" font-weight="600" fill="${ACCENT}">Signet</text>
 </svg>`;
+  }
 
-    return Buffer.from(svg, 'utf8');
+  /**
+   * Rasterize layout SVG with bundled Noto Sans (Latin + Cyrillic).
+   * sharp/librsvg cannot load data-URI @font-face reliably in Alpine, so we
+   * use resvg with explicit font files instead of system fontconfig.
+   */
+  private renderLayoutPng(svg: string): Buffer {
+    const resvg = new Resvg(svg, {
+      font: {
+        fontFiles: lockScreenFontFiles(),
+        loadSystemFonts: false,
+        defaultFontFamily: LOCK_SCREEN_FONT_FAMILY,
+      },
+      fitTo: {
+        mode: 'width',
+        value: LOCK_SCREEN_WIDTH,
+      },
+    });
+    return Buffer.from(resvg.render().asPng());
   }
 
   async generateForOwner(
@@ -192,6 +216,7 @@ export class LockScreenImageService {
       hasPhoto: Boolean(photoJpeg),
       hasQr: published,
     });
+    const layoutPng = this.renderLayoutPng(layoutSvg);
 
     const composites: OverlayOptions[] = [];
 
@@ -237,8 +262,7 @@ export class LockScreenImageService {
     }
 
     try {
-      const buffer = await sharp(layoutSvg)
-        .resize(LOCK_SCREEN_WIDTH, LOCK_SCREEN_HEIGHT)
+      const buffer = await sharp(layoutPng)
         .composite(composites)
         .png({ compressionLevel: 9 })
         .toBuffer();

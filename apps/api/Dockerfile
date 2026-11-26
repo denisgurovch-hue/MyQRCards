@@ -28,6 +28,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/package.json ./package.json
 COPY --from=build /app/apps/api/dist ./dist
 COPY --from=build /app/apps/api/prisma ./prisma
+# Bundled Noto Sans for lock-screen PNG text (Latin + Cyrillic)
+COPY --from=build /app/apps/api/assets ./assets
 COPY apps/api/docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chmod +x ./docker-entrypoint.sh \
