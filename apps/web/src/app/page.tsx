@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BrandMark } from '../components/brand-mark';
 import { LandingJsonLd } from '../components/landing-json-ld';
+import { YandexMetrika } from '../components/yandex-metrika';
 
 const landingTitle = 'Визитка, которая открывается с телефона';
 const landingDescription =
@@ -42,6 +43,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <main className="landing">
+      <YandexMetrika />
       <LandingJsonLd />
       <section className="landing-copy">
         <BrandMark />
