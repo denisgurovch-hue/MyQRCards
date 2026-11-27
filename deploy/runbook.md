@@ -32,11 +32,13 @@ Postgres/Redis are **not** published publicly; web/api bind `127.0.0.1:3000/3001
    ```bash
    ./deploy/scripts/deploy.sh
    ```
-6. TLS:
+6. TLS (apex + www; nginx 301s www → apex):
    ```bash
-   sudo certbot --nginx -d cards.example.com
+   sudo certbot --nginx -d cards.example.com -d www.cards.example.com
    ```
 7. Smoke: open `https://domain/`, login, `/u/{slug}`, QR URL host, vCard download.
+   Confirm: `curl -sSI https://www.<domain>/robots.txt` → `301` to `https://<domain>/robots.txt`,
+   then apex returns `200` `text/plain`.
 
 **Do not** run `npm run db:seed` on production.
 

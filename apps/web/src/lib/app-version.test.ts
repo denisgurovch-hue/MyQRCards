@@ -6,6 +6,6 @@ describe('APP_VERSION', () => {
   it('exposes the root package version', () => {
     expect(APP_VERSION).toMatch(/^\d+\.\d+\.\d+/);
     expect(APP_VERSION).toBe(packageJson.version);
-    expect(APP_VERSION).toBe('2.0.0-beta.8');
+    expect(APP_VERSION).toBe('2.0.0-beta.9');
   });
 });

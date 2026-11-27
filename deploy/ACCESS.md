@@ -5,7 +5,7 @@
 | Item | Value |
 |---|---|
 | SSH | `ubuntu@77.91.73.109` |
-| Domain | `smartvizitka.ru` (+ `www`) |
+| Domain | `smartvizitka.ru` (canonical apex; `www` → apex 301) |
 | Public origin | `https://smartvizitka.ru` |
 | App dir | `/opt/myqrcards` |
 
