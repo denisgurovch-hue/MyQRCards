@@ -95,7 +95,7 @@ echo "  2) Point DNS A/AAAA to this server"
 echo "  3) Copy repo + .env.production into $APP_DIR"
 echo "  4) Run deploy/scripts/deploy.sh as $DEPLOY_USER"
 if [[ -n "$DOMAIN" ]]; then
-  echo "  5) sudo certbot --nginx -d $DOMAIN"
+  echo "  5) sudo certbot --nginx -d $DOMAIN -d www.$DOMAIN"
 else
-  echo "  5) Set DOMAIN in nginx site, then: sudo certbot --nginx -d <domain>"
+  echo "  5) Set DOMAIN in nginx site, then: sudo certbot --nginx -d <apex> -d www.<apex>"
 fi
