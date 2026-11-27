@@ -59,6 +59,11 @@ jobs:
             APP_DIR="${APP_DIR:-/opt/myqrcards}"
             cd "$APP_DIR"
             BRANCH="${{ steps.meta.outputs.branch }}" ./deploy/scripts/deploy.sh
+            # Belt-and-suspenders: apply nginx even if an older deploy.sh ran
+            # (www→apex lives in host nginx, not the web container).
+            if [[ -f ./deploy/scripts/apply-nginx.sh ]]; then
+              APP_DIR="$APP_DIR" bash ./deploy/scripts/apply-nginx.sh
+            fi
 
       - name: Report blocker
         if: env.blocker == 'missing_secrets'

@@ -83,6 +83,14 @@ for i in $(seq 1 60); do
     fi
     echo "Deploy healthy (web+api @ ${GIT_SHA})."
     compose ps
+    # Host nginx is outside Compose — apply repo site (www→apex) and reload.
+    if [[ -x "$APP_DIR/deploy/scripts/apply-nginx.sh" ]]; then
+      APP_DIR="$APP_DIR" ENV_FILE="$ENV_FILE" "$APP_DIR/deploy/scripts/apply-nginx.sh"
+    elif [[ -f "$APP_DIR/deploy/scripts/apply-nginx.sh" ]]; then
+      APP_DIR="$APP_DIR" ENV_FILE="$ENV_FILE" bash "$APP_DIR/deploy/scripts/apply-nginx.sh"
+    else
+      echo "NOTE: deploy/scripts/apply-nginx.sh missing — skip host nginx reload." >&2
+    fi
     exit 0
   fi
   sleep 2
